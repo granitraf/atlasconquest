@@ -76,7 +76,7 @@ function isTrue(q: Question, optionIndex: number): boolean {
     case 'currency':
       return c.currencies.map(currencyUnit).includes(option.label);
     case 'language':
-      return c.languages.includes(option.label);
+      return c.languages.includes(option.label) || c.languagesAvoid.includes(option.label);
     case 'domain':
       return option.label === c.tld;
     case 'brand':
@@ -515,6 +515,53 @@ describe('filling difficulty slots', () => {
         asked.push(q.sig);
       }
     }
+  });
+});
+
+describe('language questions', () => {
+  it('the only official language asked about Kosovo is Albanian, and Serbian is never an option', () => {
+    const kosovo = world.byId[id('Kosovo')];
+    expect(kosovo.languages).toEqual(['Albanian']);
+    expect(kosovo.languagesAvoid).toEqual(['Serbian']);
+    for (let seed = 0; seed < 400; seed++) {
+      for (const closeness of [0, 1] as const) {
+        const q = generateQuestion(world, kosovo.id, 'language', createRng(seed), undefined, closeness)!;
+        expect(q.sig).toBe(`language:${kosovo.id}:Albanian`);
+        expect(q.options[q.correctIndex].label).toBe('Albanian');
+        expect(q.options.map((o) => o.label)).not.toContain('Serbian');
+        checkWellFormed(q);
+      }
+    }
+    // Asked once, it is used up: there is no second language to fall back on.
+    expect(generateQuestion(world, kosovo.id, 'language', createRng(1), new Set([`language:${kosovo.id}:Albanian`]))).toBeNull();
+    // In whole battles and recruit rounds too.
+    const rng = createRng(9);
+    for (let run = 0; run < 60; run++) {
+      const asked: string[] = [];
+      for (let i = 0; i < 14; i++) {
+        const q = run % 2 ? nextBattleQuestion(world, kosovo.id, asked, rng) : i < 5 ? nextRecruitQuestion(world, kosovo.id, asked, rng) : nextBattleQuestion(world, kosovo.id, asked, rng);
+        asked.push(q.sig);
+        if (q.type !== 'language') continue;
+        expect(q.options[q.correctIndex].label).toBe('Albanian');
+        expect(q.options.map((o) => o.label)).not.toContain('Serbian');
+      }
+    }
+  });
+
+  it('no country is ever offered a language set aside for it, and every other country keeps its own', () => {
+    const rng = createRng(21);
+    for (const c of ALL) {
+      expect(Array.isArray(c.languagesAvoid), c.name).toBe(true);
+      expect(c.languages.length, c.name).toBeGreaterThan(0);
+      for (const avoided of c.languagesAvoid) expect(c.languages).not.toContain(avoided);
+      for (let i = 0; i < 6; i++) {
+        const q = generateQuestion(world, c.id, 'language', rng, undefined, i % 2 ? 1 : 0)!;
+        for (const o of q.options) expect(c.languagesAvoid, `${c.name}: ${o.label}`).not.toContain(o.label);
+      }
+    }
+    expect(ALL.filter((c) => c.languagesAvoid.length > 0).map((c) => c.name)).toEqual(['Kosovo']);
+    // Serbia itself is unchanged.
+    expect(world.byId.SRB.languages).toContain('Serbian');
   });
 });
 

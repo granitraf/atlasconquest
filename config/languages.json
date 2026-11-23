@@ -1,0 +1,6 @@
+{
+  "about": "Corrections to the official languages that come with the country data. `ask` replaces the list: only these can be the answer to \"Which of these is an official language of ...?\". `avoid` lists languages that are never offered for that country at all, neither as the right answer nor as a wrong one. Keys are country ids. Edit, then run `npm run derive`.",
+  "countries": {
+    "UNK": { "ask": ["Albanian"], "avoid": ["Serbian"] }
+  }
+}

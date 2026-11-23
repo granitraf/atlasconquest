@@ -630,7 +630,8 @@ const GENERATORS: Record<QuestionType, Generator> = {
       poolFor(world, c, closeness),
       3,
       rng,
-      (o) => shuffle(rng, o.languages).find((l) => !c.languages.includes(l)) ?? null,
+      // Never one of the country's own languages, and never one set aside for it (config/languages.json).
+      (o) => shuffle(rng, o.languages).find((l) => !c.languages.includes(l) && !(c.languagesAvoid ?? []).includes(l)) ?? null,
       (l) => l,
       c.languages,
     );

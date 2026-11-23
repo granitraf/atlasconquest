@@ -31,6 +31,8 @@ export interface Country {
   area: number;
   currencies: string[];
   languages: string[];
+  /** Languages never offered for this country at all, neither as the answer nor as a wrong option. */
+  languagesAvoid: string[];
   /** Internet country code domain, e.g. ".ch"; null where there is none. */
   tld: string | null;
   /** How well known the country is: 0 famous, 1 mid-known, 2 obscure. Set from config/fame.json. */

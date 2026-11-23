@@ -5,6 +5,7 @@
 //   waters, watersAvoid       seas and oceans it borders, from config/geography.json
 //   features, featuresAvoid   great rivers, deserts, ranges and rainforests, from config/geography.json
 //   lines, linesAvoid         lines on the globe that cross it, computed from the map shapes
+//   languages, languagesAvoid corrections to the official languages, from config/languages.json
 // The setup script calls the same functions, so a full rebuild gives the same result.
 import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
@@ -150,12 +151,32 @@ export function applyGeography(countries, config, boxes) {
   return countries;
 }
 
+/**
+ * Applies config/languages.json: `ask` replaces a country's languages (only these can be the answer),
+ * `avoid` lists languages never offered for it at all. Throws on a country it does not recognise.
+ */
+export function applyLanguages(countries, config) {
+  const byId = new Map(countries.map((c) => [c.id, c]));
+  for (const c of countries) c.languagesAvoid = [];
+  for (const [id, rule] of Object.entries(config.countries ?? {})) {
+    const c = byId.get(id);
+    if (!c) throw new Error(`config/languages.json: unknown country "${id}"`);
+    if (rule.ask) {
+      if (rule.ask.length === 0) throw new Error(`config/languages.json: "${id}" needs at least one language to ask about`);
+      c.languages = [...rule.ask];
+    }
+    c.languagesAvoid = (rule.avoid ?? []).filter((language) => !c.languages.includes(language));
+  }
+  return countries;
+}
+
 export async function deriveAll(countries, topology) {
   const boxes = landBoxes(topology);
   applyFame(countries, await loadConfig('fame'));
   const geography = await loadConfig('geography');
   applyGeography(countries, geography, boxes);
   applyGlobeLines(countries, boxes, geography.linesAvoid);
+  applyLanguages(countries, await loadConfig('languages'));
   return countries;
 }
 

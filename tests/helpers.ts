@@ -41,6 +41,7 @@ export function fake(id: string, over: Partial<Country> = {}): Country {
     featuresAvoid: [],
     lines: [],
     linesAvoid: [],
+    languagesAvoid: [],
     lat: 0,
     lng: 0,
     flagKey: `flag-${id}`,
