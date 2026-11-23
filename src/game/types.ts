@@ -22,6 +22,10 @@ export interface Country {
   name: string;
   officialName: string;
   capital: string;
+  /** Well-known cities other than the capital: the tempting wrong answers to "what is the capital?". */
+  cities: string[];
+  /** Ids of the countries whose flags look most like this one's, most alike first. */
+  flagKin: string[];
   continent: Continent;
   region: string;
   subregion: string;

@@ -4,6 +4,7 @@ import {
   DIRECTION_CLEAR,
   DIRECTION_ELSEWHERE,
   FACT_MIN_RECOGNITION,
+  FLAG_NEAREST,
   FLAG_CLOSE_CHANCE,
   GLOBE_LINES,
   NO_LINE,
@@ -255,25 +256,87 @@ describe('question generation', () => {
     }
   });
 
-  it('closeness 1 draws wrong options from the same region; closeness 0 avoids the subregion', () => {
+  it('no option is far-fetched: wrong answers come from the same continent, and from the same region for a close call', () => {
     const rng = createRng(11);
     const germany = world.byId.DEU;
     const capitalOf = new Map(ALL.map((c) => [c.capital, c]));
     for (let i = 0; i < 30; i++) {
+      // Capitals offered alongside Berlin (the other wrong options are German cities, tested below).
       const close = generateQuestion(world, 'DEU', 'capital', rng, undefined, 1)!;
-      const far = generateQuestion(world, 'DEU', 'capital', rng, undefined, 0)!;
+      const wide = generateQuestion(world, 'DEU', 'capital', rng, undefined, 0)!;
       for (const [index, option] of close.options.entries()) {
-        if (index !== close.correctIndex) expect(capitalOf.get(option.label)!.subregion).toBe(germany.subregion);
+        const home = capitalOf.get(option.label);
+        if (index !== close.correctIndex && home) expect(home.subregion).toBe(germany.subregion);
       }
-      for (const [index, option] of far.options.entries()) {
-        if (index !== far.correctIndex) expect(capitalOf.get(option.label)!.subregion).not.toBe(germany.subregion);
+      for (const [index, option] of wide.options.entries()) {
+        const home = capitalOf.get(option.label);
+        if (index === wide.correctIndex || !home) continue;
+        expect(home.continent).toBe('Europe');
+        expect(home.subregion).not.toBe(germany.subregion);
       }
-      const borderFar = generateQuestion(world, 'DEU', 'border', rng, undefined, 0)!;
-      for (const [index, option] of borderFar.options.entries()) {
-        if (index !== borderFar.correctIndex) expect(byName.get(option.label)!.subregion).not.toBe(germany.subregion);
+      // Border questions: every wrong country is European, at either level.
+      for (const closeness of [0, 1] as const) {
+        for (const type of ['border', 'notBorder'] as const) {
+          const q = generateQuestion(world, 'DEU', type, rng, undefined, closeness)!;
+          for (const option of q.options) expect(byName.get(option.label)!.continent, `${type} ${closeness}: ${option.label}`).toBe('Europe');
+        }
       }
-      const oddOneOut = generateQuestion(world, 'DEU', 'notBorder', rng, undefined, 0)!;
-      expect(byName.get(oddOneOut.options[oddOneOut.correctIndex].label)!.subregion).not.toBe(germany.subregion);
+    }
+    // Across the big continents: a wrong "neighbour" is always from the same continent, or (for a close call)
+    // a neighbour of a neighbour, which can lie just across a continental line: Morocco for Andorra, by way of Spain.
+    for (const c of ALL.filter((x) => x.continent === 'Europe' || x.continent === 'Africa' || x.continent === 'Asia')) {
+      const oneStepOut = new Set(c.borders.flatMap((b) => world.byId[b]?.borders ?? []));
+      for (const closeness of [0, 1] as const) {
+        const q = generateQuestion(world, c.id, 'border', rng, undefined, closeness);
+        if (!q || sigKind(q.sig) === 'border:landlocked') continue;
+        for (const [index, option] of q.options.entries()) {
+          if (index === q.correctIndex) continue;
+          const o = byName.get(option.label)!;
+          // (In the "borders both" and "to the east" forms a close call may also be a real neighbour that fails the extra condition.)
+          const nextDoor = oneStepOut.has(o.id) || c.borders.includes(o.id);
+          expect(o.continent === c.continent || (closeness === 1 && nextDoor), `${c.name} at ${closeness}: ${option.label}`).toBe(true);
+        }
+      }
+    }
+  });
+
+  it('a capital question always includes another city of the country itself: one, or two for a close call', () => {
+    const rng = createRng(17);
+    let withCities = 0;
+    for (const c of ALL) {
+      expect(Array.isArray(c.cities), c.name).toBe(true);
+      // The list never contains a capital, the country's own or anyone else's.
+      for (const city of c.cities) expect(ALL.some((o) => o.capital === city), `${c.name}: ${city}`).toBe(false);
+      for (const closeness of [0, 1] as const) {
+        const q = generateQuestion(world, c.id, 'capital', rng, undefined, closeness);
+        if (!q) continue;
+        checkWellFormed(q);
+        const own = q.options.filter((o, index) => index !== q.correctIndex && c.cities.includes(o.label)).length;
+        expect(own, `${c.name} at closeness ${closeness}`).toBe(Math.min(c.cities.length, closeness === 1 ? 2 : 1));
+        // The rest are capitals from the same continent, wherever it has enough of them.
+        for (const [index, o] of q.options.entries()) {
+          if (index === q.correctIndex || c.cities.includes(o.label)) continue;
+          const home = ALL.find((x) => x.capital === o.label)!;
+          expect(home, `${c.name}: ${o.label}`).toBeDefined();
+          if (c.continent !== 'South America' && c.continent !== 'Oceania') expect(home.continent, `${c.name}: ${o.label}`).toBe(c.continent);
+        }
+        if (c.cities.length > 0) withCities++;
+      }
+    }
+    expect(withCities).toBeGreaterThan(330);
+    // The traps everyone knows.
+    const offered = (code: string) => {
+      const seen = new Set<string>();
+      for (let seed = 0; seed < 80; seed++) for (const o of generateQuestion(world, code, 'capital', createRng(seed), undefined, 1)!.options) seen.add(o.label);
+      return seen;
+    };
+    expect(offered('AUS')).toContain('Sydney');
+    expect(offered('TUR')).toContain('Istanbul');
+    expect(offered('CAN')).toContain('Toronto');
+    expect(offered('BRA')).toContain('Rio de Janeiro');
+    // Cities with a claim to being a capital are never offered as wrong answers.
+    for (const [code, city] of [['ZAF', 'Cape Town'], ['BOL', 'La Paz'], ['NLD', 'The Hague'], ['CIV', 'Abidjan'], ['LKA', 'Colombo'], ['BEN', 'Cotonou'], ['ISR', 'Tel Aviv']] as const) {
+      expect(world.byId[code].cities, code).not.toContain(city);
     }
   });
 
@@ -356,22 +419,42 @@ describe('flags', () => {
     }
   });
 
-  it('offers lookalike flags only when closeness is 1, and then prefers them', () => {
+  it('every flag option resembles the right flag; close calls lead with the lookalikes and the nearest matches', () => {
     const rng = createRng(10);
     for (const c of ALL) {
+      // Ten similar flags for every country, none of them its own or an identical one.
+      expect(c.flagKin, c.name).toHaveLength(10);
+      for (const id of c.flagKin) {
+        expect(world.byId[id], `${c.name}: ${id}`).toBeDefined();
+        expect(world.byId[id].flagKey).not.toBe(c.flagKey);
+      }
       const lookalikes = ALL.filter((o) => flagsLookAlike(o, c));
+      const similar = new Set([...c.flagKin, ...lookalikes.map((o) => o.id)]);
       for (let i = 0; i < 6; i++) {
-        const far = flagOptions(generateQuestion(world, c.id, 'flag', rng, undefined, 0)!);
-        expect(far.filter((o) => flagsLookAlike(o, c)), `${c.name} at closeness 0`).toEqual([]);
+        // At either level every wrong flag is one of the similar ones.
+        const wide = flagOptions(generateQuestion(world, c.id, 'flag', rng, undefined, 0)!);
+        for (const o of wide) if (o.id !== c.id) expect(similar.has(o.id), `${c.name} at closeness 0: ${o.name}`).toBe(true);
         const close = flagOptions(generateQuestion(world, c.id, 'flag', rng, undefined, 1)!);
+        for (const o of close) if (o.id !== c.id) expect(similar.has(o.id), `${c.name} at closeness 1: ${o.name}`).toBe(true);
+        // A close call uses every available lookalike, up to the three wrong slots (identical twins share one slot)…
         const used = close.filter((o) => flagsLookAlike(o, c)).length;
-        // Every available lookalike is used, up to the three wrong slots (identical twins share one slot).
         const distinct = new Set(lookalikes.map((o) => IDENTICAL_FLAGS.find((g) => g.includes(o.id))?.[0] ?? o.id)).size;
-        expect(used, `${c.name} at closeness 1`).toBe(Math.min(3, distinct));
+        expect(used, `${c.name} at closeness 1`).toBeGreaterThanOrEqual(Math.min(3, distinct));
+        // …and fills the rest from the few most similar flags of all.
+        const nearest = new Set([...lookalikes.map((o) => o.id), ...c.flagKin.slice(0, FLAG_NEAREST + 3)]);
+        for (const o of close) if (o.id !== c.id) expect(nearest.has(o.id), `${c.name} close: ${o.name}`).toBe(true);
       }
     }
     const ireland = flagOptions(generateQuestion(world, 'IRL', 'flag', rng, undefined, 1)!).map((o) => o.id);
     expect(ireland).toEqual(expect.arrayContaining(['CIV', 'ITA']));
+    // Flags are matched on their colours: Andorra's blue, yellow and red bring Moldova, Romania or Chad, Colombia and Ecuador.
+    const kin = (code: string) => world.byId[code].flagKin;
+    expect(kin('AND')).toEqual(expect.arrayContaining(['MDA', 'COL', 'ECU']));
+    expect(kin('AND').some((id) => id === 'ROU' || id === 'TCD')).toBe(true);
+    expect(kin('IRL')).toEqual(expect.arrayContaining(['CIV', 'ITA', 'IND']));
+    expect(kin('USA')).toEqual(expect.arrayContaining(['LBR', 'MYS', 'PRI']));
+    expect(kin('DEU')).toContain('BEL');
+    expect(kin('JPN').length).toBe(10);
   });
 
   it('opening flags use close-call options about half the time', () => {
@@ -402,7 +485,7 @@ describe('currency, domain and brand questions', () => {
     expect(currencyFamily('Krona')).toBe(currencyFamily('Krone'));
   });
 
-  it('asks for the internet domain, with guessable fakes when close and unrelated real ones when far', () => {
+  it('asks for the internet domain, with guessable fakes when close and real ones from the same continent otherwise', () => {
     const rng = createRng(41);
     const real = new Set(ALL.map((c) => c.tld));
     for (let i = 0; i < 40; i++) {
@@ -413,11 +496,11 @@ describe('currency, domain and brand questions', () => {
       // Close calls start with the same letter as the country or its real domain.
       const wrong = close.options.filter((_, index) => index !== close.correctIndex);
       expect(wrong.filter((o) => 'sc'.includes(o.label[1])).length).toBeGreaterThanOrEqual(2);
-      const far = generateQuestion(world, 'CHE', 'domain', rng, undefined, 0)!;
-      for (const [index, o] of far.options.entries()) {
-        if (index === far.correctIndex) continue;
+      const wide = generateQuestion(world, 'CHE', 'domain', rng, undefined, 0)!;
+      for (const [index, o] of wide.options.entries()) {
+        if (index === wide.correctIndex) continue;
         expect(real.has(o.label)).toBe(true);
-        expect(o.label[1]).not.toBe('c');
+        expect(ALL.find((c) => c.tld === o.label)!.continent).toBe('Europe');
       }
     }
     expect(questionScore('domain', 0, 0)).toBe(2);

@@ -66,8 +66,9 @@ in [MECHANICS.md](MECHANICS.md). In short:
    countries you hold. Sea crossings face a third more, with half the time per question.
 7. **Question difficulty** is a score: the kind of question, plus how obscure the country is, plus how
    close the wrong options are. Fourteen question types, from flags and seas to famous people and a
-   memorable hook for every country. Less familiar countries get more questions you can reason out
-   from the map.
+   memorable hook for every country. No option is far-fetched: wrong answers come from the same
+   continent, flag options all resemble the right flag, and a capital question always includes another
+   city of the same country.
 8. **Score** is countries conquered × your start's multiplier, plus 10 for every continent held in full.
 
 Controls: mouse wheel, drag, pinch, `+` / `-` keys or buttons to move the map. `1`–`4` or `A`–`D`

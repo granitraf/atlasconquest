@@ -24,6 +24,8 @@ export function fake(id: string, over: Partial<Country> = {}): Country {
     name: `Land ${id}`,
     officialName: `Republic of ${id}`,
     capital: `${id} City`,
+    cities: [],
+    flagKin: [],
     continent: 'Europe' as Continent,
     region: 'Europe',
     subregion: 'Testland',

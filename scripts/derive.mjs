@@ -7,6 +7,8 @@
 //   lines, linesAvoid         lines on the globe that cross it, computed from the map shapes
 //   languages, languagesAvoid corrections to the official languages, from config/languages.json
 //   lanes                     the sea lanes it has a coast on (where its ships can go), from config/geography.json
+//   cities                    well-known cities other than the capital, from config/cities.json
+//   flagKin                   the flags most like its own in colour and layout, worked out from the flag images
 // The setup script calls the same functions, so a full rebuild gives the same result.
 import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
@@ -15,6 +17,7 @@ import { feature } from 'topojson-client';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const COUNTRIES = join(ROOT, 'public', 'data', 'countries.json');
+const FLAGS = join(ROOT, 'public', 'flags', 'l');
 const WORLD = join(ROOT, 'public', 'data', 'world.json');
 
 export const loadConfig = async (name) => JSON.parse(await readFile(join(ROOT, 'config', `${name}.json`), 'utf8'));
@@ -199,6 +202,112 @@ export function applyLanguages(countries, config) {
   return countries;
 }
 
+/**
+ * Sets `cities` from config/cities.json: other cities of the country, offered as wrong answers to its
+ * capital question. Throws if a listed city is a capital (its own or anyone else's).
+ */
+export function applyCities(countries, config) {
+  const byId = new Map(countries.map((c) => [c.id, c]));
+  const capitals = new Map(countries.filter((c) => c.capital).map((c) => [c.capital, c.name]));
+  for (const c of countries) c.cities = [];
+  for (const [id, cities] of Object.entries(config.cities)) {
+    const c = byId.get(id);
+    if (!c) throw new Error(`config/cities.json: unknown country "${id}"`);
+    for (const city of cities) {
+      if (capitals.has(city)) throw new Error(`config/cities.json: "${city}" (${id}) is the capital of ${capitals.get(city)}`);
+    }
+    if (new Set(cities).size !== cities.length) throw new Error(`config/cities.json: a city is listed twice for "${id}"`);
+    c.cities = [...cities];
+  }
+  return countries;
+}
+
+// ------------------------------------------------------------------ flag likeness
+//
+// Each flag is boiled down to which colours it uses and where: every pixel of a small copy is put in
+// one of a dozen colour bins, for the whole flag and for each cell of a 3 x 3 grid. Two flags are alike
+// when they use the same set of colours in similar amounts (which is most of it) in similar places.
+
+const FLAG_W = 24;
+const FLAG_H = 16;
+const BINS = ['white', 'black', 'red', 'orange', 'yellow', 'green', 'sky', 'blue', 'purple', 'pink'];
+/** How many of the most similar flags are kept for each country. */
+export const FLAG_KIN = 10;
+/** A colour has to cover this much of a flag to count as one of "its colours". */
+const COLOUR_SHARE = 0.06;
+
+function colourBin(r, g, b) {
+  const max = Math.max(r, g, b) / 255;
+  const min = Math.min(r, g, b) / 255;
+  const light = (max + min) / 2;
+  const spread = max - min;
+  const saturation = spread === 0 ? 0 : spread / (1 - Math.abs(2 * light - 1));
+  if (light >= 0.9 || (light >= 0.78 && saturation <= 0.4)) return 'white';
+  if (light <= 0.14) return 'black';
+  if (saturation <= 0.2) return light > 0.5 ? 'white' : 'black';
+  let hue;
+  if (max === r / 255) hue = ((g - b) / 255 / spread + 6) % 6;
+  else if (max === g / 255) hue = (b - r) / 255 / spread + 2;
+  else hue = (r - g) / 255 / spread + 4;
+  hue *= 60;
+  if (hue < 18 || hue >= 340) return 'red';
+  if (hue < 42) return 'orange';
+  if (hue < 68) return 'yellow';
+  if (hue < 165) return 'green';
+  if (hue < 200) return 'sky';
+  if (hue < 262) return light > 0.62 ? 'sky' : 'blue';
+  if (hue < 300) return 'purple';
+  return 'pink';
+}
+
+async function flagSignature(sharp, file) {
+  const { data } = await sharp(file).resize(FLAG_W, FLAG_H, { fit: 'fill' }).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  const whole = Object.fromEntries(BINS.map((bin) => [bin, 0]));
+  const cells = Array.from({ length: 9 }, () => Object.fromEntries(BINS.map((bin) => [bin, 0])));
+  for (let y = 0; y < FLAG_H; y++) {
+    for (let x = 0; x < FLAG_W; x++) {
+      const i = (y * FLAG_W + x) * 3;
+      const bin = colourBin(data[i], data[i + 1], data[i + 2]);
+      whole[bin] += 1 / (FLAG_W * FLAG_H);
+      const cell = Math.min(2, Math.floor((y * 3) / FLAG_H)) * 3 + Math.min(2, Math.floor((x * 3) / FLAG_W));
+      cells[cell][bin] += 9 / (FLAG_W * FLAG_H);
+    }
+  }
+  return { whole, cells, colours: new Set(BINS.filter((bin) => whole[bin] >= COLOUR_SHARE)) };
+}
+
+/** 0 for the same flag, towards 1 for flags with nothing in common. */
+function flagDistance(a, b) {
+  const gap = (x, y) => BINS.reduce((sum, bin) => sum + Math.abs(x[bin] - y[bin]), 0) / 2;
+  const shared = [...a.colours].filter((bin) => b.colours.has(bin)).length;
+  const union = new Set([...a.colours, ...b.colours]).size;
+  const palette = union === 0 ? 0 : 1 - shared / union;
+  const layout = a.cells.reduce((sum, cell, i) => sum + gap(cell, b.cells[i]), 0) / 9;
+  return 0.45 * palette + 0.35 * gap(a.whole, b.whole) + 0.2 * layout;
+}
+
+/**
+ * Sets `flagKin`: for each country, the ids of the FLAG_KIN countries whose flags look most like its
+ * own, most alike first. Countries that fly the very same flag are left out.
+ */
+export async function applyFlagKin(countries) {
+  const { default: sharp } = await import('sharp');
+  const signature = new Map();
+  for (const c of countries) signature.set(c.id, c.cca2 ? await flagSignature(sharp, join(FLAGS, `${c.cca2}.png`)) : null);
+  for (const c of countries) {
+    const mine = signature.get(c.id);
+    c.flagKin = !mine
+      ? []
+      : countries
+          .filter((o) => o.id !== c.id && o.flagKey !== c.flagKey && signature.get(o.id))
+          .map((o) => ({ id: o.id, d: flagDistance(mine, signature.get(o.id)) }))
+          .sort((a, b) => a.d - b.d || a.id.localeCompare(b.id))
+          .slice(0, FLAG_KIN)
+          .map((o) => o.id);
+  }
+  return countries;
+}
+
 export async function deriveAll(countries, topology) {
   const boxes = landBoxes(topology);
   applyFame(countries, await loadConfig('fame'));
@@ -206,6 +315,8 @@ export async function deriveAll(countries, topology) {
   applyGeography(countries, geography, boxes);
   applyGlobeLines(countries, boxes, geography.linesAvoid);
   applyLanes(countries, geography);
+  applyCities(countries, await loadConfig('cities'));
+  await applyFlagKin(countries);
   applyLanguages(countries, await loadConfig('languages'));
   return countries;
 }
@@ -216,6 +327,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const count = (test) => countries.filter(test).length;
   console.log(`Fame: ${[0, 1, 2].map((f) => count((c) => c.fame === f)).join(' / ')} (famous / mid-known / obscure).`);
   console.log(`Waters: ${count((c) => c.waters.length > 0)} countries. Features: ${count((c) => c.features.length > 0)}. Globe lines: ${count((c) => c.lines.length > 0)}.`);
+  console.log(`Cities: ${count((c) => c.cities.length > 0)} countries have at least one besides the capital.`);
+  const names = new Map(countries.map((c) => [c.id, c.name]));
+  for (const id of ['AND', 'IRL', 'DEU', 'JPN', 'USA']) console.log(`Flags most like ${names.get(id)}: ${countries.find((c) => c.id === id).flagKin.map((k) => names.get(k)).join(', ')}.`);
   const lanes = [...new Set(countries.flatMap((c) => c.lanes))];
   console.log(`Sea lanes: ${lanes.map((lane) => `${lane} ${count((c) => c.lanes.includes(lane))}`).join(', ')}.`);
 }

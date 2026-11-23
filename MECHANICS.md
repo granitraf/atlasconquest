@@ -125,9 +125,16 @@ Score 1–2 is **Easy**, 3–4 is **Medium**, 5–6 is **Hard**.
 
 **Option closeness:** 0 or 1.
 
-- 0: the wrong options come from anywhere in the world except the country's own subregion.
-- 1: the wrong options are close calls: same subregion first, then the continent;
-  neighbours-of-neighbours for border questions; lookalike flags for flag questions.
+No option is far-fetched at either level. Every wrong option is at least from the same
+continent, every flag resembles the right one, and a capital question always includes
+another city of the country itself.
+
+- 0: the same continent, outside the country's own subregion where that is possible.
+- 1: the closest calls there are: the same subregion first; neighbours-of-neighbours for
+  border questions; hand-picked lookalikes and the most similar flags for flag questions; two
+  of the country's own cities for capital questions.
+- If a continent has too few candidates (few countries in South America or Oceania share a
+  given kind of answer), the pool widens to the rest of the world rather than repeating one.
 - For population, area, globe-line and curated-fact questions closeness does not apply and
   counts as 0.
 
@@ -288,15 +295,15 @@ country is one of the four options, and is sometimes the answer.
 
 | Weight | Type | Prompt | Notes |
 |---|---|---|---|
-| 1 | Flag | Which flag belongs to X? | Four flag images. See flag rules below. |
-| 1 | Capital | What is the capital of X? | Skipped where the capital carries the country's name. 214 of 230 qualify. |
-| 1 | Water | Which sea or ocean does X border? | Coastal countries only; 21 named seas and oceans. Wrong options are bodies the country does not touch, not even arguably. 179 qualify. |
+| 1 | Flag | Which flag belongs to X? | Four flag images, all alike in colour. See flag rules below. |
+| 1 | Capital | What is the capital of X? | One wrong option (two for a close call) is another city of X itself, from `config/cities.json`: Sydney for Australia, Istanbul for Turkey. The rest are capitals from the same continent (the same subregion for a close call). Cities with any claim to being a capital (Cape Town, La Paz, The Hague, Abidjan, Colombo) are never offered. 192 countries have cities listed. Skipped where the capital carries the country's name. 214 of 230 qualify. |
+| 1 | Water | Which sea or ocean does X border? | Coastal countries only; 21 named seas and oceans. Wrong options are bodies the country does not touch, not even arguably, and they are the nearest such bodies: three of the nearest four for a close call, three of the nearest eight otherwise. 179 qualify. |
 | 2 | Border | Which country borders X? / Which country borders both X and Y? / Which country borders X to the east? / Which of these neighbours of X is landlocked? (or: is not landlocked?) | Four forms, taken in turn. The answer is never a country the player holds. In "borders both", Y is a held neighbour when there is one, so the player's own map is the clue. "To the east" is asked only where the neighbour's centre lies within 30° of that compass point, never about a microstate or an enclave, and no wrong option is a neighbour on that side. In the landlocked form all four options are real neighbours. 161 qualify. |
 | 2 | Currency | What currency does X use? | Options are the kind only ("Dinar", not "Serbian Dinar"). Lookalike kinds (krona/krone, rial/riyal) are never offered together. |
 | 2 | Language | Which is an official language of X? | One variant per official language. Corrections live in `config/languages.json`: for Kosovo the only language asked about is Albanian, and Serbian is never shown as an option. |
-| 2 | Domain | What is the internet domain of X? | Close options are guessable codes from the name and real domains with the same first letter; far options are unrelated real domains. 229 qualify. |
+| 2 | Domain | What is the internet domain of X? | Close options are guessable codes from the name and real domains with the same first letter; otherwise real domains of other countries on the same continent. 229 qualify. |
 | 2 | Brand | Which company was founded in X? | From a hand-picked list in `src/game/brands.ts`. 52 qualify. |
-| 2 | Major feature | Which river flows through X? / Which desert lies in X? / Which mountain range runs through X? / Which rainforest is found in X? | Only where the country has a well-known one; options are always the same kind of feature. 105 qualify. |
+| 2 | Major feature | Which river flows through X? / Which desert lies in X? / Which mountain range runs through X? / Which rainforest is found in X? | Only where the country has a well-known one; options are always the same kind of feature, and the nearest ones of that kind (the Alps and the Apennines for the Pyrenees). 105 qualify. |
 | 2 | Globe line | Which of these lines on the globe passes through X? | Equator, the two tropics, the Arctic Circle and the Prime Meridian, worked out from the country's shape, with "None of these" as an option. 47 qualify. |
 | 2 | Curated fact | (written per fact) | Famous people, top exports, highest mountains, landmarks, dishes, former names and one-off hooks. See below. All 230 qualify. |
 | 3 | Population | What is the population of X? / Which of these has the most people? / Which of these has the fewest people? | Three forms, taken in turn. The range form shows four adjacent ranges out of ten (under 10k … over 250M). The line-ups rank X against three countries from its region; the winner leads by at least 1.3×. No closeness. |
@@ -309,9 +316,14 @@ A type is skipped for a country that lacks the data.
 
 - **Identical flags** (Chad and Romania, Indonesia and Monaco, and any two countries sharing
   one flag file) are never offered together, at any difficulty.
-- **Lookalike flags** (Ireland and Côte d'Ivoire, Netherlands and Luxembourg, and 21 more
-  groups in `LOOKALIKE_FLAGS`) are offered together only when closeness is 1, where they are
-  the preferred wrong options.
+- **Every wrong flag resembles the right one.** For each country the ten flags most like its
+  own are worked out from the flag images by `npm run derive` (`flagKin`): which colours a
+  flag uses, in what amounts, and roughly where. Andorra's blue, yellow and red bring up
+  Moldova, Romania, Chad, Colombia and Ecuador; the United States brings up Liberia, Malaysia
+  and Puerto Rico.
+- Closeness 0: any three of those ten. Closeness 1: the hand-picked **lookalike flags**
+  (Ireland and Côte d'Ivoire, Netherlands and Luxembourg, and 21 more groups in
+  `LOOKALIKE_FLAGS`) first, then the four most similar of the ten.
 
 **Seas, features and globe lines** come from `config/geography.json` and the map shapes,
 applied by `npm run derive`. Each sea and feature lists the countries that clearly have it

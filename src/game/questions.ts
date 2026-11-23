@@ -50,8 +50,12 @@ export const USES_CLOSENESS: Record<QuestionType, boolean> = {
 export const QUESTION_TYPES = Object.keys(TYPE_WEIGHT) as QuestionType[];
 
 /**
- * 0: wrong options come from anywhere in the world except the country's own subregion.
- * 1: wrong options are close calls: same subregion first, lookalike flags, neighbours of neighbours.
+ * How tempting the wrong options are. Neither level is far-fetched: every option is at least from the
+ * same continent, every flag resembles the right one, and a capital question always includes another
+ * city of the country itself.
+ * 0: the same continent, outside the country's own subregion where that is possible.
+ * 1: the closest calls there are: the same subregion, lookalike flags, neighbours of neighbours, a
+ *    second city of the country.
  */
 export type Closeness = 0 | 1;
 
@@ -65,7 +69,10 @@ export function tierOf(score: number): Difficulty {
   return score <= 2 ? 'easy' : score <= 4 ? 'medium' : 'hard';
 }
 
-/** Chance that an opening flag question uses close-call options (lookalike and regional flags). */
+/** For a close-call flag question, the wrong flags come from this many of the most similar ones (after the hand-picked lookalikes). */
+export const FLAG_NEAREST = 4;
+
+/** Chance that an opening flag question uses the closest-call options rather than any of the similar flags. */
 export const FLAG_CLOSE_CHANCE = 0.5;
 
 /** A curated fact is only asked if it is at least this well known (3 worldwide, 2 well-read player, 1 local). */
@@ -279,21 +286,36 @@ function regionTiers(world: World, c: Country): Country[][] {
 }
 
 /**
- * Far-fetched pool: the whole world except the country's own subregion. The
- * subregion is kept as a last resort so a question can always be completed.
+ * The wider pool: the country's own continent, outside its subregion first. The subregion and then
+ * the rest of the world are kept as last resorts so a question can always be completed.
  */
-function worldTiers(world: World, c: Country): Country[][] {
-  const away: Country[] = [];
-  const near: Country[] = [];
-  for (const o of world.all) {
-    if (o.id === c.id) continue;
-    (o.continent === c.continent && o.subregion === c.subregion ? near : away).push(o);
-  }
-  return [away, near];
+function continentTiers(world: World, c: Country): Country[][] {
+  const [sub, cont, rest] = regionTiers(world, c);
+  return [cont, sub, rest];
 }
 
+/**
+ * Seas or features in the order a player might plausibly confuse them: nearest first, measured from
+ * the country to the closest other country that has each one. So Germany is offered the Adriatic
+ * and the Mediterranean before the Sea of Japan, and Australia the South China Sea before the Aegean.
+ */
+function nearestFirst(world: World, c: Country, names: readonly string[], has: (o: Country, name: string) => boolean): string[] {
+  const reach = (name: string) => {
+    let best = Infinity;
+    for (const o of world.all) if (o.id !== c.id && has(o, name)) best = Math.min(best, distanceKm(c, o));
+    return best;
+  };
+  return names
+    .map((name) => ({ name, km: reach(name) }))
+    .sort((a, b) => a.km - b.km || a.name.localeCompare(b.name))
+    .map((entry) => entry.name);
+}
+
+/** Wrong options are drawn from this many of the nearest candidates: a tight handful for a close call, a wider ring otherwise. */
+const NEAREST_POOL: Record<Closeness, number> = { 0: 8, 1: 4 };
+
 const poolFor = (world: World, c: Country, closeness: Closeness) =>
-  closeness === 1 ? regionTiers(world, c) : worldTiers(world, c);
+  closeness === 1 ? regionTiers(world, c) : continentTiers(world, c);
 
 /** Countries one step beyond the border: the most tempting wrong "neighbours". */
 function neighboursOfNeighbours(world: World, c: Country): Country[] {
@@ -459,17 +481,16 @@ const GENERATORS: Record<QuestionType, Generator> = {
   flag(world, c, closeness, exclude, rng) {
     const sig = `flag:${c.id}`;
     if (exclude.has(sig) || !c.cca2) return null;
-    // Close calls lead with lookalike flags; far-fetched options never include one.
+    // Every option is a flag that resembles the right one in its colours and layout (`flagKin`, worked
+    // out from the flag images). Close calls lead with the hand-picked lookalikes and the nearest few
+    // of those; otherwise any three of the ten most alike. Identical flags are never offered together.
+    const kin = (c.flagKin ?? []).map((id) => world.byId[id]).filter(Boolean);
     const lookalikes = world.all.filter((o) => flagsLookAlike(o, c));
-    const tiers = closeness === 1 ? [lookalikes, ...regionTiers(world, c)] : worldTiers(world, c);
-    const wrong = collect(
-      tiers,
-      3,
-      rng,
-      (o) => (flagsIdentical(o, c) || (closeness === 0 && flagsLookAlike(o, c)) ? null : o),
-      flagIdentity,
-      [flagIdentity(c)],
-    );
+    const tiers =
+      closeness === 1
+        ? [lookalikes, kin.slice(0, FLAG_NEAREST), kin.slice(FLAG_NEAREST), ...regionTiers(world, c)]
+        : [kin, lookalikes, ...continentTiers(world, c)];
+    const wrong = collect(tiers, 3, rng, (o) => (flagsIdentical(o, c) ? null : o), flagIdentity, [flagIdentity(c)]);
     return {
       sig,
       prompt: `Which flag belongs to ${countryPhrase(c)}?`,
@@ -482,8 +503,11 @@ const GENERATORS: Record<QuestionType, Generator> = {
     const sig = `capital:${c.id}`;
     // Skipped where the capital carries the country's name (Djibouti, Singapore, Mexico City).
     if (exclude.has(sig) || !c.capital || givesAway(c.capital, c)) return null;
-    const wrong = collect(poolFor(world, c, closeness), 3, rng, (o) => o.capital || null, (cap) => cap, [c.capital]);
-    return { sig, prompt: `What is the capital of ${countryPhrase(c)}?`, correct: { label: c.capital }, wrong: labels(wrong) };
+    // Other cities of the country itself are the natural wrong answers: one of them always, two for a
+    // close call. The rest are capitals from the same continent (the same subregion for a close call).
+    const own = shuffle(rng, c.cities ?? []).slice(0, closeness === 1 ? 2 : 1);
+    const others = collect(poolFor(world, c, closeness), 3 - own.length, rng, (o) => o.capital || null, (cap) => cap, [c.capital, ...own]);
+    return { sig, prompt: `What is the capital of ${countryPhrase(c)}?`, correct: { label: c.capital }, wrong: labels([...own, ...others]) };
   },
 
   border(world, c, closeness, exclude, rng, known) {
@@ -491,7 +515,7 @@ const GENERATORS: Record<QuestionType, Generator> = {
     if (neighbours.length === 0) return null;
     // A neighbour the player already holds would be a free answer: it is right there on their map.
     const hidden = neighbours.filter((n) => !known.has(n.id));
-    const nearby = () => (closeness === 1 ? [neighboursOfNeighbours(world, c), ...regionTiers(world, c)] : worldTiers(world, c));
+    const nearby = () => (closeness === 1 ? [neighboursOfNeighbours(world, c), ...regionTiers(world, c)] : continentTiers(world, c));
 
     const forms: Record<'' | 'both' | 'direction' | 'landlocked', () => Draft | null> = {
       // "Which country borders X?"
@@ -523,7 +547,7 @@ const GENERATORS: Record<QuestionType, Generator> = {
           const oneOnly = world.all.filter(
             (o) => o.id !== c.id && o.id !== second.id && c.borders.includes(o.id) !== second.borders.includes(o.id),
           );
-          const tiers = closeness === 1 ? [oneOnly, ...nearby()] : worldTiers(world, c);
+          const tiers = closeness === 1 ? [oneOnly, ...nearby()] : continentTiers(world, c);
           const wrong = collect(unknownFirst(tiers, known), 3, rng, (o) => (o.id === second.id || bordersBoth(o) ? null : o), (o) => o.id);
           if (wrong.length < 3) continue;
           return {
@@ -554,7 +578,7 @@ const GENERATORS: Record<QuestionType, Generator> = {
         for (const { name, angle, n } of choices) {
           // A wrong option is either no neighbour at all, or a neighbour on a clearly different side.
           const elsewhere = neighbours.filter((o) => side(o, angle) >= DIRECTION_ELSEWHERE);
-          const tiers = closeness === 1 ? [elsewhere, ...nearby()] : worldTiers(world, c);
+          const tiers = closeness === 1 ? [elsewhere, ...nearby()] : continentTiers(world, c);
           const wrong = collect(
             unknownFirst(tiers, known),
             3,
@@ -662,8 +686,8 @@ const GENERATORS: Record<QuestionType, Generator> = {
         ...collect([sameLetter, ...regionTiers(world, c)], 3, rng, (o) => o.tld, (t) => t, [c.tld, ...invented]),
       ].slice(0, 3);
     } else {
-      // Far-fetched: real domains from elsewhere that do not even share the first letter.
-      wrong = collect(worldTiers(world, c), 3, rng, (o) => (o.tld && o.tld[1] !== first ? o.tld : null), (t) => t, [c.tld]);
+      // Real domains of other countries on the same continent.
+      wrong = collect(continentTiers(world, c), 3, rng, (o) => o.tld || null, (t) => t, [c.tld]);
     }
     return { sig, prompt: `What is the internet domain of ${countryPhrase(c)}?`, correct: { label: c.tld }, wrong: labels(wrong) };
   },
@@ -696,10 +720,13 @@ const GENERATORS: Record<QuestionType, Generator> = {
     const answer = pick(rng, candidates);
     // Wrong options are bodies of water the country does not touch, not even arguably.
     const off = new Set([...c.waters, ...c.watersAvoid]);
-    const others = [...world.waters.keys()].filter((w) => !off.has(w));
-    const near = others.filter((w) => world.waters.get(w)!.has(c.continent));
-    const far = others.filter((w) => !world.waters.get(w)!.has(c.continent));
-    const wrong = (closeness === 1 ? [near, far] : [far, near]).flatMap((tier) => shuffle(rng, tier)).slice(0, 3);
+    const others = nearestFirst(
+      world,
+      c,
+      [...world.waters.keys()].filter((w) => !off.has(w)),
+      (o, w) => o.waters.includes(w),
+    );
+    const wrong = shuffle(rng, others.slice(0, NEAREST_POOL[closeness])).slice(0, 3);
     return {
       sig: `water:${c.id}:${answer}`,
       prompt: `Which sea or ocean does ${countryPhrase(c)} border?`,
@@ -714,10 +741,13 @@ const GENERATORS: Record<QuestionType, Generator> = {
     const answer = pick(rng, candidates);
     // Wrong options are features of the same kind that the country does not contain, not even arguably.
     const off = new Set([...c.features.map((f) => f.name), ...c.featuresAvoid]);
-    const others = [...world.features.entries()].filter(([name, f]) => f.kind === answer.kind && !off.has(name));
-    const near = others.filter(([, f]) => f.continents.has(c.continent)).map(([name]) => name);
-    const far = others.filter(([, f]) => !f.continents.has(c.continent)).map(([name]) => name);
-    const wrong = (closeness === 1 ? [near, far] : [far, near]).flatMap((tier) => shuffle(rng, tier)).slice(0, 3);
+    const others = nearestFirst(
+      world,
+      c,
+      [...world.features.entries()].filter(([name, f]) => f.kind === answer.kind && !off.has(name)).map(([name]) => name),
+      (o, name) => o.features.some((f) => f.name === name),
+    );
+    const wrong = shuffle(rng, others.slice(0, NEAREST_POOL[closeness])).slice(0, 3);
     const where = countryPhrase(c);
     const prompts = {
       river: `Which river flows through ${where}?`,
@@ -897,7 +927,7 @@ const GENERATORS: Record<QuestionType, Generator> = {
     if (hidden.length < 2) return null;
     const decoys = [...shuffle(rng, hidden), ...shuffle(rng, neighbours.filter((id) => known.has(id)))].slice(0, 3);
     // The odd one out is nearly a neighbour when close, and nowhere near when far-fetched.
-    const tiers = closeness === 1 ? [neighboursOfNeighbours(world, c), ...regionTiers(world, c)] : worldTiers(world, c);
+    const tiers = closeness === 1 ? [neighboursOfNeighbours(world, c), ...regionTiers(world, c)] : continentTiers(world, c);
     const [answer] = collect(
       unknownFirst(tiers, known),
       1,
