@@ -1,0 +1,8047 @@
+{
+ "about": "Curated facts and hooks. One entry per fact. A fact is only asked if its recognition is at least the game threshold (3 = known worldwide, 2 = known to a well-read player, 1 = known mostly inside the country). `kind` groups facts whose answers can stand in as wrong options for each other; `wrong` lists hand-picked wrong options for one-off questions; `sharedWith` lists other countries the answer is also true for; `group` marks answers too close to offer against each other; `hook` marks the memorable ones; `unsure` marks facts worth double-checking.",
+ "facts": [
+  {
+   "id": "AFG-buzkashi",
+   "country": "AFG",
+   "category": "sport",
+   "kind": "custom",
+   "prompt": "Which horseback game, played with a goat carcass, is Afghanistan's national sport?",
+   "answer": "Buzkashi",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Polo",
+    "Kabaddi",
+    "Jousting"
+   ]
+  },
+  {
+   "id": "AFG-buddhas-of-bamiyan",
+   "country": "AFG",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Afghanistan?",
+   "answer": "Buddhas of Bamiyan",
+   "recognition": 2
+  },
+  {
+   "id": "AFG-noshaq",
+   "country": "AFG",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in Afghanistan?",
+   "answer": "Noshaq",
+   "recognition": 1
+  },
+  {
+   "id": "ALA-swedish",
+   "country": "ALA",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "The Åland Islands belong to Finland, but which language do the islanders speak?",
+   "answer": "Swedish",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Finnish",
+    "Russian",
+    "Estonian"
+   ]
+  },
+  {
+   "id": "ALB-concrete-bunkers",
+   "country": "ALB",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Hundreds of thousands of which structures were built all over Albania under its communist leader Enver Hoxha?",
+   "answer": "Concrete bunkers",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Windmills",
+    "Lighthouses",
+    "Clock towers"
+   ]
+  },
+  {
+   "id": "DZA-largest-by-area",
+   "country": "DZA",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Which record does Algeria hold among the countries of Africa?",
+   "answer": "Largest by area",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Most populous",
+    "Longest coastline",
+    "Highest mountain"
+   ]
+  },
+  {
+   "id": "DZA-rai",
+   "country": "DZA",
+   "category": "culture",
+   "kind": "music",
+   "prompt": "Which of these music or dance styles comes from Algeria?",
+   "answer": "Raï",
+   "recognition": 2
+  },
+  {
+   "id": "DZA-riyad-mahrez",
+   "country": "DZA",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Algeria's national team?",
+   "answer": "Riyad Mahrez",
+   "recognition": 2
+  },
+  {
+   "id": "ASM-tuna",
+   "country": "ASM",
+   "category": "food",
+   "kind": "custom",
+   "prompt": "American Samoa's biggest industry is canning which fish?",
+   "answer": "Tuna",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Salmon",
+    "Sardines",
+    "Cod"
+   ]
+  },
+  {
+   "id": "AND-the-president-of-france",
+   "country": "AND",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Andorra has two heads of state. One is a Spanish bishop; who is the other?",
+   "answer": "The President of France",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "The King of Spain",
+    "The Pope",
+    "The Prince of Monaco"
+   ]
+  },
+  {
+   "id": "AGO-kizomba",
+   "country": "AGO",
+   "category": "culture",
+   "kind": "music",
+   "prompt": "Which of these music or dance styles comes from Angola?",
+   "answer": "Kizomba",
+   "recognition": 2,
+   "hook": true
+  },
+  {
+   "id": "AGO-crude-oil",
+   "country": "AGO",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Angola's biggest export?",
+   "answer": "Crude oil",
+   "recognition": 2,
+   "group": "petroleum"
+  },
+  {
+   "id": "AIA-eel",
+   "country": "AIA",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Anguilla is long and thin, and its name comes from the word for which animal?",
+   "answer": "Eel",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Lizard",
+    "Snake",
+    "Shark"
+   ]
+  },
+  {
+   "id": "ATG-365",
+   "country": "ATG",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Antigua is said to have a beach for every day of the year. How many is that?",
+   "answer": "365",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "52",
+    "100",
+    "1,000"
+   ]
+  },
+  {
+   "id": "ARG-lionel-messi",
+   "country": "ARG",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Argentina's national team?",
+   "answer": "Lionel Messi",
+   "recognition": 3
+  },
+  {
+   "id": "ARG-aconcagua",
+   "country": "ARG",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in Argentina?",
+   "answer": "Aconcagua",
+   "recognition": 2
+  },
+  {
+   "id": "ARG-pope-francis",
+   "country": "ARG",
+   "category": "person",
+   "kind": "custom",
+   "prompt": "Which pope was born in Buenos Aires, Argentina?",
+   "answer": "Pope Francis",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Pope John Paul II",
+    "Pope Benedict XVI",
+    "Pope Leo XIV"
+   ]
+  },
+  {
+   "id": "ARM-christianity",
+   "country": "ARM",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "In the year 301 Armenia became the first country to adopt which religion as its state religion?",
+   "answer": "Christianity",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Islam",
+    "Buddhism",
+    "Judaism"
+   ]
+  },
+  {
+   "id": "ARM-henrikh-mkhitaryan",
+   "country": "ARM",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Armenia's national team?",
+   "answer": "Henrikh Mkhitaryan",
+   "recognition": 2
+  },
+  {
+   "id": "ABW-netherlands",
+   "country": "ABW",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Aruba is a self-governing part of which European kingdom?",
+   "answer": "Netherlands",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Spain",
+    "Denmark",
+    "Belgium"
+   ]
+  },
+  {
+   "id": "AUS-koala",
+   "country": "AUS",
+   "category": "nature",
+   "kind": "animal",
+   "prompt": "Which of these animals lives in the wild only in Australia?",
+   "answer": "Koala",
+   "recognition": 3
+  },
+  {
+   "id": "AUS-platypus",
+   "country": "AUS",
+   "category": "nature",
+   "kind": "animal",
+   "prompt": "Which of these animals lives in the wild only in Australia?",
+   "answer": "Platypus",
+   "recognition": 2
+  },
+  {
+   "id": "AUS-sydney-opera-house",
+   "country": "AUS",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in Australia?",
+   "answer": "Sydney Opera House",
+   "recognition": 3
+  },
+  {
+   "id": "AUS-great-barrier-reef",
+   "country": "AUS",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in Australia?",
+   "answer": "Great Barrier Reef",
+   "recognition": 3
+  },
+  {
+   "id": "AUS-mount-kosciuszko",
+   "country": "AUS",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in Australia?",
+   "answer": "Mount Kosciuszko",
+   "recognition": 2,
+   "unsure": true
+  },
+  {
+   "id": "AUS-iron-ore",
+   "country": "AUS",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Australia's biggest export?",
+   "answer": "Iron ore",
+   "recognition": 2
+  },
+  {
+   "id": "AUS-ian-thorpe",
+   "country": "AUS",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Australia?",
+   "answer": "Ian Thorpe",
+   "recognition": 2
+  },
+  {
+   "id": "AUS-uluru",
+   "country": "AUS",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Which great red rock in the centre of Australia is sacred to the Anangu people?",
+   "answer": "Uluru",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Sugarloaf Mountain",
+    "Table Mountain",
+    "Devils Tower"
+   ]
+  },
+  {
+   "id": "AUT-wolfgang-amadeus-mozart",
+   "country": "AUT",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these musicians is from Austria?",
+   "answer": "Wolfgang Amadeus Mozart",
+   "recognition": 3
+  },
+  {
+   "id": "AUT-wiener-schnitzel",
+   "country": "AUT",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Austria?",
+   "answer": "Wiener schnitzel",
+   "recognition": 2
+  },
+  {
+   "id": "AUT-the-sound-of-music",
+   "country": "AUT",
+   "category": "film",
+   "kind": "film",
+   "prompt": "Which of these films or series was shot in Austria?",
+   "answer": "The Sound of Music",
+   "recognition": 3,
+   "hook": true,
+   "sharedWith": [
+    "USA"
+   ]
+  },
+  {
+   "id": "AUT-david-alaba",
+   "country": "AUT",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Austria's national team?",
+   "answer": "David Alaba",
+   "recognition": 2
+  },
+  {
+   "id": "AUT-grossglockner",
+   "country": "AUT",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in Austria?",
+   "answer": "Grossglockner",
+   "recognition": 1
+  },
+  {
+   "id": "AZE-land-of-fire",
+   "country": "AZE",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Natural gas vents that burn day and night have earned Azerbaijan which nickname?",
+   "answer": "Land of Fire",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Land of Ice",
+    "Land of Thunder",
+    "Land of Smoke"
+   ]
+  },
+  {
+   "id": "BHS-pigs",
+   "country": "BHS",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Which animals famously swim out to greet boats at a beach in the Bahamas?",
+   "answer": "Pigs",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Goats",
+    "Monkeys",
+    "Dogs"
+   ]
+  },
+  {
+   "id": "BHS-christopher-columbus",
+   "country": "BHS",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Which explorer first set foot in the Americas on an island in the Bahamas in 1492?",
+   "answer": "Christopher Columbus",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Ferdinand Magellan",
+    "Vasco da Gama",
+    "Hernán Cortés"
+   ]
+  },
+  {
+   "id": "BHR-pearls",
+   "country": "BHR",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Before oil, Bahrain was famous for diving for which treasure?",
+   "answer": "Pearls",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Coral",
+    "Gold",
+    "Sponges"
+   ]
+  },
+  {
+   "id": "BGD-bengal-tiger",
+   "country": "BGD",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "The Sundarbans mangrove forest in Bangladesh is home to which big cat?",
+   "answer": "Bengal tiger",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Snow leopard",
+    "Jaguar",
+    "Asiatic lion"
+   ]
+  },
+  {
+   "id": "BGD-clothing",
+   "country": "BGD",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Bangladesh's biggest export?",
+   "answer": "Clothing",
+   "recognition": 2
+  },
+  {
+   "id": "BGD-east-pakistan",
+   "country": "BGD",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Bangladesh formerly called?",
+   "answer": "East Pakistan",
+   "recognition": 2
+  },
+  {
+   "id": "BRB-rihanna",
+   "country": "BRB",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these musicians is from Barbados?",
+   "answer": "Rihanna",
+   "recognition": 3,
+   "hook": true
+  },
+  {
+   "id": "BRB-rum",
+   "country": "BRB",
+   "category": "food",
+   "kind": "custom",
+   "prompt": "Barbados is home to Mount Gay, the world's oldest brand of which spirit?",
+   "answer": "Rum",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Gin",
+    "Whisky",
+    "Tequila"
+   ]
+  },
+  {
+   "id": "BLR-marc-chagall",
+   "country": "BLR",
+   "category": "person",
+   "kind": "custom",
+   "prompt": "Which painter was born near Vitebsk in present-day Belarus?",
+   "answer": "Marc Chagall",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Wassily Kandinsky",
+    "Gustav Klimt",
+    "Edvard Munch"
+   ]
+  },
+  {
+   "id": "BLR-european-bison",
+   "country": "BLR",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Which animal, Europe's heaviest land mammal, roams the ancient Białowieża Forest in Belarus?",
+   "answer": "European bison",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Brown bear",
+    "Moose",
+    "Reindeer"
+   ]
+  },
+  {
+   "id": "BEL-tintin",
+   "country": "BEL",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Which comic-book reporter was created in Belgium?",
+   "answer": "Tintin",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Asterix",
+    "Corto Maltese",
+    "Dennis the Menace"
+   ]
+  },
+  {
+   "id": "BEL-saxophone",
+   "country": "BEL",
+   "category": "culture",
+   "kind": "invention",
+   "prompt": "Which of these was invented or discovered in Belgium?",
+   "answer": "Saxophone",
+   "recognition": 2,
+   "unsure": true
+  },
+  {
+   "id": "BEL-battle-of-waterloo",
+   "country": "BEL",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Napoleon's final defeat in 1815 took place in Belgium. What was the battle called?",
+   "answer": "Battle of Waterloo",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Battle of Austerlitz",
+    "Battle of Trafalgar",
+    "Battle of Leipzig"
+   ]
+  },
+  {
+   "id": "BEL-kevin-de-bruyne",
+   "country": "BEL",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Belgium's national team?",
+   "answer": "Kevin De Bruyne",
+   "recognition": 3
+  },
+  {
+   "id": "BEL-moules-frites",
+   "country": "BEL",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Belgium?",
+   "answer": "Moules-frites",
+   "recognition": 2
+  },
+  {
+   "id": "BLZ-great-blue-hole",
+   "country": "BLZ",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in Belize?",
+   "answer": "Great Blue Hole",
+   "recognition": 2,
+   "hook": true
+  },
+  {
+   "id": "BLZ-british-honduras",
+   "country": "BLZ",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Belize formerly called?",
+   "answer": "British Honduras",
+   "recognition": 2
+  },
+  {
+   "id": "BEN-voodoo",
+   "country": "BEN",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Benin is regarded as the birthplace of which religion, later carried to Haiti and New Orleans?",
+   "answer": "Voodoo",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Rastafari",
+    "Shinto",
+    "Zoroastrianism"
+   ]
+  },
+  {
+   "id": "BEN-dahomey",
+   "country": "BEN",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Benin formerly called?",
+   "answer": "Dahomey",
+   "recognition": 2
+  },
+  {
+   "id": "BMU-the-tempest",
+   "country": "BMU",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "A 1609 shipwreck on Bermuda is thought to have inspired which Shakespeare play?",
+   "answer": "The Tempest",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Macbeth",
+    "Othello",
+    "Twelfth Night"
+   ]
+  },
+  {
+   "id": "BTN-gross-national-happiness",
+   "country": "BTN",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Instead of GDP, Bhutan famously measures its progress by which index?",
+   "answer": "Gross National Happiness",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Gross National Kindness",
+    "National Harmony Index",
+    "Universal Peace Score"
+   ]
+  },
+  {
+   "id": "BTN-tiger-s-nest-monastery",
+   "country": "BTN",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in Bhutan?",
+   "answer": "Tiger's Nest Monastery",
+   "recognition": 2
+  },
+  {
+   "id": "BOL-salar-de-uyuni-salt-flat",
+   "country": "BOL",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in Bolivia?",
+   "answer": "Salar de Uyuni salt flat",
+   "recognition": 2,
+   "hook": true
+  },
+  {
+   "id": "BOL-simon-bolivar",
+   "country": "BOL",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Bolivia is named after which independence leader?",
+   "answer": "Simón Bolívar",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "José de San Martín",
+    "Che Guevara",
+    "Hernán Cortés"
+   ]
+  },
+  {
+   "id": "BIH-archduke-franz-ferdinand",
+   "country": "BIH",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Whose assassination in Sarajevo, in Bosnia and Herzegovina, set off the First World War?",
+   "answer": "Archduke Franz Ferdinand",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Tsar Nicholas II",
+    "Kaiser Wilhelm II",
+    "Otto von Bismarck"
+   ]
+  },
+  {
+   "id": "BIH-edin-dzeko",
+   "country": "BIH",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Bosnia and Herzegovina's national team?",
+   "answer": "Edin Džeko",
+   "recognition": 2
+  },
+  {
+   "id": "BWA-diamonds",
+   "country": "BWA",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Botswana's biggest export?",
+   "answer": "Diamonds",
+   "recognition": 2
+  },
+  {
+   "id": "BWA-okavango-delta",
+   "country": "BWA",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in Botswana?",
+   "answer": "Okavango Delta",
+   "recognition": 2,
+   "hook": true
+  },
+  {
+   "id": "BWA-bechuanaland",
+   "country": "BWA",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Botswana formerly called?",
+   "answer": "Bechuanaland",
+   "recognition": 1
+  },
+  {
+   "id": "BRA-pele",
+   "country": "BRA",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Brazil's national team?",
+   "answer": "Pelé",
+   "recognition": 3
+  },
+  {
+   "id": "BRA-christ-the-redeemer",
+   "country": "BRA",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in Brazil?",
+   "answer": "Christ the Redeemer",
+   "recognition": 3
+  },
+  {
+   "id": "BRA-samba",
+   "country": "BRA",
+   "category": "culture",
+   "kind": "music",
+   "prompt": "Which of these music or dance styles comes from Brazil?",
+   "answer": "Samba",
+   "recognition": 3
+  },
+  {
+   "id": "BRA-ayrton-senna",
+   "country": "BRA",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Brazil?",
+   "answer": "Ayrton Senna",
+   "recognition": 3
+  },
+  {
+   "id": "BRA-caipirinha",
+   "country": "BRA",
+   "category": "food",
+   "kind": "drink",
+   "prompt": "Which of these drinks comes from Brazil?",
+   "answer": "Caipirinha",
+   "recognition": 2
+  },
+  {
+   "id": "BRA-capoeira",
+   "country": "BRA",
+   "category": "sport",
+   "kind": "sport",
+   "prompt": "Which of these sports originated in Brazil?",
+   "answer": "Capoeira",
+   "recognition": 2
+  },
+  {
+   "id": "BRA-portuguese",
+   "country": "BRA",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Brazil is the only country in the Americas where which language is official?",
+   "answer": "Portuguese",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Dutch",
+    "Italian",
+    "French"
+   ]
+  },
+  {
+   "id": "VGB-treasure-island",
+   "country": "VGB",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Norman Island in the British Virgin Islands, with its tales of buried pirate loot, is said to have inspired which novel?",
+   "answer": "Treasure Island",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Robinson Crusoe",
+    "Moby-Dick",
+    "Lord of the Flies"
+   ],
+   "unsure": true
+  },
+  {
+   "id": "BRN-residential-palace",
+   "country": "BRN",
+   "category": "landmark",
+   "kind": "custom",
+   "prompt": "Brunei's Istana Nurul Iman, with almost 1,800 rooms, is the world's largest example of what?",
+   "answer": "Residential palace",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Mosque",
+    "Hotel",
+    "Shopping mall"
+   ]
+  },
+  {
+   "id": "BGR-yogurt",
+   "country": "BGR",
+   "category": "food",
+   "kind": "custom",
+   "prompt": "The bacterium Lactobacillus bulgaricus, named after Bulgaria, is used to make which food?",
+   "answer": "Yogurt",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Sourdough bread",
+    "Blue cheese",
+    "Sauerkraut"
+   ]
+  },
+  {
+   "id": "BGR-roses",
+   "country": "BGR",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Bulgaria's Rose Valley makes it one of the world's biggest producers of oil from which flower?",
+   "answer": "Roses",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Jasmine",
+    "Tulips",
+    "Orchids"
+   ]
+  },
+  {
+   "id": "BGR-hristo-stoichkov",
+   "country": "BGR",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Bulgaria's national team?",
+   "answer": "Hristo Stoichkov",
+   "recognition": 2
+  },
+  {
+   "id": "BFA-upper-volta",
+   "country": "BFA",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Burkina Faso formerly called?",
+   "answer": "Upper Volta",
+   "recognition": 2
+  },
+  {
+   "id": "BFA-land-of-honest-people",
+   "country": "BFA",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "What does the name Burkina Faso mean?",
+   "answer": "Land of honest people",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Land of red earth",
+    "Land of many rivers",
+    "Land of the lions"
+   ]
+  },
+  {
+   "id": "BDI-drums",
+   "country": "BDI",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Burundi is famous for royal ensembles that play which instrument?",
+   "answer": "Drums",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Flutes",
+    "Harps",
+    "Xylophones"
+   ]
+  },
+  {
+   "id": "KHM-angkor-wat",
+   "country": "KHM",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Cambodia?",
+   "answer": "Angkor Wat",
+   "recognition": 3,
+   "hook": true
+  },
+  {
+   "id": "KHM-lara-croft-tomb-raider",
+   "country": "KHM",
+   "category": "film",
+   "kind": "film",
+   "prompt": "Which of these films or series was shot in Cambodia?",
+   "answer": "Lara Croft: Tomb Raider",
+   "recognition": 2,
+   "sharedWith": [
+    "GBR",
+    "ISL"
+   ]
+  },
+  {
+   "id": "KHM-fish-amok",
+   "country": "KHM",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Cambodia?",
+   "answer": "Fish amok",
+   "recognition": 1
+  },
+  {
+   "id": "KHM-kampuchea",
+   "country": "KHM",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Cambodia formerly called?",
+   "answer": "Kampuchea",
+   "recognition": 2
+  },
+  {
+   "id": "KHM-clothing",
+   "country": "KHM",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Cambodia's biggest export?",
+   "answer": "Clothing",
+   "recognition": 2,
+   "unsure": true
+  },
+  {
+   "id": "CMR-samuel-eto-o",
+   "country": "CMR",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Cameroon's national team?",
+   "answer": "Samuel Eto'o",
+   "recognition": 2
+  },
+  {
+   "id": "CMR-francis-ngannou",
+   "country": "CMR",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Cameroon?",
+   "answer": "Francis Ngannou",
+   "recognition": 2
+  },
+  {
+   "id": "CMR-the-quarter-finals",
+   "country": "CMR",
+   "category": "sport",
+   "kind": "custom",
+   "prompt": "In 1990 Cameroon became the first African team to reach which stage of the men's football World Cup?",
+   "answer": "The quarter-finals",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "The semi-finals",
+    "The final",
+    "The group stage"
+   ]
+  },
+  {
+   "id": "CAN-insulin",
+   "country": "CAN",
+   "category": "culture",
+   "kind": "invention",
+   "prompt": "Which of these was invented or discovered in Canada?",
+   "answer": "Insulin",
+   "recognition": 2,
+   "hook": true
+  },
+  {
+   "id": "CAN-ice-hockey",
+   "country": "CAN",
+   "category": "sport",
+   "kind": "sport",
+   "prompt": "Which of these sports originated in Canada?",
+   "answer": "Ice hockey",
+   "recognition": 3
+  },
+  {
+   "id": "CAN-poutine",
+   "country": "CAN",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Canada?",
+   "answer": "Poutine",
+   "recognition": 2
+  },
+  {
+   "id": "CAN-mount-logan",
+   "country": "CAN",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in Canada?",
+   "answer": "Mount Logan",
+   "recognition": 2
+  },
+  {
+   "id": "CAN-niagara-falls",
+   "country": "CAN",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in Canada?",
+   "answer": "Niagara Falls",
+   "recognition": 3,
+   "sharedWith": [
+    "USA"
+   ]
+  },
+  {
+   "id": "CAN-celine-dion",
+   "country": "CAN",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these musicians is from Canada?",
+   "answer": "Celine Dion",
+   "recognition": 3
+  },
+  {
+   "id": "CAN-alphonso-davies",
+   "country": "CAN",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Canada's national team?",
+   "answer": "Alphonso Davies",
+   "recognition": 2
+  },
+  {
+   "id": "CPV-cesaria-evora",
+   "country": "CPV",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these musicians is from Cape Verde?",
+   "answer": "Cesária Évora",
+   "recognition": 2,
+   "hook": true
+  },
+  {
+   "id": "CYM-stingrays",
+   "country": "CYM",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "At a famous sandbar in the Cayman Islands, visitors wade among which friendly sea creatures?",
+   "answer": "Stingrays",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Dolphins",
+    "Manatees",
+    "Seahorses"
+   ]
+  },
+  {
+   "id": "CAF-ubangi-shari",
+   "country": "CAF",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was the Central African Republic formerly called?",
+   "answer": "Ubangi-Shari",
+   "recognition": 1
+  },
+  {
+   "id": "CAF-emperor",
+   "country": "CAF",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "In 1977 the ruler of the Central African Republic, Jean-Bédel Bokassa, staged a lavish coronation to give himself which title?",
+   "answer": "Emperor",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Pharaoh",
+    "Sultan",
+    "Pope"
+   ]
+  },
+  {
+   "id": "TCD-romania",
+   "country": "TCD",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "The flag of Chad is almost identical to the flag of which European country?",
+   "answer": "Romania",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Belgium",
+    "Italy",
+    "France"
+   ]
+  },
+  {
+   "id": "CHL-moai-of-easter-island",
+   "country": "CHL",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in Chile?",
+   "answer": "Moai of Easter Island",
+   "recognition": 3
+  },
+  {
+   "id": "CHL-copper",
+   "country": "CHL",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Chile's biggest export?",
+   "answer": "Copper",
+   "recognition": 2
+  },
+  {
+   "id": "CHL-pablo-neruda",
+   "country": "CHL",
+   "category": "person",
+   "kind": "writer",
+   "prompt": "Which of these writers is from Chile?",
+   "answer": "Pablo Neruda",
+   "recognition": 2
+  },
+  {
+   "id": "CHL-alexis-sanchez",
+   "country": "CHL",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Chile's national team?",
+   "answer": "Alexis Sánchez",
+   "recognition": 2
+  },
+  {
+   "id": "CHL-driest-non-polar-desert",
+   "country": "CHL",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Chile's Atacama is famous as the world's what?",
+   "answer": "Driest non-polar desert",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Hottest desert",
+    "Largest sand desert",
+    "Highest plateau"
+   ]
+  },
+  {
+   "id": "CHN-great-wall",
+   "country": "CHN",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in China?",
+   "answer": "Great Wall",
+   "recognition": 3
+  },
+  {
+   "id": "CHN-giant-panda",
+   "country": "CHN",
+   "category": "nature",
+   "kind": "animal",
+   "prompt": "Which of these animals lives in the wild only in China?",
+   "answer": "Giant panda",
+   "recognition": 3
+  },
+  {
+   "id": "CHN-gunpowder",
+   "country": "CHN",
+   "category": "culture",
+   "kind": "invention",
+   "prompt": "Which of these was invented or discovered in China?",
+   "answer": "Gunpowder",
+   "recognition": 3
+  },
+  {
+   "id": "CHN-yao-ming",
+   "country": "CHN",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from China?",
+   "answer": "Yao Ming",
+   "recognition": 3
+  },
+  {
+   "id": "CHN-peking-duck",
+   "country": "CHN",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from China?",
+   "answer": "Peking duck",
+   "recognition": 2
+  },
+  {
+   "id": "CHN-terracotta-army",
+   "country": "CHN",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in China?",
+   "answer": "Terracotta Army",
+   "recognition": 3,
+   "hook": true
+  },
+  {
+   "id": "COL-shakira",
+   "country": "COL",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these musicians is from Colombia?",
+   "answer": "Shakira",
+   "recognition": 3
+  },
+  {
+   "id": "COL-gabriel-garcia-marquez",
+   "country": "COL",
+   "category": "person",
+   "kind": "writer",
+   "prompt": "Which of these writers is from Colombia?",
+   "answer": "Gabriel García Márquez",
+   "recognition": 2
+  },
+  {
+   "id": "COL-james-rodriguez",
+   "country": "COL",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Colombia's national team?",
+   "answer": "James Rodríguez",
+   "recognition": 2
+  },
+  {
+   "id": "COL-cumbia",
+   "country": "COL",
+   "category": "culture",
+   "kind": "music",
+   "prompt": "Which of these music or dance styles comes from Colombia?",
+   "answer": "Cumbia",
+   "recognition": 2
+  },
+  {
+   "id": "COL-emeralds",
+   "country": "COL",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Colombia is the world's leading source of which green gemstone?",
+   "answer": "Emeralds",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Jade",
+    "Malachite",
+    "Peridot"
+   ],
+   "unsure": true
+  },
+  {
+   "id": "COM-perfume",
+   "country": "COM",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Comoros is a leading grower of ylang-ylang. What is the oil from its flowers mainly used to make?",
+   "answer": "Perfume",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Medicine",
+    "Cooking oil",
+    "Dye"
+   ]
+  },
+  {
+   "id": "COM-coelacanth",
+   "country": "COM",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Which \"living fossil\" fish, once thought extinct for 65 million years, lives in the deep waters off Comoros?",
+   "answer": "Coelacanth",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Sturgeon",
+    "Lungfish",
+    "Hagfish"
+   ]
+  },
+  {
+   "id": "COK-new-zealand",
+   "country": "COK",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "The Cook Islands govern themselves in free association with which country?",
+   "answer": "New Zealand",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Australia",
+    "France",
+    "United States"
+   ]
+  },
+  {
+   "id": "CRI-its-army",
+   "country": "CRI",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "What did Costa Rica abolish in 1948, spending the money on schools and health instead?",
+   "answer": "Its army",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Its monarchy",
+    "Its currency",
+    "Its parliament"
+   ]
+  },
+  {
+   "id": "CRI-keylor-navas",
+   "country": "CRI",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Costa Rica's national team?",
+   "answer": "Keylor Navas",
+   "recognition": 2
+  },
+  {
+   "id": "HRV-luka-modric",
+   "country": "HRV",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Croatia's national team?",
+   "answer": "Luka Modrić",
+   "recognition": 3
+  },
+  {
+   "id": "HRV-necktie",
+   "country": "HRV",
+   "category": "culture",
+   "kind": "invention",
+   "prompt": "Which of these was invented or discovered in Croatia?",
+   "answer": "Necktie",
+   "recognition": 2
+  },
+  {
+   "id": "HRV-game-of-thrones",
+   "country": "HRV",
+   "category": "film",
+   "kind": "film",
+   "prompt": "Which of these films or series was shot in Croatia?",
+   "answer": "Game of Thrones",
+   "recognition": 3,
+   "sharedWith": [
+    "ISL",
+    "GBR",
+    "MLT",
+    "ESP",
+    "MAR"
+   ]
+  },
+  {
+   "id": "HRV-dalmatian",
+   "country": "HRV",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Which spotted dog breed is named after a coastal region of Croatia?",
+   "answer": "Dalmatian",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Rottweiler",
+    "Pomeranian",
+    "Labrador"
+   ]
+  },
+  {
+   "id": "CUB-mojito",
+   "country": "CUB",
+   "category": "food",
+   "kind": "drink",
+   "prompt": "Which of these drinks comes from Cuba?",
+   "answer": "Mojito",
+   "recognition": 3
+  },
+  {
+   "id": "CUB-mambo",
+   "country": "CUB",
+   "category": "culture",
+   "kind": "music",
+   "prompt": "Which of these music or dance styles comes from Cuba?",
+   "answer": "Mambo",
+   "recognition": 2
+  },
+  {
+   "id": "CUB-bee-hummingbird",
+   "country": "CUB",
+   "category": "nature",
+   "kind": "animal",
+   "prompt": "Which of these animals lives in the wild only in Cuba?",
+   "answer": "Bee hummingbird",
+   "recognition": 1
+  },
+  {
+   "id": "CUB-classic-american-cars",
+   "country": "CUB",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Cuba's streets are famous for being full of what, kept running since the 1950s?",
+   "answer": "Classic American cars",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Steam trams",
+    "Horse-drawn taxis",
+    "Soviet tanks"
+   ]
+  },
+  {
+   "id": "CUW-blue",
+   "country": "CUW",
+   "category": "food",
+   "kind": "custom",
+   "prompt": "The liqueur named after Curaçao is best known in which colour?",
+   "answer": "Blue",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Red",
+    "Green",
+    "Yellow"
+   ]
+  },
+  {
+   "id": "CYP-aphrodite",
+   "country": "CYP",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "According to myth, which Greek goddess was born from the sea foam off Cyprus?",
+   "answer": "Aphrodite",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Athena",
+    "Hera",
+    "Artemis"
+   ]
+  },
+  {
+   "id": "CZE-pilsner-lager",
+   "country": "CZE",
+   "category": "food",
+   "kind": "drink",
+   "prompt": "Which of these drinks comes from Czechia?",
+   "answer": "Pilsner lager",
+   "recognition": 3
+  },
+  {
+   "id": "CZE-robot",
+   "country": "CZE",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Which word comes from a 1920 play by Karel Čapek, a writer from what is now Czechia?",
+   "answer": "Robot",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Computer",
+    "Rocket",
+    "Android"
+   ]
+  },
+  {
+   "id": "CZE-pavel-nedved",
+   "country": "CZE",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Czechia's national team?",
+   "answer": "Pavel Nedvěd",
+   "recognition": 2
+  },
+  {
+   "id": "CZE-polka",
+   "country": "CZE",
+   "category": "culture",
+   "kind": "music",
+   "prompt": "Which of these music or dance styles comes from Czechia?",
+   "answer": "Polka",
+   "recognition": 2
+  },
+  {
+   "id": "CZE-jaromir-jagr",
+   "country": "CZE",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Czechia?",
+   "answer": "Jaromír Jágr",
+   "recognition": 2
+  },
+  {
+   "id": "DNK-hans-christian-andersen",
+   "country": "DNK",
+   "category": "person",
+   "kind": "writer",
+   "prompt": "Which of these writers is from Denmark?",
+   "answer": "Hans Christian Andersen",
+   "recognition": 3
+  },
+  {
+   "id": "DNK-the-little-mermaid-statue",
+   "country": "DNK",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in Denmark?",
+   "answer": "The Little Mermaid statue",
+   "recognition": 2
+  },
+  {
+   "id": "DNK-christian-eriksen",
+   "country": "DNK",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Denmark's national team?",
+   "answer": "Christian Eriksen",
+   "recognition": 2
+  },
+  {
+   "id": "DNK-oldest-national-flag-still-in-use",
+   "country": "DNK",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Denmark's flag, the Dannebrog, holds which record?",
+   "answer": "Oldest national flag still in use",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Largest national flag",
+    "Only square national flag",
+    "First flag flown in space"
+   ]
+  },
+  {
+   "id": "DJI-lowest-point",
+   "country": "DJI",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Lake Assal in Djibouti is ten times saltier than the sea. It is also Africa's what?",
+   "answer": "Lowest point",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Largest lake",
+    "Deepest lake",
+    "Highest lake"
+   ]
+  },
+  {
+   "id": "DMA-pirates-of-the-caribbean",
+   "country": "DMA",
+   "category": "film",
+   "kind": "film",
+   "prompt": "Which of these films or series was shot in Dominica?",
+   "answer": "Pirates of the Caribbean",
+   "recognition": 3,
+   "sharedWith": [
+    "VCT",
+    "BHS",
+    "PRI",
+    "USA"
+   ]
+  },
+  {
+   "id": "DMA-purple",
+   "country": "DMA",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Dominica's flag shows a sisserou parrot, making it one of very few national flags to include which colour?",
+   "answer": "Purple",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Pink",
+    "Turquoise",
+    "Brown"
+   ]
+  },
+  {
+   "id": "DOM-merengue",
+   "country": "DOM",
+   "category": "culture",
+   "kind": "music",
+   "prompt": "Which of these music or dance styles comes from the Dominican Republic?",
+   "answer": "Merengue",
+   "recognition": 3
+  },
+  {
+   "id": "DOM-bachata",
+   "country": "DOM",
+   "category": "culture",
+   "kind": "music",
+   "prompt": "Which of these music or dance styles comes from the Dominican Republic?",
+   "answer": "Bachata",
+   "recognition": 2
+  },
+  {
+   "id": "DOM-david-ortiz",
+   "country": "DOM",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from the Dominican Republic?",
+   "answer": "David Ortiz",
+   "recognition": 2
+  },
+  {
+   "id": "DOM-haiti",
+   "country": "DOM",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "The Dominican Republic shares the island of Hispaniola with which country?",
+   "answer": "Haiti",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Cuba",
+    "Jamaica",
+    "Puerto Rico"
+   ]
+  },
+  {
+   "id": "COD-zaire",
+   "country": "COD",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was DR Congo formerly called?",
+   "answer": "Zaire",
+   "recognition": 3
+  },
+  {
+   "id": "COD-okapi",
+   "country": "COD",
+   "category": "nature",
+   "kind": "animal",
+   "prompt": "Which of these animals lives in the wild only in DR Congo?",
+   "answer": "Okapi",
+   "recognition": 2
+  },
+  {
+   "id": "COD-bonobo",
+   "country": "COD",
+   "category": "nature",
+   "kind": "animal",
+   "prompt": "Which of these animals lives in the wild only in DR Congo?",
+   "answer": "Bonobo",
+   "recognition": 2
+  },
+  {
+   "id": "COD-dikembe-mutombo",
+   "country": "COD",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from DR Congo?",
+   "answer": "Dikembe Mutombo",
+   "recognition": 2
+  },
+  {
+   "id": "COD-muhammad-ali",
+   "country": "COD",
+   "category": "sport",
+   "kind": "custom",
+   "prompt": "Which boxer won the 1974 \"Rumble in the Jungle\" in Kinshasa, DR Congo?",
+   "answer": "Muhammad Ali",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Joe Frazier",
+    "Mike Tyson",
+    "Sugar Ray Leonard"
+   ]
+  },
+  {
+   "id": "ECU-the-equator",
+   "country": "ECU",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Ecuador is named after which line on the globe?",
+   "answer": "The equator",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "The Tropic of Capricorn",
+    "The Prime Meridian",
+    "The International Date Line"
+   ]
+  },
+  {
+   "id": "ECU-galapagos-giant-tortoise",
+   "country": "ECU",
+   "category": "nature",
+   "kind": "animal",
+   "prompt": "Which of these animals lives in the wild only in Ecuador?",
+   "answer": "Galápagos giant tortoise",
+   "recognition": 3
+  },
+  {
+   "id": "ECU-panama-hat",
+   "country": "ECU",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Which famous straw hat, despite its name, actually comes from Ecuador?",
+   "answer": "Panama hat",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Fedora",
+    "Sombrero",
+    "Stetson"
+   ]
+  },
+  {
+   "id": "ECU-chimborazo",
+   "country": "ECU",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in Ecuador?",
+   "answer": "Chimborazo",
+   "recognition": 2
+  },
+  {
+   "id": "ECU-richard-carapaz",
+   "country": "ECU",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Ecuador?",
+   "answer": "Richard Carapaz",
+   "recognition": 2
+  },
+  {
+   "id": "ECU-antonio-valencia",
+   "country": "ECU",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Ecuador's national team?",
+   "answer": "Antonio Valencia",
+   "recognition": 2
+  },
+  {
+   "id": "EGY-pyramids-of-giza",
+   "country": "EGY",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Egypt?",
+   "answer": "Pyramids of Giza",
+   "recognition": 3
+  },
+  {
+   "id": "EGY-mohamed-salah",
+   "country": "EGY",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Egypt's national team?",
+   "answer": "Mohamed Salah",
+   "recognition": 3
+  },
+  {
+   "id": "EGY-koshari",
+   "country": "EGY",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Egypt?",
+   "answer": "Koshari",
+   "recognition": 2
+  },
+  {
+   "id": "EGY-cleopatra",
+   "country": "EGY",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical figures was born in Egypt?",
+   "answer": "Cleopatra",
+   "recognition": 3
+  },
+  {
+   "id": "EGY-suez-canal",
+   "country": "EGY",
+   "category": "landmark",
+   "kind": "custom",
+   "prompt": "Which canal in Egypt links the Mediterranean to the Red Sea?",
+   "answer": "Suez Canal",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Panama Canal",
+    "Corinth Canal",
+    "Kiel Canal"
+   ]
+  },
+  {
+   "id": "SLV-bitcoin",
+   "country": "SLV",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "In 2021 El Salvador became the first country to make which of these legal tender?",
+   "answer": "Bitcoin",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "The euro",
+    "Gold coins",
+    "Ethereum"
+   ]
+  },
+  {
+   "id": "SLV-pupusa",
+   "country": "SLV",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from El Salvador?",
+   "answer": "Pupusa",
+   "recognition": 2,
+   "sharedWith": [
+    "HND"
+   ]
+  },
+  {
+   "id": "GNQ-spanish",
+   "country": "GNQ",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Equatorial Guinea is the only country in Africa where which European language is official?",
+   "answer": "Spanish",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Italian",
+    "German",
+    "Dutch"
+   ]
+  },
+  {
+   "id": "ERI-italy",
+   "country": "ERI",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Eritrea's capital, Asmara, is a World Heritage Site for its 1930s buildings in the style of which colonial power?",
+   "answer": "Italy",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "France",
+    "Britain",
+    "Portugal"
+   ]
+  },
+  {
+   "id": "EST-skype",
+   "country": "EST",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Which video-calling service was first built by programmers in Estonia?",
+   "answer": "Skype",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Zoom",
+    "WhatsApp",
+    "FaceTime"
+   ]
+  },
+  {
+   "id": "EST-vote",
+   "country": "EST",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "In 2005 Estonia became the first country to let its citizens do what over the internet in a nationwide election?",
+   "answer": "Vote",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Pay taxes",
+    "Get married",
+    "Register a birth"
+   ]
+  },
+  {
+   "id": "SWZ-swaziland",
+   "country": "SWZ",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Eswatini formerly called?",
+   "answer": "Swaziland",
+   "recognition": 2
+  },
+  {
+   "id": "SWZ-absolute-monarchy",
+   "country": "SWZ",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Eswatini is Africa's last remaining example of which form of government?",
+   "answer": "Absolute monarchy",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "City-state",
+    "Theocracy",
+    "Emirate"
+   ]
+  },
+  {
+   "id": "ETH-abyssinia",
+   "country": "ETH",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Ethiopia formerly called?",
+   "answer": "Abyssinia",
+   "recognition": 2
+  },
+  {
+   "id": "ETH-coffee",
+   "country": "ETH",
+   "category": "food",
+   "kind": "custom",
+   "prompt": "Legend says a goatherd in Ethiopia discovered which drink when his goats ate red berries and would not sleep?",
+   "answer": "Coffee",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Tea",
+    "Cocoa",
+    "Wine"
+   ]
+  },
+  {
+   "id": "ETH-13",
+   "country": "ETH",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "How many months are there in Ethiopia's traditional calendar?",
+   "answer": "13",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "10",
+    "11",
+    "14"
+   ]
+  },
+  {
+   "id": "ETH-haile-gebrselassie",
+   "country": "ETH",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Ethiopia?",
+   "answer": "Haile Gebrselassie",
+   "recognition": 2
+  },
+  {
+   "id": "ETH-gelada",
+   "country": "ETH",
+   "category": "nature",
+   "kind": "animal",
+   "prompt": "Which of these animals lives in the wild only in Ethiopia?",
+   "answer": "Gelada",
+   "recognition": 1
+  },
+  {
+   "id": "ETH-injera",
+   "country": "ETH",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Ethiopia?",
+   "answer": "Injera",
+   "recognition": 2,
+   "sharedWith": [
+    "ERI"
+   ]
+  },
+  {
+   "id": "ETH-rock-hewn-churches-of-lalibela",
+   "country": "ETH",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Ethiopia?",
+   "answer": "Rock-hewn churches of Lalibela",
+   "recognition": 2
+  },
+  {
+   "id": "ETH-coffee-export",
+   "country": "ETH",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Ethiopia's biggest export?",
+   "answer": "Coffee",
+   "recognition": 2
+  },
+  {
+   "id": "FLK-penguins",
+   "country": "FLK",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Five species of which bird breed on the Falkland Islands, far outnumbering the people?",
+   "answer": "Penguins",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Puffins",
+    "Flamingos",
+    "Pelicans"
+   ]
+  },
+  {
+   "id": "FRO-sheep",
+   "country": "FRO",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "The name of the Faroe Islands is thought to mean \"islands of\" which animal, which outnumbers the people there?",
+   "answer": "Sheep",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Seals",
+    "Horses",
+    "Geese"
+   ]
+  },
+  {
+   "id": "FJI-rugby-sevens",
+   "country": "FJI",
+   "category": "sport",
+   "kind": "custom",
+   "prompt": "Fiji won its first ever Olympic medal, a gold, in 2016 in which sport?",
+   "answer": "Rugby sevens",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Sailing",
+    "Boxing",
+    "Weightlifting"
+   ]
+  },
+  {
+   "id": "FIN-sauna",
+   "country": "FIN",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Which of these, found in most homes in Finland, takes its name from a Finnish word?",
+   "answer": "Sauna",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Jacuzzi",
+    "Solarium",
+    "Hammam"
+   ]
+  },
+  {
+   "id": "FIN-linux",
+   "country": "FIN",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Which computer operating system was created in 1991 by Linus Torvalds, a student in Finland?",
+   "answer": "Linux",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Windows",
+    "macOS",
+    "MS-DOS"
+   ]
+  },
+  {
+   "id": "FIN-santa-claus",
+   "country": "FIN",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Rovaniemi, on the Arctic Circle in Finland, markets itself as the official home of whom?",
+   "answer": "Santa Claus",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "The Tooth Fairy",
+    "The Easter Bunny",
+    "Father Time"
+   ]
+  },
+  {
+   "id": "FIN-kimi-raikkonen",
+   "country": "FIN",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Finland?",
+   "answer": "Kimi Räikkönen",
+   "recognition": 2
+  },
+  {
+   "id": "FIN-jari-litmanen",
+   "country": "FIN",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Finland's national team?",
+   "answer": "Jari Litmanen",
+   "recognition": 2
+  },
+  {
+   "id": "FRA-eiffel-tower",
+   "country": "FRA",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in France?",
+   "answer": "Eiffel Tower",
+   "recognition": 3
+  },
+  {
+   "id": "FRA-zinedine-zidane",
+   "country": "FRA",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for France's national team?",
+   "answer": "Zinedine Zidane",
+   "recognition": 3
+  },
+  {
+   "id": "FRA-mont-blanc",
+   "country": "FRA",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in France?",
+   "answer": "Mont Blanc",
+   "recognition": 3,
+   "sharedWith": [
+    "ITA"
+   ]
+  },
+  {
+   "id": "FRA-champagne",
+   "country": "FRA",
+   "category": "food",
+   "kind": "drink",
+   "prompt": "Which of these drinks comes from France?",
+   "answer": "Champagne",
+   "recognition": 3
+  },
+  {
+   "id": "FRA-napoleon-bonaparte",
+   "country": "FRA",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical figures was born in France?",
+   "answer": "Napoleon Bonaparte",
+   "recognition": 3
+  },
+  {
+   "id": "FRA-claude-monet",
+   "country": "FRA",
+   "category": "person",
+   "kind": "artist",
+   "prompt": "Which of these artists is from France?",
+   "answer": "Claude Monet",
+   "recognition": 3
+  },
+  {
+   "id": "FRA-victor-hugo",
+   "country": "FRA",
+   "category": "person",
+   "kind": "writer",
+   "prompt": "Which of these writers is from France?",
+   "answer": "Victor Hugo",
+   "recognition": 2
+  },
+  {
+   "id": "FRA-louis-pasteur",
+   "country": "FRA",
+   "category": "person",
+   "kind": "scientist",
+   "prompt": "Which of these scientists was born in France?",
+   "answer": "Louis Pasteur",
+   "recognition": 2
+  },
+  {
+   "id": "FRA-the-storming-of-the-bastille",
+   "country": "FRA",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Which event of 1789, celebrated in France every 14 July, began the French Revolution?",
+   "answer": "The storming of the Bastille",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "The Battle of Waterloo",
+    "The coronation of Napoleon",
+    "The signing of the Treaty of Versailles"
+   ]
+  },
+  {
+   "id": "PYF-paul-gauguin",
+   "country": "PYF",
+   "category": "person",
+   "kind": "custom",
+   "prompt": "Which French painter spent his last years painting in Tahiti and the Marquesas, in French Polynesia?",
+   "answer": "Paul Gauguin",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Claude Monet",
+    "Pierre-Auguste Renoir",
+    "Edgar Degas"
+   ]
+  },
+  {
+   "id": "GAB-pierre-emerick-aubameyang",
+   "country": "GAB",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Gabon's national team?",
+   "answer": "Pierre-Emerick Aubameyang",
+   "recognition": 2
+  },
+  {
+   "id": "GAB-albert-schweitzer",
+   "country": "GAB",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Which Nobel Peace Prize winner ran a jungle hospital at Lambaréné in Gabon?",
+   "answer": "Albert Schweitzer",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Mother Teresa",
+    "Florence Nightingale",
+    "Henry Dunant"
+   ]
+  },
+  {
+   "id": "GMB-senegal",
+   "country": "GMB",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Apart from its short coast, the Gambia is entirely surrounded by which country?",
+   "answer": "Senegal",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Guinea",
+    "Mali",
+    "Mauritania"
+   ]
+  },
+  {
+   "id": "GMB-roots",
+   "country": "GMB",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Which novel and TV series traced its author's ancestor Kunta Kinte back to a village in the Gambia?",
+   "answer": "Roots",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Things Fall Apart",
+    "Out of Africa",
+    "The Color Purple"
+   ]
+  },
+  {
+   "id": "GEO-wine",
+   "country": "GEO",
+   "category": "food",
+   "kind": "custom",
+   "prompt": "Clay jars 8,000 years old suggest Georgia is the birthplace of which drink?",
+   "answer": "Wine",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Beer",
+    "Tea",
+    "Mead"
+   ]
+  },
+  {
+   "id": "GEO-joseph-stalin",
+   "country": "GEO",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical figures was born in Georgia?",
+   "answer": "Joseph Stalin",
+   "recognition": 3
+  },
+  {
+   "id": "GEO-khachapuri",
+   "country": "GEO",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Georgia?",
+   "answer": "Khachapuri",
+   "recognition": 2
+  },
+  {
+   "id": "GEO-khvicha-kvaratskhelia",
+   "country": "GEO",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Georgia's national team?",
+   "answer": "Khvicha Kvaratskhelia",
+   "recognition": 2
+  },
+  {
+   "id": "GEO-shkhara",
+   "country": "GEO",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in Georgia?",
+   "answer": "Shkhara",
+   "recognition": 1
+  },
+  {
+   "id": "DEU-brandenburg-gate",
+   "country": "DEU",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in Germany?",
+   "answer": "Brandenburg Gate",
+   "recognition": 3
+  },
+  {
+   "id": "DEU-printing-press",
+   "country": "DEU",
+   "category": "culture",
+   "kind": "invention",
+   "prompt": "Which of these was invented or discovered in Germany?",
+   "answer": "Printing press",
+   "recognition": 3,
+   "sharedWith": [
+    "CHN"
+   ]
+  },
+  {
+   "id": "DEU-franz-beckenbauer",
+   "country": "DEU",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Germany's national team?",
+   "answer": "Franz Beckenbauer",
+   "recognition": 3
+  },
+  {
+   "id": "DEU-michael-schumacher",
+   "country": "DEU",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Germany?",
+   "answer": "Michael Schumacher",
+   "recognition": 3
+  },
+  {
+   "id": "DEU-albert-einstein",
+   "country": "DEU",
+   "category": "person",
+   "kind": "scientist",
+   "prompt": "Which of these scientists was born in Germany?",
+   "answer": "Albert Einstein",
+   "recognition": 3
+  },
+  {
+   "id": "DEU-ludwig-van-beethoven",
+   "country": "DEU",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these musicians is from Germany?",
+   "answer": "Ludwig van Beethoven",
+   "recognition": 3
+  },
+  {
+   "id": "DEU-zugspitze",
+   "country": "DEU",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in Germany?",
+   "answer": "Zugspitze",
+   "recognition": 2
+  },
+  {
+   "id": "DEU-cars",
+   "country": "DEU",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Germany's biggest export?",
+   "answer": "Cars",
+   "recognition": 2
+  },
+  {
+   "id": "DEU-bratwurst",
+   "country": "DEU",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Germany?",
+   "answer": "Bratwurst",
+   "recognition": 2
+  },
+  {
+   "id": "DEU-the-berlin-wall",
+   "country": "DEU",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Which barrier, torn down in 1989, divided Germany's capital for 28 years?",
+   "answer": "The Berlin Wall",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "The Iron Gate",
+    "The Maginot Line",
+    "Hadrian's Wall"
+   ]
+  },
+  {
+   "id": "GHA-gold-coast",
+   "country": "GHA",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Ghana formerly called?",
+   "answer": "Gold Coast",
+   "recognition": 2
+  },
+  {
+   "id": "GHA-kofi-annan",
+   "country": "GHA",
+   "category": "person",
+   "kind": "custom",
+   "prompt": "Which Secretary-General of the United Nations came from Ghana?",
+   "answer": "Kofi Annan",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Boutros Boutros-Ghali",
+    "Ban Ki-moon",
+    "António Guterres"
+   ]
+  },
+  {
+   "id": "GHA-michael-essien",
+   "country": "GHA",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Ghana's national team?",
+   "answer": "Michael Essien",
+   "recognition": 2
+  },
+  {
+   "id": "GHA-highlife",
+   "country": "GHA",
+   "category": "culture",
+   "kind": "music",
+   "prompt": "Which of these music or dance styles comes from Ghana?",
+   "answer": "Highlife",
+   "recognition": 2
+  },
+  {
+   "id": "GRC-acropolis-of-athens",
+   "country": "GRC",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Greece?",
+   "answer": "Acropolis of Athens",
+   "recognition": 3
+  },
+  {
+   "id": "GRC-mount-olympus",
+   "country": "GRC",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in Greece?",
+   "answer": "Mount Olympus",
+   "recognition": 3
+  },
+  {
+   "id": "GRC-ouzo",
+   "country": "GRC",
+   "category": "food",
+   "kind": "drink",
+   "prompt": "Which of these drinks comes from Greece?",
+   "answer": "Ouzo",
+   "recognition": 2,
+   "sharedWith": [
+    "CYP"
+   ]
+  },
+  {
+   "id": "GRC-giannis-antetokounmpo",
+   "country": "GRC",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Greece?",
+   "answer": "Giannis Antetokounmpo",
+   "recognition": 3
+  },
+  {
+   "id": "GRC-mamma-mia",
+   "country": "GRC",
+   "category": "film",
+   "kind": "film",
+   "prompt": "Which of these films or series was shot in Greece?",
+   "answer": "Mamma Mia!",
+   "recognition": 2,
+   "sharedWith": [
+    "GBR"
+   ]
+  },
+  {
+   "id": "GRC-the-olympic-games",
+   "country": "GRC",
+   "category": "sport",
+   "kind": "custom",
+   "prompt": "Which sporting event began in ancient Greece at Olympia?",
+   "answer": "The Olympic Games",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "The Tour de France",
+    "The World Cup",
+    "The Super Bowl"
+   ]
+  },
+  {
+   "id": "GRL-erik-the-red",
+   "country": "GRL",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Which Viking is said to have given Greenland its inviting name to attract settlers?",
+   "answer": "Erik the Red",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Leif Erikson",
+    "Harald Bluetooth",
+    "Ragnar Lothbrok"
+   ]
+  },
+  {
+   "id": "GRD-nutmeg",
+   "country": "GRD",
+   "category": "food",
+   "kind": "custom",
+   "prompt": "Grenada's flag shows which spice, the island's most famous crop?",
+   "answer": "Nutmeg",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Cinnamon",
+    "Vanilla",
+    "Cloves"
+   ]
+  },
+  {
+   "id": "GRD-kirani-james",
+   "country": "GRD",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Grenada?",
+   "answer": "Kirani James",
+   "recognition": 2,
+   "unsure": true
+  },
+  {
+   "id": "GUM-ferdinand-magellan",
+   "country": "GUM",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Which explorer reached Guam in 1521 during the first voyage around the world?",
+   "answer": "Ferdinand Magellan",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "James Cook",
+    "Abel Tasman",
+    "Francis Drake"
+   ]
+  },
+  {
+   "id": "GTM-tikal",
+   "country": "GTM",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Guatemala?",
+   "answer": "Tikal",
+   "recognition": 2
+  },
+  {
+   "id": "GTM-quetzal",
+   "country": "GTM",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Guatemala's currency is named after its national bird. Which bird is it?",
+   "answer": "Quetzal",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Toucan",
+    "Macaw",
+    "Condor"
+   ]
+  },
+  {
+   "id": "GGY-victor-hugo",
+   "country": "GGY",
+   "category": "person",
+   "kind": "custom",
+   "prompt": "Which French author finished Les Misérables while living in exile on Guernsey?",
+   "answer": "Victor Hugo",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Alexandre Dumas",
+    "Émile Zola",
+    "Jules Verne"
+   ]
+  },
+  {
+   "id": "GIN-bauxite",
+   "country": "GIN",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Guinea's biggest export?",
+   "answer": "Bauxite",
+   "recognition": 2
+  },
+  {
+   "id": "GIN-naby-keita",
+   "country": "GIN",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Guinea's national team?",
+   "answer": "Naby Keïta",
+   "recognition": 2
+  },
+  {
+   "id": "GIN-independence",
+   "country": "GIN",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "In a 1958 referendum, Guinea was the only French colony in Africa to vote for immediate what?",
+   "answer": "Independence",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Union with France",
+    "A monarchy",
+    "Membership of the British Commonwealth"
+   ]
+  },
+  {
+   "id": "GNB-cashew-nuts",
+   "country": "GNB",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Guinea-Bissau's biggest export?",
+   "answer": "Cashew nuts",
+   "recognition": 2,
+   "hook": true
+  },
+  {
+   "id": "GUY-english",
+   "country": "GUY",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Guyana is the only country in South America where which language is official?",
+   "answer": "English",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Dutch",
+    "Portuguese",
+    "French"
+   ]
+  },
+  {
+   "id": "GUY-kaieteur-falls",
+   "country": "GUY",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in Guyana?",
+   "answer": "Kaieteur Falls",
+   "recognition": 2
+  },
+  {
+   "id": "GUY-british-guiana",
+   "country": "GUY",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Guyana formerly called?",
+   "answer": "British Guiana",
+   "recognition": 2
+  },
+  {
+   "id": "HTI-slave-revolt",
+   "country": "HTI",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "In 1804 Haiti became the first nation founded after a successful what?",
+   "answer": "Slave revolt",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Military coup",
+    "Referendum",
+    "Papal decree"
+   ]
+  },
+  {
+   "id": "HTI-saint-domingue",
+   "country": "HTI",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Haiti formerly called?",
+   "answer": "Saint-Domingue",
+   "recognition": 2
+  },
+  {
+   "id": "HTI-kompa",
+   "country": "HTI",
+   "category": "culture",
+   "kind": "music",
+   "prompt": "Which of these music or dance styles comes from Haiti?",
+   "answer": "Kompa",
+   "recognition": 1
+  },
+  {
+   "id": "HTI-clothing",
+   "country": "HTI",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Haiti's biggest export?",
+   "answer": "Clothing",
+   "recognition": 2,
+   "unsure": true
+  },
+  {
+   "id": "HND-copan",
+   "country": "HND",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Honduras?",
+   "answer": "Copán",
+   "recognition": 2
+  },
+  {
+   "id": "HND-banana-republic",
+   "country": "HND",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Which phrase did the writer O. Henry coin in 1904 for a fictional country modelled on Honduras?",
+   "answer": "Banana republic",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Tin-pot state",
+    "Paper tiger",
+    "Rogue nation"
+   ]
+  },
+  {
+   "id": "HKG-united-kingdom",
+   "country": "HKG",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Which country governed Hong Kong until 1997?",
+   "answer": "United Kingdom",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Portugal",
+    "Japan",
+    "Netherlands"
+   ]
+  },
+  {
+   "id": "HKG-jackie-chan",
+   "country": "HKG",
+   "category": "person",
+   "kind": "custom",
+   "prompt": "Which martial-arts film star was born in Hong Kong?",
+   "answer": "Jackie Chan",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Jet Li",
+    "Donnie Yen",
+    "Michelle Yeoh"
+   ]
+  },
+  {
+   "id": "HUN-rubik-s-cube",
+   "country": "HUN",
+   "category": "culture",
+   "kind": "invention",
+   "prompt": "Which of these was invented or discovered in Hungary?",
+   "answer": "Rubik's Cube",
+   "recognition": 3,
+   "hook": true
+  },
+  {
+   "id": "HUN-goulash",
+   "country": "HUN",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Hungary?",
+   "answer": "Goulash",
+   "recognition": 3
+  },
+  {
+   "id": "HUN-ferenc-puskas",
+   "country": "HUN",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Hungary's national team?",
+   "answer": "Ferenc Puskás",
+   "recognition": 3,
+   "sharedWith": [
+    "ESP"
+   ]
+  },
+  {
+   "id": "HUN-tokaji-wine",
+   "country": "HUN",
+   "category": "food",
+   "kind": "drink",
+   "prompt": "Which of these drinks comes from Hungary?",
+   "answer": "Tokaji wine",
+   "recognition": 1,
+   "sharedWith": [
+    "SVK"
+   ]
+  },
+  {
+   "id": "ISL-bjork",
+   "country": "ISL",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these musicians is from Iceland?",
+   "answer": "Björk",
+   "recognition": 2
+  },
+  {
+   "id": "ISL-geyser",
+   "country": "ISL",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Which word for a spouting hot spring comes from a place name in Iceland?",
+   "answer": "Geyser",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Volcano",
+    "Glacier",
+    "Lagoon"
+   ]
+  },
+  {
+   "id": "ISL-parliament",
+   "country": "ISL",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Iceland's Althing, founded in 930, is often called the world's oldest surviving what?",
+   "answer": "Parliament",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "University",
+    "Newspaper",
+    "Bank"
+   ]
+  },
+  {
+   "id": "IND-taj-mahal",
+   "country": "IND",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in India?",
+   "answer": "Taj Mahal",
+   "recognition": 3
+  },
+  {
+   "id": "IND-mahatma-gandhi",
+   "country": "IND",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical figures was born in India?",
+   "answer": "Mahatma Gandhi",
+   "recognition": 3
+  },
+  {
+   "id": "IND-sachin-tendulkar",
+   "country": "IND",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from India?",
+   "answer": "Sachin Tendulkar",
+   "recognition": 3
+  },
+  {
+   "id": "IND-chess",
+   "country": "IND",
+   "category": "culture",
+   "kind": "invention",
+   "prompt": "Which of these was invented or discovered in India?",
+   "answer": "Chess",
+   "recognition": 2
+  },
+  {
+   "id": "IND-darjeeling-tea",
+   "country": "IND",
+   "category": "food",
+   "kind": "drink",
+   "prompt": "Which of these drinks comes from India?",
+   "answer": "Darjeeling tea",
+   "recognition": 2
+  },
+  {
+   "id": "IND-kangchenjunga",
+   "country": "IND",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in India?",
+   "answer": "Kangchenjunga",
+   "recognition": 2,
+   "sharedWith": [
+    "NPL"
+   ]
+  },
+  {
+   "id": "IND-cricket",
+   "country": "IND",
+   "category": "sport",
+   "kind": "custom",
+   "prompt": "Which sport, a national obsession in India, was brought there by the British?",
+   "answer": "Cricket",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Baseball",
+    "Rugby",
+    "Golf"
+   ]
+  },
+  {
+   "id": "IDN-komodo-dragon",
+   "country": "IDN",
+   "category": "nature",
+   "kind": "animal",
+   "prompt": "Which of these animals lives in the wild only in Indonesia?",
+   "answer": "Komodo dragon",
+   "recognition": 3
+  },
+  {
+   "id": "IDN-borobudur",
+   "country": "IDN",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Indonesia?",
+   "answer": "Borobudur",
+   "recognition": 2
+  },
+  {
+   "id": "IDN-gamelan",
+   "country": "IDN",
+   "category": "culture",
+   "kind": "music",
+   "prompt": "Which of these music or dance styles comes from Indonesia?",
+   "answer": "Gamelan",
+   "recognition": 1
+  },
+  {
+   "id": "IDN-puncak-jaya",
+   "country": "IDN",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in Indonesia?",
+   "answer": "Puncak Jaya",
+   "recognition": 1
+  },
+  {
+   "id": "IDN-krakatoa",
+   "country": "IDN",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Which volcano in Indonesia exploded in 1883 with a bang heard thousands of kilometres away?",
+   "answer": "Krakatoa",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Vesuvius",
+    "Mount St. Helens",
+    "Pinatubo"
+   ]
+  },
+  {
+   "id": "IRN-persia",
+   "country": "IRN",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Iran formerly called?",
+   "answer": "Persia",
+   "recognition": 3,
+   "hook": true
+  },
+  {
+   "id": "IRN-persepolis",
+   "country": "IRN",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Iran?",
+   "answer": "Persepolis",
+   "recognition": 2
+  },
+  {
+   "id": "IRN-mount-damavand",
+   "country": "IRN",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in Iran?",
+   "answer": "Mount Damavand",
+   "recognition": 2
+  },
+  {
+   "id": "IRN-ali-daei",
+   "country": "IRN",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Iran's national team?",
+   "answer": "Ali Daei",
+   "recognition": 2
+  },
+  {
+   "id": "IRN-crude-oil",
+   "country": "IRN",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Iran's biggest export?",
+   "answer": "Crude oil",
+   "recognition": 2,
+   "group": "petroleum"
+  },
+  {
+   "id": "IRQ-babylon",
+   "country": "IRQ",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Iraq?",
+   "answer": "Babylon",
+   "recognition": 3
+  },
+  {
+   "id": "IRQ-crude-oil",
+   "country": "IRQ",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Iraq's biggest export?",
+   "answer": "Crude oil",
+   "recognition": 2,
+   "group": "petroleum"
+  },
+  {
+   "id": "IRQ-mesopotamia",
+   "country": "IRQ",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Iraq lies on the land between the Tigris and Euphrates, known to history by which name?",
+   "answer": "Mesopotamia",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Anatolia",
+    "Phoenicia",
+    "Carthage"
+   ]
+  },
+  {
+   "id": "IRL-harp",
+   "country": "IRL",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Ireland is the only country whose national emblem is a musical instrument. Which one?",
+   "answer": "Harp",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Bagpipes",
+    "Fiddle",
+    "Flute"
+   ]
+  },
+  {
+   "id": "IRL-conor-mcgregor",
+   "country": "IRL",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Ireland?",
+   "answer": "Conor McGregor",
+   "recognition": 3
+  },
+  {
+   "id": "IRL-roy-keane",
+   "country": "IRL",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Ireland's national team?",
+   "answer": "Roy Keane",
+   "recognition": 2
+  },
+  {
+   "id": "IRL-james-joyce",
+   "country": "IRL",
+   "category": "person",
+   "kind": "writer",
+   "prompt": "Which of these writers is from Ireland?",
+   "answer": "James Joyce",
+   "recognition": 2
+  },
+  {
+   "id": "IRL-halloween",
+   "country": "IRL",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Which festival grew out of the ancient Celtic celebration of Samhain in Ireland?",
+   "answer": "Halloween",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Easter",
+    "Midsummer",
+    "May Day"
+   ]
+  },
+  {
+   "id": "IMN-motorcycles",
+   "country": "IMN",
+   "category": "sport",
+   "kind": "custom",
+   "prompt": "The Isle of Man's famous TT races, held on public roads since 1907, are for which vehicles?",
+   "answer": "Motorcycles",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Rally cars",
+    "Bicycles",
+    "Go-karts"
+   ]
+  },
+  {
+   "id": "IMN-a-tail",
+   "country": "IMN",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "The Manx cat, a breed from the Isle of Man, is known for lacking what?",
+   "answer": "A tail",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Whiskers",
+    "Fur",
+    "Claws"
+   ]
+  },
+  {
+   "id": "ISR-dead-sea",
+   "country": "ISR",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in Israel?",
+   "answer": "Dead Sea",
+   "recognition": 3,
+   "sharedWith": [
+    "JOR",
+    "PSE"
+   ]
+  },
+  {
+   "id": "ISR-masada",
+   "country": "ISR",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Israel?",
+   "answer": "Masada",
+   "recognition": 2
+  },
+  {
+   "id": "ISR-hebrew",
+   "country": "ISR",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Which language, hardly spoken in daily life for centuries, was revived to become the everyday language of Israel?",
+   "answer": "Hebrew",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Aramaic",
+    "Latin",
+    "Yiddish"
+   ]
+  },
+  {
+   "id": "ITA-colosseum",
+   "country": "ITA",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in Italy?",
+   "answer": "Colosseum",
+   "recognition": 3
+  },
+  {
+   "id": "ITA-pizza",
+   "country": "ITA",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Italy?",
+   "answer": "Pizza",
+   "recognition": 3
+  },
+  {
+   "id": "ITA-leonardo-da-vinci",
+   "country": "ITA",
+   "category": "person",
+   "kind": "artist",
+   "prompt": "Which of these artists is from Italy?",
+   "answer": "Leonardo da Vinci",
+   "recognition": 3
+  },
+  {
+   "id": "ITA-paolo-maldini",
+   "country": "ITA",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Italy's national team?",
+   "answer": "Paolo Maldini",
+   "recognition": 3
+  },
+  {
+   "id": "ITA-galileo-galilei",
+   "country": "ITA",
+   "category": "person",
+   "kind": "scientist",
+   "prompt": "Which of these scientists was born in Italy?",
+   "answer": "Galileo Galilei",
+   "recognition": 3
+  },
+  {
+   "id": "ITA-marco-polo",
+   "country": "ITA",
+   "category": "person",
+   "kind": "explorer",
+   "prompt": "Which of these explorers came from Italy?",
+   "answer": "Marco Polo",
+   "recognition": 3
+  },
+  {
+   "id": "ITA-pompeii",
+   "country": "ITA",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Italy?",
+   "answer": "Pompeii",
+   "recognition": 3
+  },
+  {
+   "id": "ITA-piano",
+   "country": "ITA",
+   "category": "culture",
+   "kind": "invention",
+   "prompt": "Which of these was invented or discovered in Italy?",
+   "answer": "Piano",
+   "recognition": 2
+  },
+  {
+   "id": "ITA-vatican-city",
+   "country": "ITA",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Two tiny independent states lie entirely inside Italy. One is San Marino; what is the other?",
+   "answer": "Vatican City",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Monaco",
+    "Andorra",
+    "Liechtenstein"
+   ]
+  },
+  {
+   "id": "CIV-didier-drogba",
+   "country": "CIV",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Ivory Coast's national team?",
+   "answer": "Didier Drogba",
+   "recognition": 3
+  },
+  {
+   "id": "CIV-cocoa",
+   "country": "CIV",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Ivory Coast's biggest export?",
+   "answer": "Cocoa",
+   "recognition": 2
+  },
+  {
+   "id": "CIV-st-peter-s-basilica-in-rome",
+   "country": "CIV",
+   "category": "landmark",
+   "kind": "custom",
+   "prompt": "The vast Basilica of Our Lady of Peace in Yamoussoukro, Ivory Coast, is modelled on which famous church?",
+   "answer": "St Peter's Basilica in Rome",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Notre-Dame in Paris",
+    "St Paul's Cathedral in London",
+    "Hagia Sophia in Istanbul"
+   ]
+  },
+  {
+   "id": "JAM-bob-marley",
+   "country": "JAM",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these musicians is from Jamaica?",
+   "answer": "Bob Marley",
+   "recognition": 3
+  },
+  {
+   "id": "JAM-usain-bolt",
+   "country": "JAM",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Jamaica?",
+   "answer": "Usain Bolt",
+   "recognition": 3
+  },
+  {
+   "id": "JAM-reggae",
+   "country": "JAM",
+   "category": "culture",
+   "kind": "music",
+   "prompt": "Which of these music or dance styles comes from Jamaica?",
+   "answer": "Reggae",
+   "recognition": 3
+  },
+  {
+   "id": "JAM-jerk-chicken",
+   "country": "JAM",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Jamaica?",
+   "answer": "Jerk chicken",
+   "recognition": 2
+  },
+  {
+   "id": "JAM-cool-runnings",
+   "country": "JAM",
+   "category": "film",
+   "kind": "custom",
+   "prompt": "Which film tells the story of Jamaica's bobsleigh team at the 1988 Winter Olympics?",
+   "answer": "Cool Runnings",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Eddie the Eagle",
+    "Miracle",
+    "The Mighty Ducks"
+   ]
+  },
+  {
+   "id": "JAM-james-bond",
+   "country": "JAM",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Ian Fleming wrote all of his novels about which spy at his home in Jamaica?",
+   "answer": "James Bond",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Sherlock Holmes",
+    "Jason Bourne",
+    "George Smiley"
+   ]
+  },
+  {
+   "id": "JAM-bauxite",
+   "country": "JAM",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Jamaica's biggest export?",
+   "answer": "Bauxite",
+   "recognition": 1
+  },
+  {
+   "id": "JPN-mount-fuji",
+   "country": "JPN",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in Japan?",
+   "answer": "Mount Fuji",
+   "recognition": 3
+  },
+  {
+   "id": "JPN-sushi",
+   "country": "JPN",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Japan?",
+   "answer": "Sushi",
+   "recognition": 3
+  },
+  {
+   "id": "JPN-karaoke",
+   "country": "JPN",
+   "category": "culture",
+   "kind": "invention",
+   "prompt": "Which of these was invented or discovered in Japan?",
+   "answer": "Karaoke",
+   "recognition": 2,
+   "sharedWith": [
+    "PHL"
+   ]
+  },
+  {
+   "id": "JPN-sumo",
+   "country": "JPN",
+   "category": "sport",
+   "kind": "sport",
+   "prompt": "Which of these sports originated in Japan?",
+   "answer": "Sumo",
+   "recognition": 3
+  },
+  {
+   "id": "JPN-shohei-ohtani",
+   "country": "JPN",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Japan?",
+   "answer": "Shohei Ohtani",
+   "recognition": 3
+  },
+  {
+   "id": "JPN-snow-monkey",
+   "country": "JPN",
+   "category": "nature",
+   "kind": "animal",
+   "prompt": "Which of these animals lives in the wild only in Japan?",
+   "answer": "Snow monkey",
+   "recognition": 2
+  },
+  {
+   "id": "JPN-sake",
+   "country": "JPN",
+   "category": "food",
+   "kind": "drink",
+   "prompt": "Which of these drinks comes from Japan?",
+   "answer": "Sake",
+   "recognition": 3
+  },
+  {
+   "id": "JPN-cars",
+   "country": "JPN",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Japan's biggest export?",
+   "answer": "Cars",
+   "recognition": 2
+  },
+  {
+   "id": "JPN-keisuke-honda",
+   "country": "JPN",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Japan's national team?",
+   "answer": "Keisuke Honda",
+   "recognition": 2
+  },
+  {
+   "id": "JPN-shinkansen",
+   "country": "JPN",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Which high-speed \"bullet train\" began running in Japan in 1964?",
+   "answer": "Shinkansen",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "TGV",
+    "Eurostar",
+    "Orient Express"
+   ]
+  },
+  {
+   "id": "JEY-germany",
+   "country": "JEY",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Jersey was part of the only British territory occupied during the Second World War. By which country?",
+   "answer": "Germany",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Italy",
+    "Spain",
+    "Soviet Union"
+   ]
+  },
+  {
+   "id": "JOR-petra",
+   "country": "JOR",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Jordan?",
+   "answer": "Petra",
+   "recognition": 3,
+   "hook": true
+  },
+  {
+   "id": "JOR-lawrence-of-arabia",
+   "country": "JOR",
+   "category": "film",
+   "kind": "film",
+   "prompt": "Which of these films or series was shot in Jordan?",
+   "answer": "Lawrence of Arabia",
+   "recognition": 2,
+   "sharedWith": [
+    "MAR",
+    "ESP"
+   ]
+  },
+  {
+   "id": "JOR-mansaf",
+   "country": "JOR",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Jordan?",
+   "answer": "Mansaf",
+   "recognition": 1
+  },
+  {
+   "id": "JOR-transjordan",
+   "country": "JOR",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Jordan formerly called?",
+   "answer": "Transjordan",
+   "recognition": 1
+  },
+  {
+   "id": "KAZ-yuri-gagarin",
+   "country": "KAZ",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Which first human in space blasted off in 1961 from Baikonur, in what is now Kazakhstan?",
+   "answer": "Yuri Gagarin",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Neil Armstrong",
+    "John Glenn",
+    "Alan Shepard"
+   ]
+  },
+  {
+   "id": "KAZ-apples",
+   "country": "KAZ",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Which fruit is believed to have originated in the mountains near Almaty, Kazakhstan?",
+   "answer": "Apples",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Oranges",
+    "Bananas",
+    "Grapes"
+   ]
+  },
+  {
+   "id": "KAZ-gennady-golovkin",
+   "country": "KAZ",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Kazakhstan?",
+   "answer": "Gennady Golovkin",
+   "recognition": 2
+  },
+  {
+   "id": "KAZ-crude-oil",
+   "country": "KAZ",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Kazakhstan's biggest export?",
+   "answer": "Crude oil",
+   "recognition": 2,
+   "group": "petroleum"
+  },
+  {
+   "id": "KEN-eliud-kipchoge",
+   "country": "KEN",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Kenya?",
+   "answer": "Eliud Kipchoge",
+   "recognition": 2
+  },
+  {
+   "id": "KEN-tea",
+   "country": "KEN",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Kenya's biggest export?",
+   "answer": "Tea",
+   "recognition": 2,
+   "unsure": true
+  },
+  {
+   "id": "KEN-out-of-africa",
+   "country": "KEN",
+   "category": "film",
+   "kind": "film",
+   "prompt": "Which of these films or series was shot in Kenya?",
+   "answer": "Out of Africa",
+   "recognition": 2
+  },
+  {
+   "id": "KEN-wildebeest",
+   "country": "KEN",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Each year more than a million of which animal cross into Kenya's Maasai Mara in the Great Migration?",
+   "answer": "Wildebeest",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Elephants",
+    "Flamingos",
+    "Giraffes"
+   ]
+  },
+  {
+   "id": "KIR-all-four",
+   "country": "KIR",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Kiribati is the only country lying in how many of the world's hemispheres?",
+   "answer": "All four",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Only one",
+    "Two",
+    "Three"
+   ]
+  },
+  {
+   "id": "KIR-gilbert-islands",
+   "country": "KIR",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Kiribati formerly called?",
+   "answer": "Gilbert Islands",
+   "recognition": 1
+  },
+  {
+   "id": "UNK-bill-clinton",
+   "country": "UNK",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "A statue of which US president stands on a boulevard named after him in Pristina, Kosovo?",
+   "answer": "Bill Clinton",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Ronald Reagan",
+    "John F. Kennedy",
+    "Barack Obama"
+   ]
+  },
+  {
+   "id": "KWT-crude-oil",
+   "country": "KWT",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Kuwait's biggest export?",
+   "answer": "Crude oil",
+   "recognition": 2,
+   "group": "petroleum"
+  },
+  {
+   "id": "KWT-iraq",
+   "country": "KWT",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Which neighbour invaded Kuwait in 1990, starting the Gulf War?",
+   "answer": "Iraq",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Iran",
+    "Saudi Arabia",
+    "Syria"
+   ]
+  },
+  {
+   "id": "KGZ-yurt",
+   "country": "KGZ",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "The emblem in the centre of Kyrgyzstan's flag shows the roof opening of which traditional dwelling?",
+   "answer": "Yurt",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Igloo",
+    "Pagoda",
+    "Tepee"
+   ]
+  },
+  {
+   "id": "LAO-most-heavily-bombed-country-per-person",
+   "country": "LAO",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Laos holds which grim record from the Vietnam War era?",
+   "answer": "Most heavily bombed country per person",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Longest naval blockade",
+    "Largest tank battle",
+    "Longest siege of a capital"
+   ]
+  },
+  {
+   "id": "LAO-plain-of-jars",
+   "country": "LAO",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in Laos?",
+   "answer": "Plain of Jars",
+   "recognition": 2,
+   "hook": true
+  },
+  {
+   "id": "LAO-a-coastline",
+   "country": "LAO",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Laos is the only country in Southeast Asia that lacks what?",
+   "answer": "A coastline",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "A railway",
+    "An airport",
+    "A river"
+   ]
+  },
+  {
+   "id": "LAO-larb",
+   "country": "LAO",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Laos?",
+   "answer": "Larb",
+   "recognition": 1,
+   "sharedWith": [
+    "THA"
+   ]
+  },
+  {
+   "id": "LVA-kristaps-porzingis",
+   "country": "LVA",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Latvia?",
+   "answer": "Kristaps Porziņģis",
+   "recognition": 2
+  },
+  {
+   "id": "LVA-riveted-jeans",
+   "country": "LVA",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Jacob Davis, a tailor born in Riga, Latvia, teamed up with Levi Strauss to patent which garment?",
+   "answer": "Riveted jeans",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "The zip-up jacket",
+    "The baseball cap",
+    "The trench coat"
+   ]
+  },
+  {
+   "id": "LBN-cedar-tree",
+   "country": "LBN",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Which tree appears on the flag of Lebanon?",
+   "answer": "Cedar tree",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Olive tree",
+    "Palm tree",
+    "Oak tree"
+   ]
+  },
+  {
+   "id": "LBN-baalbek",
+   "country": "LBN",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Lebanon?",
+   "answer": "Baalbek",
+   "recognition": 2
+  },
+  {
+   "id": "LBN-the-bible",
+   "country": "LBN",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "The ancient port of Byblos in Lebanon gave its name to which book?",
+   "answer": "The Bible",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "The Odyssey",
+    "The Quran",
+    "The Iliad"
+   ]
+  },
+  {
+   "id": "LSO-south-africa",
+   "country": "LSO",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Lesotho is completely surrounded by which country?",
+   "answer": "South Africa",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Botswana",
+    "Mozambique",
+    "Zimbabwe"
+   ]
+  },
+  {
+   "id": "LSO-basutoland",
+   "country": "LSO",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Lesotho formerly called?",
+   "answer": "Basutoland",
+   "recognition": 1
+  },
+  {
+   "id": "LSO-1-000-metres",
+   "country": "LSO",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Lesotho is the only country in the world that lies entirely above which altitude?",
+   "answer": "1,000 metres",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "100 metres",
+    "3,000 metres",
+    "5,000 metres"
+   ]
+  },
+  {
+   "id": "LBR-george-weah",
+   "country": "LBR",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Liberia's national team?",
+   "answer": "George Weah",
+   "recognition": 2,
+   "hook": true
+  },
+  {
+   "id": "LBR-freed-american-slaves",
+   "country": "LBR",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Liberia was founded in the 1800s as a home for whom?",
+   "answer": "Freed American slaves",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Exiled French nobles",
+    "Shipwrecked Portuguese sailors",
+    "British convicts"
+   ]
+  },
+  {
+   "id": "LBR-james-monroe",
+   "country": "LBR",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Liberia's capital, Monrovia, is named after which US president?",
+   "answer": "James Monroe",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "James Madison",
+    "Abraham Lincoln",
+    "Thomas Jefferson"
+   ]
+  },
+  {
+   "id": "LBY-leptis-magna",
+   "country": "LBY",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Libya?",
+   "answer": "Leptis Magna",
+   "recognition": 2
+  },
+  {
+   "id": "LBY-it-was-a-single-plain-colour",
+   "country": "LBY",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "From 1977 to 2011 Libya's flag was unique among national flags. Why?",
+   "answer": "It was a single plain colour",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "It had no fixed shape",
+    "It was printed with a map",
+    "It changed colour every year"
+   ]
+  },
+  {
+   "id": "LBY-crude-oil",
+   "country": "LBY",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Libya's biggest export?",
+   "answer": "Crude oil",
+   "recognition": 2,
+   "group": "petroleum"
+  },
+  {
+   "id": "LIE-false-teeth",
+   "country": "LIE",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Tiny Liechtenstein is one of the world's biggest makers of which product?",
+   "answer": "False teeth",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Wristwatches",
+    "Cuckoo clocks",
+    "Ski boots"
+   ],
+   "unsure": true
+  },
+  {
+   "id": "LIE-all-its-neighbours-are-landlocked-too",
+   "country": "LIE",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Liechtenstein is \"doubly landlocked\". What does that mean?",
+   "answer": "All its neighbours are landlocked too",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "It has no rivers or lakes",
+    "It lies inside another country",
+    "It has two mountain borders"
+   ]
+  },
+  {
+   "id": "LTU-arvydas-sabonis",
+   "country": "LTU",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Lithuania?",
+   "answer": "Arvydas Sabonis",
+   "recognition": 2
+  },
+  {
+   "id": "LTU-hill-of-crosses",
+   "country": "LTU",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in Lithuania?",
+   "answer": "Hill of Crosses",
+   "recognition": 2,
+   "hook": true
+  },
+  {
+   "id": "LTU-basketball",
+   "country": "LTU",
+   "category": "sport",
+   "kind": "custom",
+   "prompt": "Which sport is so popular in Lithuania that it is often called the country's second religion?",
+   "answer": "Basketball",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Ice hockey",
+    "Handball",
+    "Football"
+   ]
+  },
+  {
+   "id": "LUX-the-schengen-agreement",
+   "country": "LUX",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Which agreement on passport-free travel is named after the village in Luxembourg where it was signed?",
+   "answer": "The Schengen Agreement",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "The Maastricht Treaty",
+    "The Dayton Agreement",
+    "The Lisbon Treaty"
+   ]
+  },
+  {
+   "id": "MDG-lemurs",
+   "country": "MDG",
+   "category": "nature",
+   "kind": "animal",
+   "prompt": "Which of these animals lives in the wild only in Madagascar?",
+   "answer": "Lemurs",
+   "recognition": 3,
+   "hook": true
+  },
+  {
+   "id": "MDG-vanilla",
+   "country": "MDG",
+   "category": "food",
+   "kind": "custom",
+   "prompt": "Madagascar is the world's leading producer of which spice?",
+   "answer": "Vanilla",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Saffron",
+    "Cinnamon",
+    "Black pepper"
+   ]
+  },
+  {
+   "id": "MDG-avenue-of-the-baobabs",
+   "country": "MDG",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in Madagascar?",
+   "answer": "Avenue of the Baobabs",
+   "recognition": 2
+  },
+  {
+   "id": "MWI-tobacco",
+   "country": "MWI",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Malawi's biggest export?",
+   "answer": "Tobacco",
+   "recognition": 2
+  },
+  {
+   "id": "MWI-nyasaland",
+   "country": "MWI",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Malawi formerly called?",
+   "answer": "Nyasaland",
+   "recognition": 1
+  },
+  {
+   "id": "MWI-fish",
+   "country": "MWI",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Lake Malawi is thought to contain more species of what than any other lake on Earth?",
+   "answer": "Fish",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Frogs",
+    "Crabs",
+    "Snails"
+   ]
+  },
+  {
+   "id": "MYS-petronas-towers",
+   "country": "MYS",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in Malaysia?",
+   "answer": "Petronas Towers",
+   "recognition": 3
+  },
+  {
+   "id": "MYS-lee-chong-wei",
+   "country": "MYS",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Malaysia?",
+   "answer": "Lee Chong Wei",
+   "recognition": 2
+  },
+  {
+   "id": "MYS-nine-sultans-take-turns-for-five-years-each",
+   "country": "MYS",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Malaysia's head of state is unusual. How is the king chosen?",
+   "answer": "Nine sultans take turns for five years each",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "By a public lottery",
+    "The eldest citizen is crowned",
+    "By a national exam"
+   ]
+  },
+  {
+   "id": "MDV-underwater",
+   "country": "MDV",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "In 2009 the government of the Maldives held a cabinet meeting where, to highlight rising seas?",
+   "answer": "Underwater",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "On a mountain top",
+    "In a hot-air balloon",
+    "On an iceberg"
+   ]
+  },
+  {
+   "id": "MDV-lowest-lying-country-on-earth",
+   "country": "MDV",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "The Maldives holds which geographical record?",
+   "answer": "Lowest-lying country on Earth",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Smallest country on Earth",
+    "Most islands of any country",
+    "Hottest country on Earth"
+   ]
+  },
+  {
+   "id": "MDV-fish",
+   "country": "MDV",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is the Maldives's biggest export?",
+   "answer": "Fish",
+   "recognition": 2
+  },
+  {
+   "id": "MLI-timbuktu",
+   "country": "MLI",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Mali?",
+   "answer": "Timbuktu",
+   "recognition": 3,
+   "hook": true
+  },
+  {
+   "id": "MLI-great-mosque-of-djenne",
+   "country": "MLI",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in Mali?",
+   "answer": "Great Mosque of Djenné",
+   "recognition": 2
+  },
+  {
+   "id": "MLI-seydou-keita",
+   "country": "MLI",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Mali's national team?",
+   "answer": "Seydou Keita",
+   "recognition": 2
+  },
+  {
+   "id": "MLI-french-sudan",
+   "country": "MLI",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Mali formerly called?",
+   "answer": "French Sudan",
+   "recognition": 1
+  },
+  {
+   "id": "MLI-gold",
+   "country": "MLI",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Mali's biggest export?",
+   "answer": "Gold",
+   "recognition": 1
+  },
+  {
+   "id": "MLT-george-cross",
+   "country": "MLT",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Which British bravery medal, awarded to the whole island in 1942, appears on Malta's flag?",
+   "answer": "George Cross",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Victoria Cross",
+    "Iron Cross",
+    "Purple Heart"
+   ]
+  },
+  {
+   "id": "MLT-gladiator",
+   "country": "MLT",
+   "category": "film",
+   "kind": "film",
+   "prompt": "Which of these films or series was shot in Malta?",
+   "answer": "Gladiator",
+   "recognition": 2,
+   "sharedWith": [
+    "MAR",
+    "GBR",
+    "ITA"
+   ]
+  },
+  {
+   "id": "MLT-the-knights-of-st-john",
+   "country": "MLT",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Which order of knights ruled Malta from 1530 to 1798?",
+   "answer": "The Knights of St John",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "The Knights Templar",
+    "The Teutonic Knights",
+    "The Knights of the Round Table"
+   ]
+  },
+  {
+   "id": "MHL-bikini",
+   "country": "MHL",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Which swimsuit is named after an atoll in the Marshall Islands where nuclear bombs were tested?",
+   "answer": "Bikini",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Tankini",
+    "Sarong",
+    "Speedo"
+   ]
+  },
+  {
+   "id": "MRT-eye-of-the-sahara",
+   "country": "MRT",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in Mauritania?",
+   "answer": "Eye of the Sahara",
+   "recognition": 2,
+   "hook": true
+  },
+  {
+   "id": "MRT-iron-ore",
+   "country": "MRT",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Mauritania's biggest export?",
+   "answer": "Iron ore",
+   "recognition": 1,
+   "unsure": true
+  },
+  {
+   "id": "MUS-dodo",
+   "country": "MUS",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Which flightless bird lived only on Mauritius until it was wiped out in the 1600s?",
+   "answer": "Dodo",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Great auk",
+    "Moa",
+    "Elephant bird"
+   ]
+  },
+  {
+   "id": "MEX-chichen-itza",
+   "country": "MEX",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Mexico?",
+   "answer": "Chichen Itza",
+   "recognition": 3
+  },
+  {
+   "id": "MEX-tequila",
+   "country": "MEX",
+   "category": "food",
+   "kind": "drink",
+   "prompt": "Which of these drinks comes from Mexico?",
+   "answer": "Tequila",
+   "recognition": 3
+  },
+  {
+   "id": "MEX-tacos",
+   "country": "MEX",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Mexico?",
+   "answer": "Tacos",
+   "recognition": 3
+  },
+  {
+   "id": "MEX-frida-kahlo",
+   "country": "MEX",
+   "category": "person",
+   "kind": "artist",
+   "prompt": "Which of these artists is from Mexico?",
+   "answer": "Frida Kahlo",
+   "recognition": 3
+  },
+  {
+   "id": "MEX-axolotl",
+   "country": "MEX",
+   "category": "nature",
+   "kind": "animal",
+   "prompt": "Which of these animals lives in the wild only in Mexico?",
+   "answer": "Axolotl",
+   "recognition": 2
+  },
+  {
+   "id": "MEX-mariachi",
+   "country": "MEX",
+   "category": "culture",
+   "kind": "music",
+   "prompt": "Which of these music or dance styles comes from Mexico?",
+   "answer": "Mariachi",
+   "recognition": 2
+  },
+  {
+   "id": "MEX-hugo-sanchez",
+   "country": "MEX",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Mexico's national team?",
+   "answer": "Hugo Sánchez",
+   "recognition": 2
+  },
+  {
+   "id": "MEX-canelo-alvarez",
+   "country": "MEX",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Mexico?",
+   "answer": "Canelo Álvarez",
+   "recognition": 2
+  },
+  {
+   "id": "MEX-new-spain",
+   "country": "MEX",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Mexico formerly called?",
+   "answer": "New Spain",
+   "recognition": 1
+  },
+  {
+   "id": "MEX-day-of-the-dead",
+   "country": "MEX",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Which festival in Mexico honours departed relatives with sugar skulls and marigolds?",
+   "answer": "Day of the Dead",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Carnival",
+    "Holi",
+    "Thanksgiving"
+   ]
+  },
+  {
+   "id": "FSM-giant-stone-discs",
+   "country": "FSM",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "The island of Yap in Micronesia is famous for which unusual form of money?",
+   "answer": "Giant stone discs",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Whale teeth",
+    "Woven mats",
+    "Feather coils"
+   ]
+  },
+  {
+   "id": "MDA-wine",
+   "country": "MDA",
+   "category": "food",
+   "kind": "custom",
+   "prompt": "Mileștii Mici in Moldova holds a world record for the largest underground cellar storing what?",
+   "answer": "Wine",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Cheese",
+    "Olive oil",
+    "Whisky"
+   ]
+  },
+  {
+   "id": "MCO-charles-leclerc",
+   "country": "MCO",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Monaco?",
+   "answer": "Charles Leclerc",
+   "recognition": 2
+  },
+  {
+   "id": "MCO-monte-carlo-casino",
+   "country": "MCO",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in Monaco?",
+   "answer": "Monte Carlo Casino",
+   "recognition": 3,
+   "hook": true
+  },
+  {
+   "id": "MCO-formula-one",
+   "country": "MCO",
+   "category": "sport",
+   "kind": "custom",
+   "prompt": "Monaco's streets host a famous Grand Prix each year in which sport?",
+   "answer": "Formula One",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Cycling",
+    "Marathon running",
+    "Powerboat racing"
+   ]
+  },
+  {
+   "id": "MNG-genghis-khan",
+   "country": "MNG",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical figures was born in Mongolia?",
+   "answer": "Genghis Khan",
+   "recognition": 3,
+   "hook": true
+  },
+  {
+   "id": "MNG-throat-singing",
+   "country": "MNG",
+   "category": "culture",
+   "kind": "music",
+   "prompt": "Which of these music or dance styles comes from Mongolia?",
+   "answer": "Throat singing",
+   "recognition": 1,
+   "sharedWith": [
+    "RUS"
+   ]
+  },
+  {
+   "id": "MNG-most-sparsely-populated",
+   "country": "MNG",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Mongolia holds which record among independent countries?",
+   "answer": "Most sparsely populated",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Largest desert",
+    "Longest border",
+    "Most lakes"
+   ]
+  },
+  {
+   "id": "MNE-black-mountain",
+   "country": "MNE",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "What does the name Montenegro mean?",
+   "answer": "Black Mountain",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Mountain of Kings",
+    "Old Forest",
+    "Blue Coast"
+   ]
+  },
+  {
+   "id": "MNE-casino-royale",
+   "country": "MNE",
+   "category": "film",
+   "kind": "custom",
+   "prompt": "Which James Bond film has its big poker game set at a casino in Montenegro?",
+   "answer": "Casino Royale",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "GoldenEye",
+    "Skyfall",
+    "Thunderball"
+   ]
+  },
+  {
+   "id": "MSR-a-volcanic-eruption",
+   "country": "MSR",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Montserrat's capital, Plymouth, was abandoned in the 1990s after being buried by what?",
+   "answer": "A volcanic eruption",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "A hurricane",
+    "A tsunami",
+    "A landslide"
+   ]
+  },
+  {
+   "id": "MAR-achraf-hakimi",
+   "country": "MAR",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Morocco's national team?",
+   "answer": "Achraf Hakimi",
+   "recognition": 2
+  },
+  {
+   "id": "MAR-tagine",
+   "country": "MAR",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Morocco?",
+   "answer": "Tagine",
+   "recognition": 2,
+   "sharedWith": [
+    "DZA",
+    "TUN"
+   ]
+  },
+  {
+   "id": "MAR-hicham-el-guerrouj",
+   "country": "MAR",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Morocco?",
+   "answer": "Hicham El Guerrouj",
+   "recognition": 2
+  },
+  {
+   "id": "MAR-toubkal",
+   "country": "MAR",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in Morocco?",
+   "answer": "Toubkal",
+   "recognition": 1
+  },
+  {
+   "id": "MAR-casablanca",
+   "country": "MAR",
+   "category": "film",
+   "kind": "custom",
+   "prompt": "Which 1942 film classic starring Humphrey Bogart is named after a city in Morocco?",
+   "answer": "Casablanca",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Cairo",
+    "Havana",
+    "Shanghai"
+   ]
+  },
+  {
+   "id": "MOZ-an-assault-rifle",
+   "country": "MOZ",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Mozambique's flag is the only national flag to show which modern weapon?",
+   "answer": "An assault rifle",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "A tank",
+    "A fighter jet",
+    "A hand grenade"
+   ]
+  },
+  {
+   "id": "MOZ-maria-mutola",
+   "country": "MOZ",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Mozambique?",
+   "answer": "Maria Mutola",
+   "recognition": 1
+  },
+  {
+   "id": "MMR-burma",
+   "country": "MMR",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Myanmar formerly called?",
+   "answer": "Burma",
+   "recognition": 3,
+   "hook": true
+  },
+  {
+   "id": "MMR-bagan",
+   "country": "MMR",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Myanmar?",
+   "answer": "Bagan",
+   "recognition": 2
+  },
+  {
+   "id": "MMR-shwedagon-pagoda",
+   "country": "MMR",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in Myanmar?",
+   "answer": "Shwedagon Pagoda",
+   "recognition": 2
+  },
+  {
+   "id": "MMR-mohinga",
+   "country": "MMR",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Myanmar?",
+   "answer": "Mohinga",
+   "recognition": 1
+  },
+  {
+   "id": "NAM-mad-max-fury-road",
+   "country": "NAM",
+   "category": "film",
+   "kind": "film",
+   "prompt": "Which of these films or series was shot in Namibia?",
+   "answer": "Mad Max: Fury Road",
+   "recognition": 2,
+   "hook": true,
+   "sharedWith": [
+    "ZAF",
+    "AUS"
+   ]
+  },
+  {
+   "id": "NAM-sossusvlei-dunes",
+   "country": "NAM",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in Namibia?",
+   "answer": "Sossusvlei dunes",
+   "recognition": 2
+  },
+  {
+   "id": "NAM-south-west-africa",
+   "country": "NAM",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Namibia formerly called?",
+   "answer": "South West Africa",
+   "recognition": 1
+  },
+  {
+   "id": "NAM-skeleton-coast",
+   "country": "NAM",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Namibia's foggy shoreline, littered with shipwrecks and whale bones, is known by which name?",
+   "answer": "Skeleton Coast",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Barbary Coast",
+    "Gold Coast",
+    "Ivory Coast"
+   ]
+  },
+  {
+   "id": "NRU-phosphate",
+   "country": "NRU",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Nauru was once among the richest countries per person thanks to mining which resource?",
+   "answer": "Phosphate",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Diamonds",
+    "Oil",
+    "Uranium"
+   ]
+  },
+  {
+   "id": "NRU-capital-city",
+   "country": "NRU",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Nauru is the only republic in the world without an official what?",
+   "answer": "Capital city",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Flag",
+    "Anthem",
+    "Language"
+   ]
+  },
+  {
+   "id": "NPL-mount-everest",
+   "country": "NPL",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in Nepal?",
+   "answer": "Mount Everest",
+   "recognition": 3,
+   "sharedWith": [
+    "CHN"
+   ]
+  },
+  {
+   "id": "NPL-it-is-not-a-rectangle",
+   "country": "NPL",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "What makes Nepal's flag unique among national flags?",
+   "answer": "It is not a rectangle",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "It has no colours",
+    "It shows a map",
+    "It is a single plain colour"
+   ]
+  },
+  {
+   "id": "NPL-the-buddha",
+   "country": "NPL",
+   "category": "person",
+   "kind": "custom",
+   "prompt": "Which religious teacher was born at Lumbini, in present-day Nepal, around 2,500 years ago?",
+   "answer": "The Buddha",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Confucius",
+    "Guru Nanak",
+    "Laozi"
+   ]
+  },
+  {
+   "id": "NLD-vincent-van-gogh",
+   "country": "NLD",
+   "category": "person",
+   "kind": "artist",
+   "prompt": "Which of these artists is from the Netherlands?",
+   "answer": "Vincent van Gogh",
+   "recognition": 3
+  },
+  {
+   "id": "NLD-johan-cruyff",
+   "country": "NLD",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for the Netherlands's national team?",
+   "answer": "Johan Cruyff",
+   "recognition": 3
+  },
+  {
+   "id": "NLD-microscope",
+   "country": "NLD",
+   "category": "culture",
+   "kind": "invention",
+   "prompt": "Which of these was invented or discovered in the Netherlands?",
+   "answer": "Microscope",
+   "recognition": 2,
+   "unsure": true
+  },
+  {
+   "id": "NLD-anne-frank-house",
+   "country": "NLD",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in the Netherlands?",
+   "answer": "Anne Frank House",
+   "recognition": 2
+  },
+  {
+   "id": "NLD-it-lies-below-sea-level",
+   "country": "NLD",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "About a quarter of the Netherlands has which unusual feature?",
+   "answer": "It lies below sea level",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "It is covered by forest",
+    "It is inside the Arctic Circle",
+    "It is desert"
+   ]
+  },
+  {
+   "id": "NCL-scotland",
+   "country": "NCL",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Captain Cook named New Caledonia after the Latin name for which country?",
+   "answer": "Scotland",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Ireland",
+    "Wales",
+    "Portugal"
+   ]
+  },
+  {
+   "id": "NCL-kagu",
+   "country": "NCL",
+   "category": "nature",
+   "kind": "animal",
+   "prompt": "Which of these animals lives in the wild only in New Caledonia?",
+   "answer": "Kagu",
+   "recognition": 1
+  },
+  {
+   "id": "NCL-nickel",
+   "country": "NCL",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "New Caledonia holds a large share of the world's reserves of which metal?",
+   "answer": "Nickel",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Gold",
+    "Copper",
+    "Tin"
+   ]
+  },
+  {
+   "id": "NZL-the-lord-of-the-rings",
+   "country": "NZL",
+   "category": "film",
+   "kind": "film",
+   "prompt": "Which of these films or series was shot in New Zealand?",
+   "answer": "The Lord of the Rings",
+   "recognition": 3,
+   "hook": true
+  },
+  {
+   "id": "NZL-kiwi",
+   "country": "NZL",
+   "category": "nature",
+   "kind": "animal",
+   "prompt": "Which of these animals lives in the wild only in New Zealand?",
+   "answer": "Kiwi",
+   "recognition": 3
+  },
+  {
+   "id": "NZL-edmund-hillary",
+   "country": "NZL",
+   "category": "person",
+   "kind": "explorer",
+   "prompt": "Which of these explorers came from New Zealand?",
+   "answer": "Edmund Hillary",
+   "recognition": 2
+  },
+  {
+   "id": "NZL-aoraki-mount-cook",
+   "country": "NZL",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in New Zealand?",
+   "answer": "Aoraki / Mount Cook",
+   "recognition": 2
+  },
+  {
+   "id": "NZL-jonah-lomu",
+   "country": "NZL",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from New Zealand?",
+   "answer": "Jonah Lomu",
+   "recognition": 2
+  },
+  {
+   "id": "NZL-dairy-products",
+   "country": "NZL",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is New Zealand's biggest export?",
+   "answer": "Dairy products",
+   "recognition": 2
+  },
+  {
+   "id": "NZL-haka",
+   "country": "NZL",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Which Māori war dance do New Zealand's rugby team perform before matches?",
+   "answer": "Haka",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Hula",
+    "Capoeira",
+    "Sirtaki"
+   ]
+  },
+  {
+   "id": "NIC-sharks",
+   "country": "NIC",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Lake Nicaragua is one of the few freshwater lakes in the world where which animals live?",
+   "answer": "Sharks",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Dolphins",
+    "Seals",
+    "Stingrays"
+   ]
+  },
+  {
+   "id": "NER-a-truck-drove-into-it",
+   "country": "NER",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "The Tree of Ténéré in Niger was once the most isolated tree on Earth. How was it destroyed in 1973?",
+   "answer": "A truck drove into it",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "It was struck by lightning",
+    "It was cut down for firewood",
+    "A sandstorm buried it"
+   ]
+  },
+  {
+   "id": "NGA-nollywood",
+   "country": "NGA",
+   "category": "film",
+   "kind": "custom",
+   "prompt": "Nigeria's huge film industry is known by which nickname?",
+   "answer": "Nollywood",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Bollywood",
+    "Lagoswood",
+    "Afrowood"
+   ]
+  },
+  {
+   "id": "NGA-afrobeat",
+   "country": "NGA",
+   "category": "culture",
+   "kind": "music",
+   "prompt": "Which of these music or dance styles comes from Nigeria?",
+   "answer": "Afrobeat",
+   "recognition": 2
+  },
+  {
+   "id": "NGA-jay-jay-okocha",
+   "country": "NGA",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Nigeria's national team?",
+   "answer": "Jay-Jay Okocha",
+   "recognition": 2
+  },
+  {
+   "id": "NGA-chinua-achebe",
+   "country": "NGA",
+   "category": "person",
+   "kind": "writer",
+   "prompt": "Which of these writers is from Nigeria?",
+   "answer": "Chinua Achebe",
+   "recognition": 2
+  },
+  {
+   "id": "NGA-crude-oil",
+   "country": "NGA",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Nigeria's biggest export?",
+   "answer": "Crude oil",
+   "recognition": 2,
+   "group": "petroleum"
+  },
+  {
+   "id": "NGA-hakeem-olajuwon",
+   "country": "NGA",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Nigeria?",
+   "answer": "Hakeem Olajuwon",
+   "recognition": 2
+  },
+  {
+   "id": "NIU-new-zealand",
+   "country": "NIU",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Niue, one of the world's smallest states, governs itself in free association with which country?",
+   "answer": "New Zealand",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Australia",
+    "France",
+    "United Kingdom"
+   ]
+  },
+  {
+   "id": "NFK-the-mutiny-on-the-bounty",
+   "country": "NFK",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Many people on Norfolk Island descend from the sailors of which famous mutiny?",
+   "answer": "The mutiny on the Bounty",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "The Potemkin mutiny",
+    "The Amistad revolt",
+    "The Hermione mutiny"
+   ]
+  },
+  {
+   "id": "PRK-a-hotel",
+   "country": "PRK",
+   "category": "landmark",
+   "kind": "custom",
+   "prompt": "The Ryugyong, a 105-storey pyramid in Pyongyang, North Korea, stood unfinished for decades. What was it built to be?",
+   "answer": "A hotel",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "A television tower",
+    "A mausoleum",
+    "A parliament"
+   ]
+  },
+  {
+   "id": "PRK-mount-paektu",
+   "country": "PRK",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in North Korea?",
+   "answer": "Mount Paektu",
+   "recognition": 1,
+   "sharedWith": [
+    "CHN"
+   ]
+  },
+  {
+   "id": "MKD-mother-teresa",
+   "country": "MKD",
+   "category": "person",
+   "kind": "custom",
+   "prompt": "Which Nobel Peace Prize winner was born in 1910 in Skopje, now the capital of North Macedonia?",
+   "answer": "Mother Teresa",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Marie Curie",
+    "Florence Nightingale",
+    "Malala Yousafzai"
+   ]
+  },
+  {
+   "id": "MKD-goran-pandev",
+   "country": "MKD",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for North Macedonia's national team?",
+   "answer": "Goran Pandev",
+   "recognition": 2
+  },
+  {
+   "id": "MNP-enola-gay",
+   "country": "MNP",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "The plane that dropped the atomic bomb on Hiroshima took off from Tinian in the Northern Mariana Islands. What was it called?",
+   "answer": "Enola Gay",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Memphis Belle",
+    "Spirit of St. Louis",
+    "Air Force One"
+   ]
+  },
+  {
+   "id": "NOR-erling-haaland",
+   "country": "NOR",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Norway's national team?",
+   "answer": "Erling Haaland",
+   "recognition": 3
+  },
+  {
+   "id": "NOR-magnus-carlsen",
+   "country": "NOR",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Norway?",
+   "answer": "Magnus Carlsen",
+   "recognition": 3
+  },
+  {
+   "id": "NOR-edvard-munch",
+   "country": "NOR",
+   "category": "person",
+   "kind": "artist",
+   "prompt": "Which of these artists is from Norway?",
+   "answer": "Edvard Munch",
+   "recognition": 3
+  },
+  {
+   "id": "NOR-roald-amundsen",
+   "country": "NOR",
+   "category": "person",
+   "kind": "explorer",
+   "prompt": "Which of these explorers came from Norway?",
+   "answer": "Roald Amundsen",
+   "recognition": 2
+  },
+  {
+   "id": "NOR-oil-and-gas",
+   "country": "NOR",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Norway's biggest export?",
+   "answer": "Oil and gas",
+   "recognition": 2,
+   "group": "petroleum"
+  },
+  {
+   "id": "NOR-the-peace-prize",
+   "country": "NOR",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Which Nobel Prize is presented in Oslo, Norway, rather than in Stockholm?",
+   "answer": "The Peace Prize",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "The Literature Prize",
+    "The Physics Prize",
+    "The Medicine Prize"
+   ]
+  },
+  {
+   "id": "OMN-frankincense",
+   "country": "OMN",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Oman's Dhofar region grew rich in ancient times by trading which fragrant resin?",
+   "answer": "Frankincense",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Amber",
+    "Camphor",
+    "Sandalwood"
+   ]
+  },
+  {
+   "id": "PAK-k2",
+   "country": "PAK",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in Pakistan?",
+   "answer": "K2",
+   "recognition": 3,
+   "sharedWith": [
+    "CHN"
+   ]
+  },
+  {
+   "id": "PAK-mohenjo-daro",
+   "country": "PAK",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Pakistan?",
+   "answer": "Mohenjo-daro",
+   "recognition": 2
+  },
+  {
+   "id": "PAK-malala-yousafzai",
+   "country": "PAK",
+   "category": "person",
+   "kind": "custom",
+   "prompt": "Which schoolgirl from Pakistan became the youngest ever Nobel Peace Prize winner in 2014?",
+   "answer": "Malala Yousafzai",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Greta Thunberg",
+    "Anne Frank",
+    "Benazir Bhutto"
+   ]
+  },
+  {
+   "id": "PLW-jellyfish",
+   "country": "PLW",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "A famous lake in Palau lets snorkellers swim among millions of which harmless animals?",
+   "answer": "Jellyfish",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Seahorses",
+    "Sea turtles",
+    "Manta rays"
+   ]
+  },
+  {
+   "id": "PSE-jericho",
+   "country": "PSE",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Which city in Palestine, the lowest on Earth, is often called the world's oldest continuously inhabited city?",
+   "answer": "Jericho",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Babylon",
+    "Troy",
+    "Petra"
+   ]
+  },
+  {
+   "id": "PAN-atlantic-and-pacific",
+   "country": "PAN",
+   "category": "landmark",
+   "kind": "custom",
+   "prompt": "The famous canal across Panama connects which two oceans?",
+   "answer": "Atlantic and Pacific",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Pacific and Indian",
+    "Atlantic and Arctic",
+    "Atlantic and Indian"
+   ]
+  },
+  {
+   "id": "PAN-roberto-duran",
+   "country": "PAN",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Panama?",
+   "answer": "Roberto Durán",
+   "recognition": 2
+  },
+  {
+   "id": "PNG-languages",
+   "country": "PNG",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Papua New Guinea has more of what than any other country, with over 800?",
+   "answer": "Languages",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Volcanoes",
+    "Islands",
+    "Rivers"
+   ]
+  },
+  {
+   "id": "PRY-jose-luis-chilavert",
+   "country": "PRY",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Paraguay's national team?",
+   "answer": "José Luis Chilavert",
+   "recognition": 2
+  },
+  {
+   "id": "PRY-its-two-sides-show-different-emblems",
+   "country": "PRY",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "What is unusual about Paraguay's national flag?",
+   "answer": "Its two sides show different emblems",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "It is not a rectangle",
+    "It is a single plain colour",
+    "It includes a map of the country"
+   ]
+  },
+  {
+   "id": "PRY-terere",
+   "country": "PRY",
+   "category": "food",
+   "kind": "drink",
+   "prompt": "Which of these drinks comes from Paraguay?",
+   "answer": "Tereré",
+   "recognition": 1
+  },
+  {
+   "id": "PRY-soybeans",
+   "country": "PRY",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Paraguay's biggest export?",
+   "answer": "Soybeans",
+   "recognition": 2,
+   "unsure": true
+  },
+  {
+   "id": "PER-machu-picchu",
+   "country": "PER",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Peru?",
+   "answer": "Machu Picchu",
+   "recognition": 3
+  },
+  {
+   "id": "PER-nazca-lines",
+   "country": "PER",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Peru?",
+   "answer": "Nazca Lines",
+   "recognition": 2
+  },
+  {
+   "id": "PER-paddington-bear",
+   "country": "PER",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Which marmalade-loving bear from children's books came to London from \"darkest Peru\"?",
+   "answer": "Paddington Bear",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Winnie-the-Pooh",
+    "Rupert Bear",
+    "Baloo"
+   ]
+  },
+  {
+   "id": "PER-potato",
+   "country": "PER",
+   "category": "food",
+   "kind": "custom",
+   "prompt": "Which staple vegetable was first cultivated in the Andes of Peru thousands of years ago?",
+   "answer": "Potato",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Carrot",
+    "Onion",
+    "Cabbage"
+   ]
+  },
+  {
+   "id": "PER-copper",
+   "country": "PER",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Peru's biggest export?",
+   "answer": "Copper",
+   "recognition": 2,
+   "unsure": true
+  },
+  {
+   "id": "PER-huascaran",
+   "country": "PER",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in Peru?",
+   "answer": "Huascarán",
+   "recognition": 1
+  },
+  {
+   "id": "PHL-manny-pacquiao",
+   "country": "PHL",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from the Philippines?",
+   "answer": "Manny Pacquiao",
+   "recognition": 3
+  },
+  {
+   "id": "PHL-spain",
+   "country": "PHL",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "The Philippines are named after King Philip II, who ruled which country?",
+   "answer": "Spain",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Portugal",
+    "France",
+    "England"
+   ]
+  },
+  {
+   "id": "PHL-chocolate-hills",
+   "country": "PHL",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in the Philippines?",
+   "answer": "Chocolate Hills",
+   "recognition": 2
+  },
+  {
+   "id": "PHL-adobo",
+   "country": "PHL",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from the Philippines?",
+   "answer": "Adobo",
+   "recognition": 2,
+   "unsure": true
+  },
+  {
+   "id": "PCN-hms-bounty",
+   "country": "PCN",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "The Pitcairn Islands were settled in 1790 by mutineers from which ship?",
+   "answer": "HMS Bounty",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "HMS Beagle",
+    "HMS Victory",
+    "The Mayflower"
+   ]
+  },
+  {
+   "id": "POL-marie-curie",
+   "country": "POL",
+   "category": "person",
+   "kind": "scientist",
+   "prompt": "Which of these scientists was born in Poland?",
+   "answer": "Marie Curie",
+   "recognition": 3,
+   "hook": true
+  },
+  {
+   "id": "POL-nicolaus-copernicus",
+   "country": "POL",
+   "category": "person",
+   "kind": "scientist",
+   "prompt": "Which of these scientists was born in Poland?",
+   "answer": "Nicolaus Copernicus",
+   "recognition": 3
+  },
+  {
+   "id": "POL-frederic-chopin",
+   "country": "POL",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these musicians is from Poland?",
+   "answer": "Frédéric Chopin",
+   "recognition": 3
+  },
+  {
+   "id": "POL-robert-lewandowski",
+   "country": "POL",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Poland's national team?",
+   "answer": "Robert Lewandowski",
+   "recognition": 3
+  },
+  {
+   "id": "POL-iga-swiatek",
+   "country": "POL",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Poland?",
+   "answer": "Iga Świątek",
+   "recognition": 2
+  },
+  {
+   "id": "POL-wieliczka-salt-mine",
+   "country": "POL",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in Poland?",
+   "answer": "Wieliczka Salt Mine",
+   "recognition": 2
+  },
+  {
+   "id": "PRT-cristiano-ronaldo",
+   "country": "PRT",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Portugal's national team?",
+   "answer": "Cristiano Ronaldo",
+   "recognition": 3
+  },
+  {
+   "id": "PRT-vasco-da-gama",
+   "country": "PRT",
+   "category": "person",
+   "kind": "explorer",
+   "prompt": "Which of these explorers came from Portugal?",
+   "answer": "Vasco da Gama",
+   "recognition": 3
+  },
+  {
+   "id": "PRT-port-wine",
+   "country": "PRT",
+   "category": "food",
+   "kind": "drink",
+   "prompt": "Which of these drinks comes from Portugal?",
+   "answer": "Port wine",
+   "recognition": 3
+  },
+  {
+   "id": "PRT-fado",
+   "country": "PRT",
+   "category": "culture",
+   "kind": "music",
+   "prompt": "Which of these music or dance styles comes from Portugal?",
+   "answer": "Fado",
+   "recognition": 2
+  },
+  {
+   "id": "PRT-pastel-de-nata",
+   "country": "PRT",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Portugal?",
+   "answer": "Pastel de nata",
+   "recognition": 2
+  },
+  {
+   "id": "PRT-cork",
+   "country": "PRT",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Portugal produces about half of the world's supply of which material, harvested from tree bark?",
+   "answer": "Cork",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Rubber",
+    "Cinnamon",
+    "Maple syrup"
+   ]
+  },
+  {
+   "id": "PRI-pina-colada",
+   "country": "PRI",
+   "category": "food",
+   "kind": "drink",
+   "prompt": "Which of these drinks comes from Puerto Rico?",
+   "answer": "Piña colada",
+   "recognition": 3,
+   "hook": true
+  },
+  {
+   "id": "PRI-roberto-clemente",
+   "country": "PRI",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Puerto Rico?",
+   "answer": "Roberto Clemente",
+   "recognition": 2
+  },
+  {
+   "id": "PRI-bad-bunny",
+   "country": "PRI",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these musicians is from Puerto Rico?",
+   "answer": "Bad Bunny",
+   "recognition": 3
+  },
+  {
+   "id": "PRI-mofongo",
+   "country": "PRI",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Puerto Rico?",
+   "answer": "Mofongo",
+   "recognition": 1
+  },
+  {
+   "id": "QAT-the-fifa-world-cup",
+   "country": "QAT",
+   "category": "sport",
+   "kind": "custom",
+   "prompt": "In 2022 Qatar became the first Arab country to host which event?",
+   "answer": "The FIFA World Cup",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "The Summer Olympics",
+    "The Rugby World Cup",
+    "The Winter Olympics"
+   ]
+  },
+  {
+   "id": "QAT-natural-gas",
+   "country": "QAT",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Qatar's biggest export?",
+   "answer": "Natural gas",
+   "recognition": 2,
+   "group": "petroleum"
+  },
+  {
+   "id": "QAT-mutaz-barshim",
+   "country": "QAT",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Qatar?",
+   "answer": "Mutaz Barshim",
+   "recognition": 1
+  },
+  {
+   "id": "COG-kinshasa",
+   "country": "COG",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Brazzaville, capital of the Republic of the Congo, faces which other capital city directly across the river?",
+   "answer": "Kinshasa",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Luanda",
+    "Libreville",
+    "Bangui"
+   ]
+  },
+  {
+   "id": "ROU-count-dracula",
+   "country": "ROU",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Which fictional vampire is linked to Transylvania in Romania?",
+   "answer": "Count Dracula",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Frankenstein's monster",
+    "The Phantom of the Opera",
+    "Dr Jekyll"
+   ]
+  },
+  {
+   "id": "ROU-nadia-comaneci",
+   "country": "ROU",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Romania?",
+   "answer": "Nadia Comăneci",
+   "recognition": 3
+  },
+  {
+   "id": "ROU-gheorghe-hagi",
+   "country": "ROU",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Romania's national team?",
+   "answer": "Gheorghe Hagi",
+   "recognition": 2
+  },
+  {
+   "id": "ROU-bran-castle",
+   "country": "ROU",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in Romania?",
+   "answer": "Bran Castle",
+   "recognition": 2
+  },
+  {
+   "id": "ROU-heaviest-building",
+   "country": "ROU",
+   "category": "landmark",
+   "kind": "custom",
+   "prompt": "The Palace of the Parliament in Bucharest, Romania, holds which world record?",
+   "answer": "Heaviest building",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Tallest building",
+    "Oldest parliament",
+    "Largest dome"
+   ]
+  },
+  {
+   "id": "RUS-st-basil-s-cathedral",
+   "country": "RUS",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in Russia?",
+   "answer": "St Basil's Cathedral",
+   "recognition": 3
+  },
+  {
+   "id": "RUS-leo-tolstoy",
+   "country": "RUS",
+   "category": "person",
+   "kind": "writer",
+   "prompt": "Which of these writers is from Russia?",
+   "answer": "Leo Tolstoy",
+   "recognition": 3
+  },
+  {
+   "id": "RUS-tetris",
+   "country": "RUS",
+   "category": "culture",
+   "kind": "invention",
+   "prompt": "Which of these was invented or discovered in Russia?",
+   "answer": "Tetris",
+   "recognition": 2
+  },
+  {
+   "id": "RUS-mount-elbrus",
+   "country": "RUS",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in Russia?",
+   "answer": "Mount Elbrus",
+   "recognition": 2
+  },
+  {
+   "id": "RUS-baikal-seal",
+   "country": "RUS",
+   "category": "nature",
+   "kind": "animal",
+   "prompt": "Which of these animals lives in the wild only in Russia?",
+   "answer": "Baikal seal",
+   "recognition": 1
+  },
+  {
+   "id": "RUS-oil-and-gas",
+   "country": "RUS",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Russia's biggest export?",
+   "answer": "Oil and gas",
+   "recognition": 2,
+   "group": "petroleum"
+  },
+  {
+   "id": "RUS-lake-baikal",
+   "country": "RUS",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in Russia?",
+   "answer": "Lake Baikal",
+   "recognition": 2
+  },
+  {
+   "id": "RUS-pelmeni",
+   "country": "RUS",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Russia?",
+   "answer": "Pelmeni",
+   "recognition": 2
+  },
+  {
+   "id": "RUS-eleven",
+   "country": "RUS",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Russia is so wide that it spans how many time zones?",
+   "answer": "Eleven",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Three",
+    "Five",
+    "Seven"
+   ]
+  },
+  {
+   "id": "RWA-mountain-gorillas",
+   "country": "RWA",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "The primatologist Dian Fossey spent years in Rwanda studying which animals?",
+   "answer": "Mountain gorillas",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Chimpanzees",
+    "Orangutans",
+    "Baboons"
+   ]
+  },
+  {
+   "id": "RWA-land-of-a-thousand-hills",
+   "country": "RWA",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Which nickname describes Rwanda's landscape?",
+   "answer": "Land of a Thousand Hills",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Land of a Thousand Lakes",
+    "Land of Fire and Ice",
+    "Land of the Long White Cloud"
+   ]
+  },
+  {
+   "id": "BLM-sweden",
+   "country": "BLM",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Saint Barthélemy's capital, Gustavia, recalls the century when the island belonged to which country?",
+   "answer": "Sweden",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Denmark",
+    "Spain",
+    "Portugal"
+   ]
+  },
+  {
+   "id": "SHN-napoleon-bonaparte",
+   "country": "SHN",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Which emperor died in exile on Saint Helena in 1821?",
+   "answer": "Napoleon Bonaparte",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Julius Caesar",
+    "Kaiser Wilhelm II",
+    "Tsar Nicholas II"
+   ]
+  },
+  {
+   "id": "KNA-alexander-hamilton",
+   "country": "KNA",
+   "category": "person",
+   "kind": "custom",
+   "prompt": "Which US founding father, later the subject of a hit musical, was born on Nevis in Saint Kitts and Nevis?",
+   "answer": "Alexander Hamilton",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Benjamin Franklin",
+    "Thomas Jefferson",
+    "George Washington"
+   ]
+  },
+  {
+   "id": "LCA-women-s-100-metres",
+   "country": "LCA",
+   "category": "sport",
+   "kind": "custom",
+   "prompt": "Saint Lucia won its first ever Olympic medal in 2024, a gold in which event?",
+   "answer": "Women's 100 metres",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Men's marathon",
+    "Women's javelin",
+    "Men's high jump"
+   ]
+  },
+  {
+   "id": "LCA-the-pitons",
+   "country": "LCA",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in Saint Lucia?",
+   "answer": "The Pitons",
+   "recognition": 2
+  },
+  {
+   "id": "MAF-netherlands",
+   "country": "MAF",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Saint Martin is the French half of an island shared with a territory of which other country?",
+   "answer": "Netherlands",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Spain",
+    "United Kingdom",
+    "Denmark"
+   ]
+  },
+  {
+   "id": "SPM-france",
+   "country": "SPM",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Saint Pierre and Miquelon, off the coast of Canada, is the last North American territory of which country?",
+   "answer": "France",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Portugal",
+    "Spain",
+    "Norway"
+   ]
+  },
+  {
+   "id": "VCT-pirates-of-the-caribbean",
+   "country": "VCT",
+   "category": "film",
+   "kind": "film",
+   "prompt": "Which of these films or series was shot in Saint Vincent and the Grenadines?",
+   "answer": "Pirates of the Caribbean",
+   "recognition": 3,
+   "hook": true,
+   "sharedWith": [
+    "DMA",
+    "BHS",
+    "PRI",
+    "USA"
+   ]
+  },
+  {
+   "id": "VCT-breadfruit",
+   "country": "VCT",
+   "category": "food",
+   "kind": "custom",
+   "prompt": "Which starchy fruit did Captain Bligh, of Bounty fame, bring to Saint Vincent in 1793?",
+   "answer": "Breadfruit",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Pineapple",
+    "Coconut",
+    "Mango"
+   ]
+  },
+  {
+   "id": "WSM-robert-louis-stevenson",
+   "country": "WSM",
+   "category": "person",
+   "kind": "custom",
+   "prompt": "Which Scottish author of Treasure Island spent his final years in Samoa and is buried there?",
+   "answer": "Robert Louis Stevenson",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Rudyard Kipling",
+    "Herman Melville",
+    "Arthur Conan Doyle"
+   ]
+  },
+  {
+   "id": "SMR-world-s-oldest-republic",
+   "country": "SMR",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "San Marino, founded according to tradition in the year 301, claims which title?",
+   "answer": "World's oldest republic",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "World's smallest country",
+    "World's highest capital",
+    "World's first kingdom"
+   ]
+  },
+  {
+   "id": "STP-cocoa",
+   "country": "STP",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is São Tomé and Príncipe's biggest export?",
+   "answer": "Cocoa",
+   "recognition": 2,
+   "hook": true
+  },
+  {
+   "id": "STP-portugal",
+   "country": "STP",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "The islands of São Tomé and Príncipe were uninhabited until they were settled as a colony of which country?",
+   "answer": "Portugal",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Spain",
+    "France",
+    "Belgium"
+   ]
+  },
+  {
+   "id": "SAU-crude-oil",
+   "country": "SAU",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Saudi Arabia's biggest export?",
+   "answer": "Crude oil",
+   "recognition": 3,
+   "group": "petroleum"
+  },
+  {
+   "id": "SAU-the-kaaba-in-mecca",
+   "country": "SAU",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in Saudi Arabia?",
+   "answer": "The Kaaba in Mecca",
+   "recognition": 3
+  },
+  {
+   "id": "SAU-kabsa",
+   "country": "SAU",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Saudi Arabia?",
+   "answer": "Kabsa",
+   "recognition": 1
+  },
+  {
+   "id": "SAU-river",
+   "country": "SAU",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Saudi Arabia is the largest country in the world without a single permanent what?",
+   "answer": "River",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Mountain",
+    "Airport",
+    "Railway"
+   ]
+  },
+  {
+   "id": "SEN-sadio-mane",
+   "country": "SEN",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Senegal's national team?",
+   "answer": "Sadio Mané",
+   "recognition": 2
+  },
+  {
+   "id": "SEN-the-dakar-rally",
+   "country": "SEN",
+   "category": "sport",
+   "kind": "custom",
+   "prompt": "Which gruelling off-road race is named after Senegal's capital, where it used to finish?",
+   "answer": "The Dakar Rally",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "The Paris–Roubaix",
+    "The Baja 1000",
+    "The Mille Miglia"
+   ]
+  },
+  {
+   "id": "SEN-lake-retba-the-pink-lake",
+   "country": "SEN",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in Senegal?",
+   "answer": "Lake Retba (the Pink Lake)",
+   "recognition": 2
+  },
+  {
+   "id": "SEN-thieboudienne",
+   "country": "SEN",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Senegal?",
+   "answer": "Thieboudienne",
+   "recognition": 1
+  },
+  {
+   "id": "SRB-novak-djokovic",
+   "country": "SRB",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Serbia?",
+   "answer": "Novak Djokovic",
+   "recognition": 3
+  },
+  {
+   "id": "SRB-nikola-jokic",
+   "country": "SRB",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Serbia?",
+   "answer": "Nikola Jokić",
+   "recognition": 3
+  },
+  {
+   "id": "SRB-nemanja-vidic",
+   "country": "SRB",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Serbia's national team?",
+   "answer": "Nemanja Vidić",
+   "recognition": 2
+  },
+  {
+   "id": "SRB-constantine-the-great",
+   "country": "SRB",
+   "category": "person",
+   "kind": "custom",
+   "prompt": "Which Roman emperor, the first to convert to Christianity, was born in what is now Niš, Serbia?",
+   "answer": "Constantine the Great",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Julius Caesar",
+    "Nero",
+    "Marcus Aurelius"
+   ]
+  },
+  {
+   "id": "SYC-seed",
+   "country": "SYC",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "The coco de mer palm, which grows wild only in Seychelles, produces the world's largest what?",
+   "answer": "Seed",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Leaf",
+    "Flower",
+    "Thorn"
+   ]
+  },
+  {
+   "id": "SYC-aldabra-giant-tortoise",
+   "country": "SYC",
+   "category": "nature",
+   "kind": "animal",
+   "prompt": "Which of these animals lives in the wild only in the Seychelles?",
+   "answer": "Aldabra giant tortoise",
+   "recognition": 2
+  },
+  {
+   "id": "SYC-tuna",
+   "country": "SYC",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is the Seychelles's biggest export?",
+   "answer": "Tuna",
+   "recognition": 1
+  },
+  {
+   "id": "SLE-lion-mountains",
+   "country": "SLE",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "What does the name Sierra Leone mean?",
+   "answer": "Lion Mountains",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Emerald Coast",
+    "Land of Rivers",
+    "Golden Shore"
+   ]
+  },
+  {
+   "id": "SLE-freed-slaves",
+   "country": "SLE",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Sierra Leone's capital, Freetown, was founded in 1792 as a home for whom?",
+   "answer": "Freed slaves",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Gold miners",
+    "Pirates",
+    "Missionaries"
+   ]
+  },
+  {
+   "id": "SGP-marina-bay-sands",
+   "country": "SGP",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in Singapore?",
+   "answer": "Marina Bay Sands",
+   "recognition": 3
+  },
+  {
+   "id": "SGP-chewing-gum",
+   "country": "SGP",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Singapore is famous for banning the sale of what in 1992?",
+   "answer": "Chewing gum",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Fireworks",
+    "Cigarettes",
+    "Plastic bags"
+   ]
+  },
+  {
+   "id": "SGP-fish",
+   "country": "SGP",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Singapore's mascot, the Merlion, is half lion and half what?",
+   "answer": "Fish",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Eagle",
+    "Dragon",
+    "Snake"
+   ]
+  },
+  {
+   "id": "SXM-landing-airliners",
+   "country": "SXM",
+   "category": "landmark",
+   "kind": "custom",
+   "prompt": "Maho Beach on Sint Maarten is world-famous because what passes just above sunbathers' heads?",
+   "answer": "Landing airliners",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Cable cars",
+    "Migrating flamingos",
+    "Hang-gliders"
+   ]
+  },
+  {
+   "id": "SVK-marek-hamsik",
+   "country": "SVK",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Slovakia's national team?",
+   "answer": "Marek Hamšík",
+   "recognition": 2
+  },
+  {
+   "id": "SVK-austria-and-hungary",
+   "country": "SVK",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Slovakia's capital, Bratislava, is the only national capital that borders two other countries. Which two?",
+   "answer": "Austria and Hungary",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Poland and Ukraine",
+    "Czechia and Poland",
+    "Austria and Czechia"
+   ]
+  },
+  {
+   "id": "SVN-luka-doncic",
+   "country": "SVN",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Slovenia?",
+   "answer": "Luka Dončić",
+   "recognition": 3
+  },
+  {
+   "id": "SVN-jan-oblak",
+   "country": "SVN",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Slovenia's national team?",
+   "answer": "Jan Oblak",
+   "recognition": 2
+  },
+  {
+   "id": "SVN-lake-bled",
+   "country": "SVN",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in Slovenia?",
+   "answer": "Lake Bled",
+   "recognition": 2
+  },
+  {
+   "id": "SVN-triglav",
+   "country": "SVN",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in Slovenia?",
+   "answer": "Triglav",
+   "recognition": 1
+  },
+  {
+   "id": "SVN-lipizzaner",
+   "country": "SVN",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Which famous breed of white horse, ridden at the Spanish Riding School in Vienna, comes from Lipica in Slovenia?",
+   "answer": "Lipizzaner",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Andalusian",
+    "Camargue",
+    "Friesian"
+   ]
+  },
+  {
+   "id": "SVN-melania-trump",
+   "country": "SVN",
+   "category": "person",
+   "kind": "custom",
+   "prompt": "Which First Lady of the United States was born in Slovenia?",
+   "answer": "Melania Trump",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Jacqueline Kennedy",
+    "Hillary Clinton",
+    "Michelle Obama"
+   ]
+  },
+  {
+   "id": "SLB-john-f-kennedy",
+   "country": "SLB",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Which future US president was shipwrecked in the Solomon Islands in 1943 when his patrol boat, PT-109, was sunk?",
+   "answer": "John F. Kennedy",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Richard Nixon",
+    "George H. W. Bush",
+    "Dwight Eisenhower"
+   ]
+  },
+  {
+   "id": "SLB-timber",
+   "country": "SLB",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is the Solomon Islands's biggest export?",
+   "answer": "Timber",
+   "recognition": 1
+  },
+  {
+   "id": "SOM-coastline",
+   "country": "SOM",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Somalia has the longest what of any country on the African mainland?",
+   "answer": "Coastline",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "River",
+    "Railway",
+    "Mountain range"
+   ]
+  },
+  {
+   "id": "SOM-livestock",
+   "country": "SOM",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Somalia's biggest export?",
+   "answer": "Livestock",
+   "recognition": 1,
+   "unsure": true
+  },
+  {
+   "id": "ZAF-nelson-mandela",
+   "country": "ZAF",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical figures was born in South Africa?",
+   "answer": "Nelson Mandela",
+   "recognition": 3
+  },
+  {
+   "id": "ZAF-table-mountain",
+   "country": "ZAF",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in South Africa?",
+   "answer": "Table Mountain",
+   "recognition": 3
+  },
+  {
+   "id": "ZAF-rooibos-tea",
+   "country": "ZAF",
+   "category": "food",
+   "kind": "drink",
+   "prompt": "Which of these drinks comes from South Africa?",
+   "answer": "Rooibos tea",
+   "recognition": 2
+  },
+  {
+   "id": "ZAF-biltong",
+   "country": "ZAF",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from South Africa?",
+   "answer": "Biltong",
+   "recognition": 2
+  },
+  {
+   "id": "ZAF-three",
+   "country": "ZAF",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "South Africa is unusual in having how many capital cities?",
+   "answer": "Three",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "One",
+    "Two",
+    "Four"
+   ]
+  },
+  {
+   "id": "KOR-son-heung-min",
+   "country": "KOR",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for South Korea's national team?",
+   "answer": "Son Heung-min",
+   "recognition": 3
+  },
+  {
+   "id": "KOR-kimchi",
+   "country": "KOR",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from South Korea?",
+   "answer": "Kimchi",
+   "recognition": 3
+  },
+  {
+   "id": "KOR-k-pop",
+   "country": "KOR",
+   "category": "culture",
+   "kind": "music",
+   "prompt": "Which of these music or dance styles comes from South Korea?",
+   "answer": "K-pop",
+   "recognition": 3
+  },
+  {
+   "id": "KOR-taekwondo",
+   "country": "KOR",
+   "category": "sport",
+   "kind": "sport",
+   "prompt": "Which of these sports originated in South Korea?",
+   "answer": "Taekwondo",
+   "recognition": 3
+  },
+  {
+   "id": "KOR-semiconductors",
+   "country": "KOR",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is South Korea's biggest export?",
+   "answer": "Semiconductors",
+   "recognition": 2,
+   "unsure": true
+  },
+  {
+   "id": "KOR-gangnam-style",
+   "country": "KOR",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Which 2012 song by South Korea's Psy became the first video to reach a billion views on YouTube?",
+   "answer": "Gangnam Style",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Despacito",
+    "Shape of You",
+    "Macarena"
+   ]
+  },
+  {
+   "id": "SSD-the-white-nile",
+   "country": "SSD",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "The Sudd, one of the world's largest wetlands, is formed in South Sudan by which river?",
+   "answer": "The White Nile",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "The Congo",
+    "The Niger",
+    "The Zambezi"
+   ]
+  },
+  {
+   "id": "ESP-sagrada-familia",
+   "country": "ESP",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in Spain?",
+   "answer": "Sagrada Família",
+   "recognition": 3
+  },
+  {
+   "id": "ESP-paella",
+   "country": "ESP",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Spain?",
+   "answer": "Paella",
+   "recognition": 3
+  },
+  {
+   "id": "ESP-flamenco",
+   "country": "ESP",
+   "category": "culture",
+   "kind": "music",
+   "prompt": "Which of these music or dance styles comes from Spain?",
+   "answer": "Flamenco",
+   "recognition": 3
+  },
+  {
+   "id": "ESP-pablo-picasso",
+   "country": "ESP",
+   "category": "person",
+   "kind": "artist",
+   "prompt": "Which of these artists is from Spain?",
+   "answer": "Pablo Picasso",
+   "recognition": 3
+  },
+  {
+   "id": "ESP-andres-iniesta",
+   "country": "ESP",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Spain's national team?",
+   "answer": "Andrés Iniesta",
+   "recognition": 3
+  },
+  {
+   "id": "ESP-rafael-nadal",
+   "country": "ESP",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Spain?",
+   "answer": "Rafael Nadal",
+   "recognition": 3
+  },
+  {
+   "id": "ESP-sherry",
+   "country": "ESP",
+   "category": "food",
+   "kind": "drink",
+   "prompt": "Which of these drinks comes from Spain?",
+   "answer": "Sherry",
+   "recognition": 2
+  },
+  {
+   "id": "ESP-mount-teide",
+   "country": "ESP",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in Spain?",
+   "answer": "Mount Teide",
+   "recognition": 2
+  },
+  {
+   "id": "ESP-miguel-de-cervantes",
+   "country": "ESP",
+   "category": "person",
+   "kind": "writer",
+   "prompt": "Which of these writers is from Spain?",
+   "answer": "Miguel de Cervantes",
+   "recognition": 2
+  },
+  {
+   "id": "ESP-la-tomatina",
+   "country": "ESP",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Which festival, held each August in Buñol, Spain, is a giant food fight with tomatoes?",
+   "answer": "La Tomatina",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Las Fallas",
+    "Oktoberfest",
+    "Holi"
+   ]
+  },
+  {
+   "id": "LKA-ceylon",
+   "country": "LKA",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Sri Lanka formerly called?",
+   "answer": "Ceylon",
+   "recognition": 3,
+   "hook": true
+  },
+  {
+   "id": "LKA-sigiriya",
+   "country": "LKA",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Sri Lanka?",
+   "answer": "Sigiriya",
+   "recognition": 2
+  },
+  {
+   "id": "LKA-ceylon-tea",
+   "country": "LKA",
+   "category": "food",
+   "kind": "drink",
+   "prompt": "Which of these drinks comes from Sri Lanka?",
+   "answer": "Ceylon tea",
+   "recognition": 2
+  },
+  {
+   "id": "LKA-prime-minister",
+   "country": "LKA",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "In 1960 Sri Lanka's Sirimavo Bandaranaike became the first woman in the world to hold which office?",
+   "answer": "Prime minister",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "President",
+    "Supreme Court judge",
+    "Army general"
+   ]
+  },
+  {
+   "id": "SDN-pyramids",
+   "country": "SDN",
+   "category": "landmark",
+   "kind": "custom",
+   "prompt": "Sudan has more of which ancient monuments than Egypt does?",
+   "answer": "Pyramids",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Sphinxes",
+    "Obelisks",
+    "Amphitheatres"
+   ]
+  },
+  {
+   "id": "SUR-dutch",
+   "country": "SUR",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Suriname is the only country in South America where which language is official?",
+   "answer": "Dutch",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "English",
+    "French",
+    "Portuguese"
+   ]
+  },
+  {
+   "id": "SUR-clarence-seedorf",
+   "country": "SUR",
+   "category": "person",
+   "kind": "custom",
+   "prompt": "Which Dutch football star was born in Paramaribo, Suriname?",
+   "answer": "Clarence Seedorf",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Johan Cruyff",
+    "Arjen Robben",
+    "Marco van Basten"
+   ]
+  },
+  {
+   "id": "SUR-dutch-guiana",
+   "country": "SUR",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Suriname formerly called?",
+   "answer": "Dutch Guiana",
+   "recognition": 1
+  },
+  {
+   "id": "SUR-gold",
+   "country": "SUR",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Suriname's biggest export?",
+   "answer": "Gold",
+   "recognition": 1
+  },
+  {
+   "id": "SWE-abba",
+   "country": "SWE",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these musicians is from Sweden?",
+   "answer": "ABBA",
+   "recognition": 3
+  },
+  {
+   "id": "SWE-zlatan-ibrahimovic",
+   "country": "SWE",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Sweden's national team?",
+   "answer": "Zlatan Ibrahimović",
+   "recognition": 3
+  },
+  {
+   "id": "SWE-bluetooth",
+   "country": "SWE",
+   "category": "culture",
+   "kind": "invention",
+   "prompt": "Which of these was invented or discovered in Sweden?",
+   "answer": "Bluetooth",
+   "recognition": 2
+  },
+  {
+   "id": "SWE-safety-match",
+   "country": "SWE",
+   "category": "culture",
+   "kind": "invention",
+   "prompt": "Which of these was invented or discovered in Sweden?",
+   "answer": "Safety match",
+   "recognition": 2
+  },
+  {
+   "id": "SWE-bjorn-borg",
+   "country": "SWE",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Sweden?",
+   "answer": "Björn Borg",
+   "recognition": 3
+  },
+  {
+   "id": "SWE-ice",
+   "country": "SWE",
+   "category": "landmark",
+   "kind": "custom",
+   "prompt": "Every winter since 1989, Jukkasjärvi in Sweden has rebuilt the world's first hotel made of what?",
+   "answer": "Ice",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Glass",
+    "Salt",
+    "Driftwood"
+   ]
+  },
+  {
+   "id": "CHE-roger-federer",
+   "country": "CHE",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Switzerland?",
+   "answer": "Roger Federer",
+   "recognition": 3
+  },
+  {
+   "id": "CHE-xherdan-shaqiri",
+   "country": "CHE",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Switzerland's national team?",
+   "answer": "Xherdan Shaqiri",
+   "recognition": 2
+  },
+  {
+   "id": "CHE-fondue",
+   "country": "CHE",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Switzerland?",
+   "answer": "Fondue",
+   "recognition": 3,
+   "sharedWith": [
+    "FRA",
+    "ITA"
+   ]
+  },
+  {
+   "id": "CHE-helvetia",
+   "country": "CHE",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Switzerland formerly called?",
+   "answer": "Helvetia",
+   "recognition": 2
+  },
+  {
+   "id": "CHE-dufourspitze",
+   "country": "CHE",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in Switzerland?",
+   "answer": "Dufourspitze",
+   "recognition": 1
+  },
+  {
+   "id": "CHE-matterhorn",
+   "country": "CHE",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in Switzerland?",
+   "answer": "Matterhorn",
+   "recognition": 3,
+   "sharedWith": [
+    "ITA"
+   ]
+  },
+  {
+   "id": "CHE-milk-chocolate",
+   "country": "CHE",
+   "category": "culture",
+   "kind": "invention",
+   "prompt": "Which of these was invented or discovered in Switzerland?",
+   "answer": "Milk chocolate",
+   "recognition": 2
+  },
+  {
+   "id": "CHE-the-red-cross",
+   "country": "CHE",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Which humanitarian organisation, whose emblem reverses the Swiss flag, was founded in Geneva, Switzerland?",
+   "answer": "The Red Cross",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Amnesty International",
+    "UNICEF",
+    "Greenpeace"
+   ]
+  },
+  {
+   "id": "SYR-palmyra",
+   "country": "SYR",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Syria?",
+   "answer": "Palmyra",
+   "recognition": 2
+  },
+  {
+   "id": "SYR-damascus",
+   "country": "SYR",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Which city in Syria gave its name to a famous patterned steel once used for sword blades?",
+   "answer": "Damascus",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Toledo",
+    "Baghdad",
+    "Isfahan"
+   ]
+  },
+  {
+   "id": "TWN-bubble-tea",
+   "country": "TWN",
+   "category": "food",
+   "kind": "drink",
+   "prompt": "Which of these drinks comes from Taiwan?",
+   "answer": "Bubble tea",
+   "recognition": 3,
+   "hook": true
+  },
+  {
+   "id": "TWN-taipei-101",
+   "country": "TWN",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in Taiwan?",
+   "answer": "Taipei 101",
+   "recognition": 2
+  },
+  {
+   "id": "TWN-formosa",
+   "country": "TWN",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Taiwan formerly called?",
+   "answer": "Formosa",
+   "recognition": 2
+  },
+  {
+   "id": "TWN-semiconductors",
+   "country": "TWN",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Taiwan's biggest export?",
+   "answer": "Semiconductors",
+   "recognition": 2
+  },
+  {
+   "id": "TJK-persian",
+   "country": "TJK",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Unlike its Turkic-speaking neighbours in Central Asia, Tajikistan speaks a language closely related to which one?",
+   "answer": "Persian",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Arabic",
+    "Mongolian",
+    "Hindi"
+   ]
+  },
+  {
+   "id": "TJK-the-roof-of-the-world",
+   "country": "TJK",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "The Pamir Mountains of Tajikistan are known by which nickname?",
+   "answer": "The Roof of the World",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "The Spine of Asia",
+    "The Gates of Heaven",
+    "The Dragon's Back"
+   ]
+  },
+  {
+   "id": "TZA-mount-kilimanjaro",
+   "country": "TZA",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in Tanzania?",
+   "answer": "Mount Kilimanjaro",
+   "recognition": 3
+  },
+  {
+   "id": "TZA-serengeti",
+   "country": "TZA",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in Tanzania?",
+   "answer": "Serengeti",
+   "recognition": 3,
+   "sharedWith": [
+    "KEN"
+   ]
+  },
+  {
+   "id": "TZA-ngorongoro-crater",
+   "country": "TZA",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in Tanzania?",
+   "answer": "Ngorongoro Crater",
+   "recognition": 2
+  },
+  {
+   "id": "TZA-freddie-mercury",
+   "country": "TZA",
+   "category": "person",
+   "kind": "custom",
+   "prompt": "Which Queen frontman was born in Zanzibar, now part of Tanzania?",
+   "answer": "Freddie Mercury",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Elton John",
+    "David Bowie",
+    "George Michael"
+   ]
+  },
+  {
+   "id": "THA-pad-thai",
+   "country": "THA",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Thailand?",
+   "answer": "Pad thai",
+   "recognition": 3
+  },
+  {
+   "id": "THA-siam",
+   "country": "THA",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Thailand formerly called?",
+   "answer": "Siam",
+   "recognition": 3
+  },
+  {
+   "id": "THA-the-beach",
+   "country": "THA",
+   "category": "film",
+   "kind": "film",
+   "prompt": "Which of these films or series was shot in Thailand?",
+   "answer": "The Beach",
+   "recognition": 2
+  },
+  {
+   "id": "THA-muay-thai",
+   "country": "THA",
+   "category": "sport",
+   "kind": "sport",
+   "prompt": "Which of these sports originated in Thailand?",
+   "answer": "Muay Thai",
+   "recognition": 2
+  },
+  {
+   "id": "THA-colonised-by-a-european-power",
+   "country": "THA",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Thailand is the only country in Southeast Asia that was never what?",
+   "answer": "Colonised by a European power",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Ruled by a king",
+    "Home to Buddhism",
+    "Part of a trade route"
+   ]
+  },
+  {
+   "id": "TLS-portugal",
+   "country": "TLS",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Timor-Leste was a colony of which European country for more than 400 years?",
+   "answer": "Portugal",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Netherlands",
+    "Spain",
+    "Britain"
+   ]
+  },
+  {
+   "id": "TGO-emmanuel-adebayor",
+   "country": "TGO",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Togo's national team?",
+   "answer": "Emmanuel Adebayor",
+   "recognition": 2
+  },
+  {
+   "id": "TGO-voodoo",
+   "country": "TGO",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "A famous market in Lomé, Togo, sells animal skulls and charms for followers of which religion?",
+   "answer": "Voodoo",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Hinduism",
+    "Shinto",
+    "Rastafari"
+   ]
+  },
+  {
+   "id": "TON-the-friendly-islands",
+   "country": "TON",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Captain Cook gave Tonga which nickname after the warm welcome he received?",
+   "answer": "The Friendly Islands",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "The Smiling Isles",
+    "The Gentle Islands",
+    "The Happy Isles"
+   ]
+  },
+  {
+   "id": "TTO-dwight-yorke",
+   "country": "TTO",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Trinidad and Tobago's national team?",
+   "answer": "Dwight Yorke",
+   "recognition": 2
+  },
+  {
+   "id": "TTO-calypso",
+   "country": "TTO",
+   "category": "culture",
+   "kind": "music",
+   "prompt": "Which of these music or dance styles comes from Trinidad and Tobago?",
+   "answer": "Calypso",
+   "recognition": 2
+  },
+  {
+   "id": "TTO-pitch-lake",
+   "country": "TTO",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in Trinidad and Tobago?",
+   "answer": "Pitch Lake",
+   "recognition": 1
+  },
+  {
+   "id": "TTO-steelpan",
+   "country": "TTO",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Which instrument, made from oil drums, was invented in Trinidad and Tobago?",
+   "answer": "Steelpan",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Marimba",
+    "Banjo",
+    "Didgeridoo"
+   ]
+  },
+  {
+   "id": "TUN-carthage",
+   "country": "TUN",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which ancient city's ruins are in Tunisia?",
+   "answer": "Carthage",
+   "recognition": 3,
+   "hook": true
+  },
+  {
+   "id": "TUN-star-wars",
+   "country": "TUN",
+   "category": "film",
+   "kind": "custom",
+   "prompt": "Which film series shot its desert planet scenes in Tunisia?",
+   "answer": "Star Wars",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Dune",
+    "Star Trek",
+    "Mad Max"
+   ]
+  },
+  {
+   "id": "TUN-the-arab-spring",
+   "country": "TUN",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Which wave of uprisings across the Arab world began in Tunisia in late 2010?",
+   "answer": "The Arab Spring",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "The Green Revolution",
+    "The Velvet Revolution",
+    "The Orange Revolution"
+   ]
+  },
+  {
+   "id": "TUN-ons-jabeur",
+   "country": "TUN",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Tunisia?",
+   "answer": "Ons Jabeur",
+   "recognition": 2
+  },
+  {
+   "id": "TUR-hagia-sophia",
+   "country": "TUR",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in Turkey?",
+   "answer": "Hagia Sophia",
+   "recognition": 3
+  },
+  {
+   "id": "TUR-troy",
+   "country": "TUR",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in Turkey?",
+   "answer": "Troy",
+   "recognition": 3
+  },
+  {
+   "id": "TUR-mount-ararat",
+   "country": "TUR",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in Turkey?",
+   "answer": "Mount Ararat",
+   "recognition": 2
+  },
+  {
+   "id": "TUR-cappadocia",
+   "country": "TUR",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in Turkey?",
+   "answer": "Cappadocia",
+   "recognition": 2
+  },
+  {
+   "id": "TUR-europe-and-asia",
+   "country": "TUR",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Turkey's largest city, Istanbul, is famous for lying on which two continents?",
+   "answer": "Europe and Asia",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Asia and Africa",
+    "Europe and Africa",
+    "Asia and Oceania"
+   ]
+  },
+  {
+   "id": "TKM-the-door-to-hell",
+   "country": "TKM",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "A burning gas crater in the desert of Turkmenistan, alight since the 1970s, is known by which nickname?",
+   "answer": "The Door to Hell",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "The Devil's Kitchen",
+    "The Dragon's Mouth",
+    "The Eternal Lantern"
+   ]
+  },
+  {
+   "id": "TKM-natural-gas",
+   "country": "TKM",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Turkmenistan's biggest export?",
+   "answer": "Natural gas",
+   "recognition": 2,
+   "group": "petroleum"
+  },
+  {
+   "id": "TCA-john-glenn",
+   "country": "TCA",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Which American astronaut, the first to orbit the Earth, was brought ashore on Grand Turk in the Turks and Caicos Islands in 1962?",
+   "answer": "John Glenn",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Neil Armstrong",
+    "Buzz Aldrin",
+    "Alan Shepard"
+   ]
+  },
+  {
+   "id": "UGA-the-pearl-of-africa",
+   "country": "UGA",
+   "category": "culture",
+   "kind": "custom",
+   "prompt": "Winston Churchill gave Uganda which nickname?",
+   "answer": "The Pearl of Africa",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "The Jewel of the Nile",
+    "The Garden of Africa",
+    "The Emerald Country"
+   ]
+  },
+  {
+   "id": "UGA-joshua-cheptegei",
+   "country": "UGA",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from Uganda?",
+   "answer": "Joshua Cheptegei",
+   "recognition": 2
+  },
+  {
+   "id": "UKR-andriy-shevchenko",
+   "country": "UKR",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Ukraine's national team?",
+   "answer": "Andriy Shevchenko",
+   "recognition": 2
+  },
+  {
+   "id": "UKR-chernobyl",
+   "country": "UKR",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "The world's worst nuclear accident happened in 1986 at which power plant in Ukraine?",
+   "answer": "Chernobyl",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Fukushima",
+    "Three Mile Island",
+    "Sellafield"
+   ]
+  },
+  {
+   "id": "UKR-deepest-metro-station-in-the-world",
+   "country": "UKR",
+   "category": "landmark",
+   "kind": "custom",
+   "prompt": "Arsenalna station in Kyiv, Ukraine, holds which record?",
+   "answer": "Deepest metro station in the world",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Oldest railway station in the world",
+    "Busiest metro station in the world",
+    "Longest platform in the world"
+   ]
+  },
+  {
+   "id": "ARE-burj-khalifa",
+   "country": "ARE",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in the United Arab Emirates?",
+   "answer": "Burj Khalifa",
+   "recognition": 3
+  },
+  {
+   "id": "ARE-trucial-states",
+   "country": "ARE",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was the United Arab Emirates formerly called?",
+   "answer": "Trucial States",
+   "recognition": 1
+  },
+  {
+   "id": "ARE-crude-oil",
+   "country": "ARE",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is the United Arab Emirates's biggest export?",
+   "answer": "Crude oil",
+   "recognition": 2,
+   "group": "petroleum"
+  },
+  {
+   "id": "ARE-a-palm-tree",
+   "country": "ARE",
+   "category": "landmark",
+   "kind": "custom",
+   "prompt": "Dubai, in the United Arab Emirates, built a famous artificial island in the shape of what?",
+   "answer": "A palm tree",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "A crescent moon",
+    "A falcon",
+    "A star"
+   ]
+  },
+  {
+   "id": "GBR-stonehenge",
+   "country": "GBR",
+   "category": "landmark",
+   "kind": "ancient",
+   "prompt": "Which of these ancient sites is in the United Kingdom?",
+   "answer": "Stonehenge",
+   "recognition": 3,
+   "hook": true
+  },
+  {
+   "id": "GBR-big-ben",
+   "country": "GBR",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in the United Kingdom?",
+   "answer": "Big Ben",
+   "recognition": 3
+  },
+  {
+   "id": "GBR-william-shakespeare",
+   "country": "GBR",
+   "category": "person",
+   "kind": "writer",
+   "prompt": "Which of these writers is from the United Kingdom?",
+   "answer": "William Shakespeare",
+   "recognition": 3
+  },
+  {
+   "id": "GBR-lewis-hamilton",
+   "country": "GBR",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from the United Kingdom?",
+   "answer": "Lewis Hamilton",
+   "recognition": 3
+  },
+  {
+   "id": "GBR-isaac-newton",
+   "country": "GBR",
+   "category": "person",
+   "kind": "scientist",
+   "prompt": "Which of these scientists was born in the United Kingdom?",
+   "answer": "Isaac Newton",
+   "recognition": 3
+  },
+  {
+   "id": "GBR-the-beatles",
+   "country": "GBR",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these musicians is from the United Kingdom?",
+   "answer": "The Beatles",
+   "recognition": 3
+  },
+  {
+   "id": "GBR-james-cook",
+   "country": "GBR",
+   "category": "person",
+   "kind": "explorer",
+   "prompt": "Which of these explorers came from the United Kingdom?",
+   "answer": "James Cook",
+   "recognition": 3
+  },
+  {
+   "id": "GBR-golf",
+   "country": "GBR",
+   "category": "sport",
+   "kind": "sport",
+   "prompt": "Which of these sports originated in the United Kingdom?",
+   "answer": "Golf",
+   "recognition": 3
+  },
+  {
+   "id": "GBR-fish-and-chips",
+   "country": "GBR",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from the United Kingdom?",
+   "answer": "Fish and chips",
+   "recognition": 3
+  },
+  {
+   "id": "GBR-ben-nevis",
+   "country": "GBR",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in the United Kingdom?",
+   "answer": "Ben Nevis",
+   "recognition": 2
+  },
+  {
+   "id": "GBR-penicillin",
+   "country": "GBR",
+   "category": "culture",
+   "kind": "invention",
+   "prompt": "Which of these was invented or discovered in the United Kingdom?",
+   "answer": "Penicillin",
+   "recognition": 2
+  },
+  {
+   "id": "USA-statue-of-liberty",
+   "country": "USA",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in the United States?",
+   "answer": "Statue of Liberty",
+   "recognition": 3
+  },
+  {
+   "id": "USA-michael-jordan",
+   "country": "USA",
+   "category": "person",
+   "kind": "athlete",
+   "prompt": "Which of these sports stars is from the United States?",
+   "answer": "Michael Jordan",
+   "recognition": 3
+  },
+  {
+   "id": "USA-denali",
+   "country": "USA",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in the United States?",
+   "answer": "Denali",
+   "recognition": 2
+  },
+  {
+   "id": "USA-basketball",
+   "country": "USA",
+   "category": "sport",
+   "kind": "sport",
+   "prompt": "Which of these sports originated in the United States?",
+   "answer": "Basketball",
+   "recognition": 3
+  },
+  {
+   "id": "USA-jazz",
+   "country": "USA",
+   "category": "culture",
+   "kind": "music",
+   "prompt": "Which of these music or dance styles comes from the United States?",
+   "answer": "Jazz",
+   "recognition": 3
+  },
+  {
+   "id": "USA-grand-canyon",
+   "country": "USA",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in the United States?",
+   "answer": "Grand Canyon",
+   "recognition": 3
+  },
+  {
+   "id": "USA-christian-pulisic",
+   "country": "USA",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for the United States's national team?",
+   "answer": "Christian Pulisic",
+   "recognition": 2
+  },
+  {
+   "id": "USA-mark-twain",
+   "country": "USA",
+   "category": "person",
+   "kind": "writer",
+   "prompt": "Which of these writers is from the United States?",
+   "answer": "Mark Twain",
+   "recognition": 2
+  },
+  {
+   "id": "USA-the-internet",
+   "country": "USA",
+   "category": "culture",
+   "kind": "invention",
+   "prompt": "Which of these was invented or discovered in the United States?",
+   "answer": "The internet",
+   "recognition": 3
+  },
+  {
+   "id": "USA-the-louisiana-purchase",
+   "country": "USA",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Which purchase from France in 1803 roughly doubled the size of the United States?",
+   "answer": "The Louisiana Purchase",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "The Alaska Purchase",
+    "The Gadsden Purchase",
+    "The Florida Purchase"
+   ]
+  },
+  {
+   "id": "VIR-denmark",
+   "country": "VIR",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "The United States Virgin Islands were bought in 1917 from which country?",
+   "answer": "Denmark",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Spain",
+    "France",
+    "Netherlands"
+   ]
+  },
+  {
+   "id": "URY-luis-suarez",
+   "country": "URY",
+   "category": "person",
+   "kind": "footballer",
+   "prompt": "Which of these footballers has played for Uruguay's national team?",
+   "answer": "Luis Suárez",
+   "recognition": 2
+  },
+  {
+   "id": "URY-the-fifa-world-cup",
+   "country": "URY",
+   "category": "sport",
+   "kind": "custom",
+   "prompt": "In 1930 Uruguay hosted and won the very first edition of which tournament?",
+   "answer": "The FIFA World Cup",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "The Copa América",
+    "The Olympic Games",
+    "The Davis Cup"
+   ]
+  },
+  {
+   "id": "URY-chivito",
+   "country": "URY",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Uruguay?",
+   "answer": "Chivito",
+   "recognition": 1
+  },
+  {
+   "id": "URY-beef",
+   "country": "URY",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Uruguay's biggest export?",
+   "answer": "Beef",
+   "recognition": 2,
+   "unsure": true
+  },
+  {
+   "id": "UZB-the-registan-in-samarkand",
+   "country": "UZB",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in Uzbekistan?",
+   "answer": "The Registan in Samarkand",
+   "recognition": 2,
+   "hook": true
+  },
+  {
+   "id": "UZB-doubly-landlocked",
+   "country": "UZB",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Uzbekistan and Liechtenstein are the world's only two countries that are what?",
+   "answer": "Doubly landlocked",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Without an army",
+    "Without rivers",
+    "Entirely mountainous"
+   ]
+  },
+  {
+   "id": "UZB-the-aral-sea",
+   "country": "UZB",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Which lake on Uzbekistan's border, once the world's fourth largest, has mostly dried up since the 1960s?",
+   "answer": "The Aral Sea",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "The Caspian Sea",
+    "Lake Baikal",
+    "The Dead Sea"
+   ]
+  },
+  {
+   "id": "VUT-bungee-jumping",
+   "country": "VUT",
+   "category": "sport",
+   "kind": "custom",
+   "prompt": "Land diving from wooden towers on Pentecost Island in Vanuatu inspired which modern thrill sport?",
+   "answer": "Bungee jumping",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Skydiving",
+    "Paragliding",
+    "Cliff diving"
+   ]
+  },
+  {
+   "id": "VUT-new-hebrides",
+   "country": "VUT",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Vanuatu formerly called?",
+   "answer": "New Hebrides",
+   "recognition": 1
+  },
+  {
+   "id": "VAT-sistine-chapel",
+   "country": "VAT",
+   "category": "landmark",
+   "kind": "landmark",
+   "prompt": "Which of these landmarks is in Vatican City?",
+   "answer": "Sistine Chapel",
+   "recognition": 3,
+   "hook": true
+  },
+  {
+   "id": "VAT-switzerland",
+   "country": "VAT",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "The Pope's colourful guards at Vatican City have been recruited since 1506 from which country?",
+   "answer": "Switzerland",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Austria",
+    "Spain",
+    "Germany"
+   ]
+  },
+  {
+   "id": "VAT-smallest-country",
+   "country": "VAT",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Vatican City holds which world record?",
+   "answer": "Smallest country",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Oldest country",
+    "Richest country",
+    "Most visited country"
+   ]
+  },
+  {
+   "id": "VEN-angel-falls",
+   "country": "VEN",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in Venezuela?",
+   "answer": "Angel Falls",
+   "recognition": 3,
+   "hook": true
+  },
+  {
+   "id": "VEN-simon-bolivar",
+   "country": "VEN",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical figures was born in Venezuela?",
+   "answer": "Simón Bolívar",
+   "recognition": 2
+  },
+  {
+   "id": "VEN-crude-oil",
+   "country": "VEN",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Venezuela's biggest export?",
+   "answer": "Crude oil",
+   "recognition": 2,
+   "group": "petroleum"
+  },
+  {
+   "id": "VEN-venice",
+   "country": "VEN",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "The name Venezuela is said to mean \"little\" what, after stilt houses that reminded explorers of an Italian city?",
+   "answer": "Venice",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Valencia",
+    "Vienna",
+    "Verona"
+   ]
+  },
+  {
+   "id": "VNM-ha-long-bay",
+   "country": "VNM",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in Vietnam?",
+   "answer": "Ha Long Bay",
+   "recognition": 3
+  },
+  {
+   "id": "VNM-pho",
+   "country": "VNM",
+   "category": "food",
+   "kind": "dish",
+   "prompt": "Which of these dishes comes from Vietnam?",
+   "answer": "Pho",
+   "recognition": 3
+  },
+  {
+   "id": "VNM-fansipan",
+   "country": "VNM",
+   "category": "nature",
+   "kind": "mountain",
+   "prompt": "What is the highest mountain in Vietnam?",
+   "answer": "Fansipan",
+   "recognition": 1
+  },
+  {
+   "id": "VNM-electronics",
+   "country": "VNM",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Vietnam's biggest export?",
+   "answer": "Electronics",
+   "recognition": 2,
+   "unsure": true
+  },
+  {
+   "id": "VNM-cave",
+   "country": "VNM",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Son Doong in Vietnam, big enough to hold a city block, is the world's largest what?",
+   "answer": "Cave",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Waterfall",
+    "Crater",
+    "Sinkhole"
+   ]
+  },
+  {
+   "id": "WLF-kings",
+   "country": "WLF",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "Although it is a French territory, Wallis and Futuna still has three traditional what?",
+   "answer": "Kings",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Presidents",
+    "Sultans",
+    "Emperors"
+   ]
+  },
+  {
+   "id": "ESH-phosphate",
+   "country": "ESH",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "A conveyor belt almost 100 km long, the longest in the world, crosses Western Sahara carrying which mineral to the coast?",
+   "answer": "Phosphate",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Salt",
+    "Iron ore",
+    "Coal"
+   ]
+  },
+  {
+   "id": "YEM-dragon-s-blood-trees",
+   "country": "YEM",
+   "category": "nature",
+   "kind": "custom",
+   "prompt": "Yemen's island of Socotra is famous for umbrella-shaped trees that ooze red sap. What are they called?",
+   "answer": "Dragon's blood trees",
+   "recognition": 2,
+   "hook": true,
+   "wrong": [
+    "Baobabs",
+    "Joshua trees",
+    "Monkey puzzle trees"
+   ]
+  },
+  {
+   "id": "YEM-mocha",
+   "country": "YEM",
+   "category": "food",
+   "kind": "custom",
+   "prompt": "Which coffee drink takes its name from a port in Yemen?",
+   "answer": "Mocha",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "Latte",
+    "Espresso",
+    "Cappuccino"
+   ]
+  },
+  {
+   "id": "ZMB-victoria-falls",
+   "country": "ZMB",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in Zambia?",
+   "answer": "Victoria Falls",
+   "recognition": 3,
+   "hook": true,
+   "sharedWith": [
+    "ZWE"
+   ]
+  },
+  {
+   "id": "ZMB-northern-rhodesia",
+   "country": "ZMB",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Zambia formerly called?",
+   "answer": "Northern Rhodesia",
+   "recognition": 1,
+   "group": "rhodesia"
+  },
+  {
+   "id": "ZMB-copper",
+   "country": "ZMB",
+   "category": "economy",
+   "kind": "export",
+   "prompt": "What is Zambia's biggest export?",
+   "answer": "Copper",
+   "recognition": 2
+  },
+  {
+   "id": "ZWE-rhodesia",
+   "country": "ZWE",
+   "category": "history",
+   "kind": "formerly",
+   "prompt": "What was Zimbabwe formerly called?",
+   "answer": "Rhodesia",
+   "recognition": 2,
+   "group": "rhodesia"
+  },
+  {
+   "id": "ZWE-victoria-falls",
+   "country": "ZWE",
+   "category": "nature",
+   "kind": "natural",
+   "prompt": "Which of these natural wonders is in Zimbabwe?",
+   "answer": "Victoria Falls",
+   "recognition": 3,
+   "sharedWith": [
+    "ZMB"
+   ]
+  },
+  {
+   "id": "ZWE-100-trillion",
+   "country": "ZWE",
+   "category": "history",
+   "kind": "custom",
+   "prompt": "During hyperinflation in 2009, Zimbabwe printed a banknote worth how many dollars?",
+   "answer": "100 trillion",
+   "recognition": 3,
+   "hook": true,
+   "wrong": [
+    "1 million",
+    "10 billion",
+    "500 million"
+   ]
+  }
+ ]
+}

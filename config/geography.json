@@ -1,0 +1,1449 @@
+{
+  "about": "Seas, oceans and major features by the countries they touch. `countries` = clearly borders or contains it (can be the right answer). `avoid` = arguable or marginal (never the right answer, never offered as a wrong one). `box` = rough [west, south, east, north] in degrees: any coastal country reaching into it is added to `avoid` automatically as a safety net. `parent` = the ocean a sea belongs to: a country on the sea is never offered that ocean as a wrong answer. Edit, then run `npm run derive`. `linesAvoid` overrides the computed globe lines where a shape includes disputed land.",
+  "waters": [
+    {
+      "name": "Atlantic Ocean",
+      "countries": [
+        "USA",
+        "CAN",
+        "GRL",
+        "ISL",
+        "IRL",
+        "GBR",
+        "FRA",
+        "ESP",
+        "PRT",
+        "MAR",
+        "ESH",
+        "MRT",
+        "SEN",
+        "GMB",
+        "GNB",
+        "GIN",
+        "SLE",
+        "LBR",
+        "CIV",
+        "GHA",
+        "TGO",
+        "BEN",
+        "NGA",
+        "CMR",
+        "GNQ",
+        "GAB",
+        "COG",
+        "COD",
+        "AGO",
+        "NAM",
+        "ZAF",
+        "BRA",
+        "URY",
+        "ARG",
+        "GUY",
+        "SUR",
+        "CPV",
+        "STP",
+        "SHN",
+        "FLK",
+        "BMU",
+        "BHS",
+        "TCA",
+        "FRO",
+        "SPM",
+        "PRI",
+        "BRB"
+      ],
+      "avoid": [
+        "NOR",
+        "VEN",
+        "CHL",
+        "GGY",
+        "JEY",
+        "IMN",
+        "TTO",
+        "ATG",
+        "DMA",
+        "LCA",
+        "VCT",
+        "GRD",
+        "KNA",
+        "MSR",
+        "AIA",
+        "VGB",
+        "VIR",
+        "MAF",
+        "SXM",
+        "BLM",
+        "DOM",
+        "HTI",
+        "CUB"
+      ]
+    },
+    {
+      "name": "Pacific Ocean",
+      "countries": [
+        "USA",
+        "CAN",
+        "MEX",
+        "GTM",
+        "SLV",
+        "HND",
+        "NIC",
+        "CRI",
+        "PAN",
+        "COL",
+        "ECU",
+        "PER",
+        "CHL",
+        "RUS",
+        "JPN",
+        "PHL",
+        "TWN",
+        "PNG",
+        "AUS",
+        "NZL",
+        "FJI",
+        "VUT",
+        "SLB",
+        "NCL",
+        "WSM",
+        "TON",
+        "KIR",
+        "MHL",
+        "FSM",
+        "PLW",
+        "NRU",
+        "GUM",
+        "MNP",
+        "ASM",
+        "COK",
+        "NIU",
+        "PYF",
+        "WLF",
+        "PCN",
+        "NFK"
+      ],
+      "avoid": [
+        "IDN",
+        "TLS",
+        "CHN",
+        "KOR",
+        "PRK",
+        "VNM",
+        "MYS",
+        "BRN",
+        "HKG",
+        "KHM",
+        "THA",
+        "SGP"
+      ]
+    },
+    {
+      "name": "Indian Ocean",
+      "countries": [
+        "ZAF",
+        "MOZ",
+        "TZA",
+        "KEN",
+        "SOM",
+        "MDG",
+        "COM",
+        "MUS",
+        "SYC",
+        "MDV",
+        "IND",
+        "LKA",
+        "IDN",
+        "AUS",
+        "OMN",
+        "YEM",
+        "PAK",
+        "THA",
+        "MMR",
+        "BGD"
+      ],
+      "avoid": [
+        "TLS",
+        "MYS",
+        "IRN",
+        "DJI",
+        "SGP",
+        "ERI",
+        "SDN",
+        "EGY",
+        "SAU",
+        "ARE"
+      ]
+    },
+    {
+      "name": "Arctic Ocean",
+      "box": [
+        -180,
+        66,
+        180,
+        90
+      ],
+      "countries": [
+        "NOR",
+        "RUS",
+        "USA",
+        "CAN",
+        "GRL"
+      ],
+      "avoid": [
+        "ISL",
+        "FIN",
+        "SWE"
+      ]
+    },
+    {
+      "name": "Mediterranean Sea",
+      "parent": "Atlantic Ocean",
+      "box": [
+        -5.5,
+        30.5,
+        36.3,
+        45.9
+      ],
+      "countries": [
+        "ESP",
+        "FRA",
+        "MCO",
+        "ITA",
+        "MLT",
+        "SVN",
+        "HRV",
+        "BIH",
+        "MNE",
+        "ALB",
+        "GRC",
+        "TUR",
+        "CYP",
+        "SYR",
+        "LBN",
+        "ISR",
+        "PSE",
+        "EGY",
+        "LBY",
+        "TUN",
+        "DZA",
+        "MAR"
+      ],
+      "avoid": []
+    },
+    {
+      "name": "Adriatic Sea",
+      "parent": "Atlantic Ocean",
+      "box": [
+        12.2,
+        39.8,
+        19.8,
+        45.8
+      ],
+      "countries": [
+        "ITA",
+        "SVN",
+        "HRV",
+        "BIH",
+        "MNE",
+        "ALB"
+      ],
+      "avoid": [
+        "GRC"
+      ]
+    },
+    {
+      "name": "Aegean Sea",
+      "parent": "Atlantic Ocean",
+      "box": [
+        22.8,
+        35.2,
+        28.2,
+        40.9
+      ],
+      "countries": [
+        "GRC",
+        "TUR"
+      ],
+      "avoid": []
+    },
+    {
+      "name": "Black Sea",
+      "parent": "Atlantic Ocean",
+      "box": [
+        27.5,
+        40.9,
+        41.8,
+        46.8
+      ],
+      "countries": [
+        "TUR",
+        "BGR",
+        "ROU",
+        "UKR",
+        "RUS",
+        "GEO"
+      ],
+      "avoid": [
+        "MDA"
+      ]
+    },
+    {
+      "name": "Baltic Sea",
+      "parent": "Atlantic Ocean",
+      "box": [
+        9.8,
+        53.7,
+        30.2,
+        65.9
+      ],
+      "countries": [
+        "DNK",
+        "DEU",
+        "POL",
+        "LTU",
+        "LVA",
+        "EST",
+        "RUS",
+        "FIN",
+        "SWE",
+        "ALA"
+      ],
+      "avoid": [
+        "NOR"
+      ]
+    },
+    {
+      "name": "North Sea",
+      "parent": "Atlantic Ocean",
+      "box": [
+        -3.5,
+        51,
+        9,
+        61
+      ],
+      "countries": [
+        "GBR",
+        "NOR",
+        "DNK",
+        "DEU",
+        "NLD",
+        "BEL",
+        "FRA"
+      ],
+      "avoid": [
+        "SWE",
+        "FRO"
+      ]
+    },
+    {
+      "name": "Caribbean Sea",
+      "parent": "Atlantic Ocean",
+      "box": [
+        -88.5,
+        9,
+        -60,
+        22
+      ],
+      "countries": [
+        "CUB",
+        "JAM",
+        "HTI",
+        "DOM",
+        "PRI",
+        "BLZ",
+        "HND",
+        "NIC",
+        "CRI",
+        "PAN",
+        "COL",
+        "VEN",
+        "MEX",
+        "GTM",
+        "CYM",
+        "ABW",
+        "CUW",
+        "SXM",
+        "MAF",
+        "BLM",
+        "AIA",
+        "KNA",
+        "ATG",
+        "MSR",
+        "DMA",
+        "LCA",
+        "VCT",
+        "GRD",
+        "TTO",
+        "VGB",
+        "VIR"
+      ],
+      "avoid": [
+        "BRB",
+        "BHS",
+        "TCA",
+        "USA",
+        "GUY"
+      ]
+    },
+    {
+      "name": "Gulf of Mexico",
+      "parent": "Atlantic Ocean",
+      "box": [
+        -97.5,
+        18.5,
+        -81.5,
+        30.3
+      ],
+      "countries": [
+        "USA",
+        "MEX",
+        "CUB"
+      ],
+      "avoid": []
+    },
+    {
+      "name": "Gulf of Guinea",
+      "parent": "Atlantic Ocean",
+      "box": [
+        -7.5,
+        -1.5,
+        9.8,
+        6.5
+      ],
+      "countries": [
+        "CIV",
+        "GHA",
+        "TGO",
+        "BEN",
+        "NGA",
+        "CMR",
+        "GNQ",
+        "GAB",
+        "STP"
+      ],
+      "avoid": [
+        "LBR",
+        "COG"
+      ]
+    },
+    {
+      "name": "Red Sea",
+      "parent": "Indian Ocean",
+      "box": [
+        32.5,
+        12.8,
+        43.3,
+        29.8
+      ],
+      "countries": [
+        "EGY",
+        "SDN",
+        "ERI",
+        "DJI",
+        "SAU",
+        "YEM",
+        "ISR",
+        "JOR"
+      ],
+      "avoid": [
+        "SOM"
+      ]
+    },
+    {
+      "name": "Persian Gulf",
+      "parent": "Indian Ocean",
+      "box": [
+        47.8,
+        23.8,
+        56.3,
+        30.3
+      ],
+      "countries": [
+        "IRN",
+        "IRQ",
+        "KWT",
+        "SAU",
+        "BHR",
+        "QAT",
+        "ARE"
+      ],
+      "avoid": [
+        "OMN"
+      ]
+    },
+    {
+      "name": "Arabian Sea",
+      "parent": "Indian Ocean",
+      "box": [
+        51,
+        8,
+        74.5,
+        25.5
+      ],
+      "countries": [
+        "OMN",
+        "YEM",
+        "PAK",
+        "IND"
+      ],
+      "avoid": [
+        "IRN",
+        "SOM",
+        "MDV",
+        "ARE",
+        "LKA"
+      ]
+    },
+    {
+      "name": "Bay of Bengal",
+      "parent": "Indian Ocean",
+      "box": [
+        80.5,
+        6,
+        94.5,
+        22.5
+      ],
+      "countries": [
+        "IND",
+        "BGD",
+        "MMR",
+        "LKA"
+      ],
+      "avoid": [
+        "THA",
+        "IDN",
+        "MYS"
+      ]
+    },
+    {
+      "name": "South China Sea",
+      "parent": "Pacific Ocean",
+      "box": [
+        105.5,
+        1,
+        120.5,
+        23
+      ],
+      "countries": [
+        "CHN",
+        "VNM",
+        "PHL",
+        "MYS",
+        "BRN",
+        "TWN",
+        "HKG"
+      ],
+      "avoid": [
+        "IDN",
+        "SGP",
+        "KHM",
+        "THA"
+      ]
+    },
+    {
+      "name": "Sea of Japan",
+      "parent": "Pacific Ocean",
+      "box": [
+        128,
+        34,
+        141.5,
+        51.5
+      ],
+      "countries": [
+        "JPN",
+        "KOR",
+        "PRK",
+        "RUS"
+      ],
+      "avoid": [
+        "CHN"
+      ]
+    },
+    {
+      "name": "Yellow Sea",
+      "parent": "Pacific Ocean",
+      "box": [
+        118,
+        31.5,
+        126.8,
+        40.5
+      ],
+      "countries": [
+        "CHN",
+        "KOR",
+        "PRK"
+      ],
+      "avoid": []
+    },
+    {
+      "name": "Caspian Sea",
+      "box": [
+        46.8,
+        36.6,
+        54.3,
+        46.9
+      ],
+      "countries": [
+        "RUS",
+        "IRN"
+      ],
+      "avoid": [
+        "KAZ",
+        "AZE",
+        "TKM"
+      ]
+    }
+  ],
+  "features": [
+    {
+      "kind": "desert",
+      "name": "Sahara",
+      "countries": [
+        "DZA",
+        "TCD",
+        "EGY",
+        "LBY",
+        "MLI",
+        "MRT",
+        "MAR",
+        "NER",
+        "SDN",
+        "TUN"
+      ],
+      "avoid": [
+        "ESH",
+        "ERI",
+        "SEN",
+        "BFA",
+        "NGA",
+        "CMR",
+        "SSD"
+      ]
+    },
+    {
+      "kind": "desert",
+      "name": "Kalahari Desert",
+      "countries": [
+        "BWA",
+        "NAM",
+        "ZAF"
+      ],
+      "avoid": [
+        "ZWE",
+        "ZMB",
+        "AGO"
+      ]
+    },
+    {
+      "kind": "desert",
+      "name": "Namib Desert",
+      "countries": [
+        "NAM"
+      ],
+      "avoid": [
+        "AGO",
+        "ZAF"
+      ]
+    },
+    {
+      "kind": "desert",
+      "name": "Gobi Desert",
+      "countries": [
+        "MNG",
+        "CHN"
+      ],
+      "avoid": []
+    },
+    {
+      "kind": "desert",
+      "name": "Atacama Desert",
+      "countries": [
+        "CHL"
+      ],
+      "avoid": [
+        "PER",
+        "BOL",
+        "ARG"
+      ]
+    },
+    {
+      "kind": "desert",
+      "name": "Empty Quarter (Rub' al Khali)",
+      "countries": [
+        "SAU",
+        "OMN",
+        "ARE",
+        "YEM"
+      ],
+      "avoid": [
+        "QAT",
+        "KWT",
+        "BHR",
+        "JOR",
+        "IRQ"
+      ]
+    },
+    {
+      "kind": "desert",
+      "name": "Thar Desert",
+      "countries": [
+        "IND",
+        "PAK"
+      ],
+      "avoid": []
+    },
+    {
+      "kind": "desert",
+      "name": "Mojave Desert",
+      "countries": [
+        "USA"
+      ],
+      "avoid": [
+        "MEX"
+      ]
+    },
+    {
+      "kind": "desert",
+      "name": "Karakum Desert",
+      "countries": [
+        "TKM"
+      ],
+      "avoid": [
+        "UZB",
+        "KAZ"
+      ]
+    },
+    {
+      "kind": "desert",
+      "name": "Negev Desert",
+      "countries": [
+        "ISR"
+      ],
+      "avoid": [
+        "EGY",
+        "JOR",
+        "PSE"
+      ]
+    },
+    {
+      "kind": "mountains",
+      "name": "Alps",
+      "countries": [
+        "FRA",
+        "CHE",
+        "ITA",
+        "AUT",
+        "DEU",
+        "SVN",
+        "LIE"
+      ],
+      "avoid": [
+        "MCO",
+        "HUN",
+        "HRV"
+      ]
+    },
+    {
+      "kind": "mountains",
+      "name": "Andes",
+      "countries": [
+        "VEN",
+        "COL",
+        "ECU",
+        "PER",
+        "BOL",
+        "CHL",
+        "ARG"
+      ],
+      "avoid": []
+    },
+    {
+      "kind": "mountains",
+      "name": "Himalayas",
+      "countries": [
+        "NPL",
+        "IND",
+        "BTN",
+        "CHN",
+        "PAK"
+      ],
+      "avoid": [
+        "AFG",
+        "MMR"
+      ]
+    },
+    {
+      "kind": "mountains",
+      "name": "Rocky Mountains",
+      "countries": [
+        "USA",
+        "CAN"
+      ],
+      "avoid": [
+        "MEX"
+      ]
+    },
+    {
+      "kind": "mountains",
+      "name": "Pyrenees",
+      "countries": [
+        "FRA",
+        "ESP",
+        "AND"
+      ],
+      "avoid": []
+    },
+    {
+      "kind": "mountains",
+      "name": "Carpathians",
+      "countries": [
+        "ROU",
+        "UKR",
+        "POL",
+        "SVK",
+        "CZE",
+        "HUN"
+      ],
+      "avoid": [
+        "SRB",
+        "AUT",
+        "MDA"
+      ]
+    },
+    {
+      "kind": "mountains",
+      "name": "Atlas Mountains",
+      "countries": [
+        "MAR",
+        "DZA",
+        "TUN"
+      ],
+      "avoid": []
+    },
+    {
+      "kind": "mountains",
+      "name": "Ural Mountains",
+      "countries": [
+        "RUS"
+      ],
+      "avoid": [
+        "KAZ"
+      ]
+    },
+    {
+      "kind": "mountains",
+      "name": "Caucasus Mountains",
+      "countries": [
+        "RUS",
+        "GEO",
+        "AZE",
+        "ARM"
+      ],
+      "avoid": [
+        "TUR",
+        "IRN"
+      ]
+    },
+    {
+      "kind": "mountains",
+      "name": "Hindu Kush",
+      "countries": [
+        "AFG",
+        "PAK"
+      ],
+      "avoid": [
+        "TJK",
+        "IND",
+        "CHN"
+      ]
+    },
+    {
+      "kind": "mountains",
+      "name": "Scandinavian Mountains",
+      "countries": [
+        "NOR",
+        "SWE"
+      ],
+      "avoid": [
+        "FIN"
+      ]
+    },
+    {
+      "kind": "mountains",
+      "name": "Tian Shan",
+      "countries": [
+        "KGZ",
+        "KAZ",
+        "CHN"
+      ],
+      "avoid": [
+        "UZB",
+        "TJK"
+      ]
+    },
+    {
+      "kind": "mountains",
+      "name": "Pamir Mountains",
+      "countries": [
+        "TJK"
+      ],
+      "avoid": [
+        "AFG",
+        "CHN",
+        "KGZ",
+        "PAK"
+      ]
+    },
+    {
+      "kind": "mountains",
+      "name": "Drakensberg",
+      "countries": [
+        "ZAF",
+        "LSO"
+      ],
+      "avoid": [
+        "SWZ"
+      ]
+    },
+    {
+      "kind": "mountains",
+      "name": "Apennines",
+      "countries": [
+        "ITA",
+        "SMR"
+      ],
+      "avoid": []
+    },
+    {
+      "kind": "mountains",
+      "name": "Dinaric Alps",
+      "countries": [
+        "HRV",
+        "BIH",
+        "MNE",
+        "SVN",
+        "ALB"
+      ],
+      "avoid": [
+        "SRB",
+        "UNK",
+        "ITA",
+        "MKD"
+      ]
+    },
+    {
+      "kind": "mountains",
+      "name": "Zagros Mountains",
+      "countries": [
+        "IRN"
+      ],
+      "avoid": [
+        "IRQ",
+        "TUR"
+      ]
+    },
+    {
+      "kind": "mountains",
+      "name": "Appalachian Mountains",
+      "countries": [
+        "USA"
+      ],
+      "avoid": [
+        "CAN",
+        "SPM"
+      ]
+    },
+    {
+      "kind": "rainforest",
+      "name": "Amazon rainforest",
+      "countries": [
+        "BRA",
+        "PER",
+        "COL",
+        "VEN",
+        "ECU",
+        "BOL",
+        "GUY",
+        "SUR"
+      ],
+      "avoid": [
+        "FRA"
+      ]
+    },
+    {
+      "kind": "rainforest",
+      "name": "Congo rainforest",
+      "countries": [
+        "COD",
+        "COG",
+        "GAB",
+        "CMR",
+        "CAF",
+        "GNQ"
+      ],
+      "avoid": [
+        "AGO",
+        "UGA",
+        "RWA",
+        "BDI"
+      ]
+    },
+    {
+      "kind": "rainforest",
+      "name": "Borneo rainforest",
+      "countries": [
+        "IDN",
+        "MYS",
+        "BRN"
+      ],
+      "avoid": []
+    },
+    {
+      "kind": "rainforest",
+      "name": "Daintree Rainforest",
+      "countries": [
+        "AUS"
+      ],
+      "avoid": []
+    },
+    {
+      "kind": "river",
+      "name": "Nile",
+      "countries": [
+        "EGY",
+        "SDN",
+        "SSD",
+        "UGA"
+      ],
+      "avoid": [
+        "ETH",
+        "TZA",
+        "KEN",
+        "RWA",
+        "BDI",
+        "COD",
+        "ERI"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Amazon River",
+      "countries": [
+        "BRA",
+        "PER",
+        "COL"
+      ],
+      "avoid": [
+        "ECU",
+        "BOL",
+        "VEN",
+        "FRA"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Danube",
+      "countries": [
+        "DEU",
+        "AUT",
+        "SVK",
+        "HUN",
+        "HRV",
+        "SRB",
+        "BGR",
+        "ROU",
+        "UKR"
+      ],
+      "avoid": [
+        "MDA"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Rhine",
+      "countries": [
+        "CHE",
+        "LIE",
+        "AUT",
+        "DEU",
+        "FRA",
+        "NLD"
+      ],
+      "avoid": [
+        "ITA",
+        "LUX",
+        "BEL"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Mississippi",
+      "countries": [
+        "USA"
+      ],
+      "avoid": [
+        "CAN"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Ganges",
+      "countries": [
+        "IND",
+        "BGD"
+      ],
+      "avoid": [
+        "NPL",
+        "CHN"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Mekong",
+      "countries": [
+        "CHN",
+        "MMR",
+        "LAO",
+        "THA",
+        "KHM",
+        "VNM"
+      ],
+      "avoid": []
+    },
+    {
+      "kind": "river",
+      "name": "Yangtze",
+      "countries": [
+        "CHN"
+      ],
+      "avoid": []
+    },
+    {
+      "kind": "river",
+      "name": "Volga",
+      "countries": [
+        "RUS"
+      ],
+      "avoid": [
+        "KAZ"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Congo River",
+      "countries": [
+        "COD",
+        "COG"
+      ],
+      "avoid": [
+        "AGO",
+        "ZMB",
+        "CAF",
+        "CMR",
+        "TZA",
+        "BDI",
+        "RWA"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Niger River",
+      "countries": [
+        "GIN",
+        "MLI",
+        "NER",
+        "BEN",
+        "NGA"
+      ],
+      "avoid": [
+        "BFA",
+        "CIV",
+        "DZA",
+        "CMR",
+        "TCD"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Zambezi",
+      "countries": [
+        "ZMB",
+        "AGO",
+        "NAM",
+        "BWA",
+        "ZWE",
+        "MOZ"
+      ],
+      "avoid": [
+        "MWI",
+        "TZA",
+        "COD"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Indus",
+      "countries": [
+        "PAK",
+        "IND",
+        "CHN"
+      ],
+      "avoid": [
+        "AFG"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Euphrates",
+      "countries": [
+        "TUR",
+        "SYR",
+        "IRQ"
+      ],
+      "avoid": [
+        "IRN",
+        "KWT",
+        "SAU",
+        "JOR"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Tigris",
+      "countries": [
+        "TUR",
+        "IRQ"
+      ],
+      "avoid": [
+        "SYR",
+        "IRN"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Jordan River",
+      "countries": [
+        "JOR",
+        "ISR",
+        "PSE"
+      ],
+      "avoid": [
+        "SYR",
+        "LBN"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Thames",
+      "countries": [
+        "GBR"
+      ],
+      "avoid": []
+    },
+    {
+      "kind": "river",
+      "name": "Seine",
+      "countries": [
+        "FRA"
+      ],
+      "avoid": []
+    },
+    {
+      "kind": "river",
+      "name": "Po",
+      "countries": [
+        "ITA"
+      ],
+      "avoid": [
+        "CHE",
+        "FRA"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Tagus",
+      "countries": [
+        "ESP",
+        "PRT"
+      ],
+      "avoid": []
+    },
+    {
+      "kind": "river",
+      "name": "Elbe",
+      "countries": [
+        "CZE",
+        "DEU"
+      ],
+      "avoid": [
+        "AUT",
+        "POL"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Vistula",
+      "countries": [
+        "POL"
+      ],
+      "avoid": [
+        "UKR",
+        "BLR",
+        "SVK"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Dnieper",
+      "countries": [
+        "RUS",
+        "BLR",
+        "UKR"
+      ],
+      "avoid": []
+    },
+    {
+      "kind": "river",
+      "name": "Murray River",
+      "countries": [
+        "AUS"
+      ],
+      "avoid": []
+    },
+    {
+      "kind": "river",
+      "name": "Orinoco",
+      "countries": [
+        "VEN",
+        "COL"
+      ],
+      "avoid": [
+        "BRA",
+        "GUY"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Paraná",
+      "countries": [
+        "BRA",
+        "PRY",
+        "ARG"
+      ],
+      "avoid": [
+        "URY",
+        "BOL"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Rio Grande",
+      "countries": [
+        "USA",
+        "MEX"
+      ],
+      "avoid": []
+    },
+    {
+      "kind": "river",
+      "name": "Irrawaddy",
+      "countries": [
+        "MMR"
+      ],
+      "avoid": [
+        "CHN",
+        "IND"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Brahmaputra",
+      "countries": [
+        "CHN",
+        "IND",
+        "BGD"
+      ],
+      "avoid": [
+        "BTN"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Amur",
+      "countries": [
+        "RUS",
+        "CHN"
+      ],
+      "avoid": [
+        "MNG"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Shannon",
+      "countries": [
+        "IRL"
+      ],
+      "avoid": [
+        "GBR"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Limpopo",
+      "countries": [
+        "ZAF",
+        "BWA",
+        "ZWE",
+        "MOZ"
+      ],
+      "avoid": []
+    },
+    {
+      "kind": "river",
+      "name": "Senegal River",
+      "countries": [
+        "GIN",
+        "MLI",
+        "SEN",
+        "MRT"
+      ],
+      "avoid": []
+    },
+    {
+      "kind": "river",
+      "name": "Amu Darya",
+      "countries": [
+        "AFG",
+        "TJK",
+        "TKM",
+        "UZB"
+      ],
+      "avoid": [
+        "KGZ"
+      ]
+    },
+    {
+      "kind": "river",
+      "name": "Magdalena",
+      "countries": [
+        "COL"
+      ],
+      "avoid": []
+    },
+    {
+      "kind": "river",
+      "name": "Yukon River",
+      "countries": [
+        "CAN",
+        "USA"
+      ],
+      "avoid": []
+    }
+  ],
+  "linesAvoid": {
+    "MAR": [
+      "Tropic of Cancer"
+    ]
+  }
+}

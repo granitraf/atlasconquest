@@ -1,0 +1,2859 @@
+:root {
+  /* Treasure-chest palette: dark brown wood, lighter brown edges, gold fittings. */
+  --bg: #150d07;
+  --ocean: #3a5c7a;
+  --panel: rgba(34, 22, 12, 0.96);
+  --panel-raised: #3b2816;
+  --panel-inset: #170e07;
+  --line: #7d5730;
+  --line-soft: #4c331c;
+  --text: #f6ead0;
+  --muted: #c2a67a;
+  --green: #3ddc84;
+  --green-deep: #17864a;
+  --red: #ff5a5f;
+  --red-deep: #b72d33;
+  --gold: #ffcf4a;
+  --gold-deep: #c8961c;
+  /* Light brown-gold for hover edges, focus rings and the clock. */
+  --accent: #e6b566;
+  --radius: 2px;
+  /* Pixel fonts, bundled with the game (no font service at runtime). */
+  --font: 'VT323', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --font-display: 'Press Start 2P', 'VT323', ui-monospace, monospace;
+  color-scheme: dark;
+  /* A blocky plus sign, like a crosshair. The hotspot is its centre. */
+  --cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' shape-rendering='crispEdges'%3E%3Cpath d='M13 5h6v8h8v6h-8v8h-6v-8H5v-6h8z' fill='%231a1008'/%3E%3Cpath d='M15 7h2v8h8v2h-8v8h-2v-8H7v-2h8z' fill='%23fff'/%3E%3C/svg%3E") 16 16, crosshair;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  cursor: var(--cursor);
+}
+
+input {
+  cursor: text;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 25px;
+  line-height: 1.1;
+  /* No fake bold and no smoothing: the glyphs are pixels and should look like it. */
+  font-synthesis: none;
+  -webkit-font-smoothing: none;
+  font-smooth: never;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------ app shell */
+
+.app {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+.splash {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.splash h1 {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 6vw, 40px);
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.splash-detail {
+  max-width: 520px;
+  color: var(--muted);
+  font-size: 23px;
+}
+
+.loading {
+  color: var(--muted);
+  animation: blink 1.2s steps(2) infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* ------------------------------------------------------------------ map */
+
+.map {
+  position: absolute;
+  inset: 0;
+  background: var(--ocean);
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/*
+ * Start screen only: the space above and below the map is a wall of wood planks
+ * (a repeating tile, so it runs the full width of any monitor), and the map's
+ * top and bottom edges get a gold trim. Neither is part of the map: they do not
+ * zoom. Once a game starts both are gone.
+ */
+.phase-start .map {
+  background-color: #4e341c;
+  background-image: var(--wood, none);
+  background-repeat: repeat;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
+.map-edge {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  height: 8px;
+  pointer-events: none;
+}
+
+.phase-start .map-edge {
+  display: block;
+}
+
+/* Hard-stepped bands: a dark lip against the wood, bright gold, then a shaded gold against the map. */
+.map-edge-top {
+  background: linear-gradient(#2a1a08 0 2px, #ffe9a8 2px 4px, var(--gold) 4px 6px, #9a6f12 6px 8px);
+}
+
+.map-edge-bottom {
+  background: linear-gradient(#9a6f12 0 2px, var(--gold) 2px 4px, #ffe9a8 4px 6px, #2a1a08 6px 8px);
+}
+
+/*
+ * The whole map (terrain, tints, borders, outlines, markers) is drawn into
+ * small canvases, one value per map pixel, and scaled up with smoothing off.
+ */
+.pixel-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+/* Invisible country shapes: never painted, but they still catch the pointer. */
+.map-hit {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.map-hit .country,
+.map-hit .marker-hit {
+  fill: none;
+  stroke: none;
+  visibility: hidden;
+  pointer-events: all;
+}
+
+/* Flags are low-resolution PNGs shown at twice their size, without smoothing. */
+.px-flag {
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
+.map-tooltip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  /* As wide as its longest line, up to the width of the map; beyond that the line wraps inside the box. */
+  width: max-content;
+  max-width: min(560px, calc(100% - 8px));
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: rgba(26, 17, 9, 0.97);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  font-size: 25px;
+  pointer-events: none;
+  line-height: 1;
+}
+
+.map-tooltip[hidden],
+.map-tooltip[data-dragging] {
+  display: none;
+}
+
+.map-tooltip span {
+  color: var(--muted);
+  font-size: 21px;
+}
+
+.zoom-controls {
+  position: absolute;
+  right: 10px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 38px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.zoom-controls button {
+  display: grid;
+  place-items: center;
+  height: 36px;
+  border: 0;
+  background: transparent;
+  font-size: 29px;
+  line-height: 1;
+}
+
+.zoom-controls button:hover {
+  background: var(--panel-raised);
+}
+
+.zoom-controls button:active {
+  background: var(--line);
+}
+
+.zoom-level {
+  padding: 3px 0;
+  border-block: 1px solid var(--line-soft);
+  color: var(--muted);
+  font-size: 18px;
+  text-align: center;
+}
+
+.zoom-reset {
+  border-top: 1px solid var(--line-soft) !important;
+}
+
+/* ------------------------------------------------------------- controls */
+
+.btn {
+  flex: none;
+  min-height: 40px;
+  padding: 8px 18px;
+  border: 2px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel-raised);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    transform 0.05s;
+  font-size: 27px;
+}
+
+.btn:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+}
+
+.btn.primary {
+  border-color: #fff3c4;
+  background: #f0b92a;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 246, 205, 0.55),
+    inset 0 -3px 0 rgba(140, 92, 0, 0.45);
+  color: #1d1305;
+  text-shadow: 0 1px 0 rgba(255, 240, 190, 0.5);
+}
+
+/* Brighter still under the pointer, with a glow, so the main action is unmissable. */
+.btn.primary:hover:not(:disabled),
+.btn.primary:focus-visible:not(:disabled) {
+  border-color: #fff;
+  background: #ffdc5e;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 252, 235, 0.8),
+    inset 0 -3px 0 rgba(170, 118, 0, 0.4),
+    0 0 18px rgba(255, 214, 90, 0.65);
+}
+
+.btn.primary:disabled {
+  opacity: 0.7;
+}
+
+.btn.danger {
+  border-color: var(--red);
+  background: var(--red-deep);
+  color: #fff;
+}
+
+.btn.danger:hover:not(:disabled) {
+  border-color: #ffc2c4;
+  background: #cc363c;
+}
+
+.btn.ghost {
+  background: transparent;
+  color: var(--muted);
+}
+
+.btn.retreat {
+  border-color: #7a3a40;
+  color: var(--text);
+}
+
+.btn.retreat b {
+  margin-left: 6px;
+  color: var(--red);
+}
+
+.btn.big {
+  min-height: 48px;
+  font-size: 32px;
+}
+
+.link {
+  padding: 4px 6px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 23px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.link:hover {
+  color: var(--text);
+}
+
+.link.danger {
+  color: var(--red);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel-raised);
+  font-size: 21px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.chip.context {
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.chip.difficulty b {
+  text-transform: capitalize;
+}
+
+/* Question tiers. */
+.chip.difficulty.easy {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.chip.difficulty.medium {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.chip.difficulty.hard {
+  border-color: var(--red);
+  color: #ff8d90;
+}
+
+/* Start ratings: green, gold, orange, red, violet. */
+.badge.easy,
+.filter.easy.active {
+  border-color: #3ddc84;
+  color: #3ddc84;
+}
+
+.badge.medium,
+.filter.medium.active {
+  border-color: #ffcf4a;
+  color: #ffcf4a;
+}
+
+.badge.hard,
+.filter.hard.active {
+  border-color: #ff9a3d;
+  color: #ff9a3d;
+}
+
+.badge.very-hard,
+.filter.very-hard.active {
+  border-color: #ff5a5f;
+  color: #ff7d81;
+}
+
+.badge.extreme,
+.filter.extreme.active {
+  border-color: #d58bff;
+  background: rgba(213, 139, 255, 0.14);
+  color: #e3b3ff;
+}
+
+.chip.clock {
+  margin-left: auto;
+  min-width: 44px;
+  justify-content: center;
+  font-size: 23px;
+}
+
+.chip.clock.urgent {
+  border-color: var(--red);
+  color: var(--red);
+  animation: blink 0.5s steps(2) infinite;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 23px;
+}
+
+/* ------------------------------------------------------------------ HUD */
+
+.top-dock {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 10;
+  padding-top: env(safe-area-inset-top);
+  background: linear-gradient(rgba(18, 11, 5, 0.94), rgba(18, 11, 5, 0.72) 70%, transparent);
+  pointer-events: none;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px 12px;
+}
+
+.topbar > * {
+  pointer-events: auto;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  font-size: 30px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.brand span {
+  overflow: hidden;
+  max-width: 300px;
+  text-overflow: ellipsis;
+}
+
+.empire-flag {
+  display: block;
+  flex: none;
+  border: 2px solid #120a05;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
+.empire-flag.fluid {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+}
+
+.turn-chip {
+  padding: 3px 9px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 21px;
+  white-space: nowrap;
+}
+
+.turn-chip b {
+  color: var(--text);
+}
+
+.quit-confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 21px;
+  white-space: nowrap;
+}
+
+.stats {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 10px;
+  border: 2px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel);
+  white-space: nowrap;
+}
+
+.stat svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+}
+
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.stat-value small {
+  color: var(--muted);
+  font-size: 25px;
+  font-weight: 500;
+  font-family: var(--font);
+}
+
+.stat-label {
+  color: var(--muted);
+  font-size: 21px;
+}
+
+.stat.lives {
+  gap: 8px;
+  border-color: #7a0d14;
+}
+
+.heart {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+
+
+.lives-text {
+  color: #ff8a8f;
+  font-size: 25px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Troop numbers come in two forms; the short one ("20k") takes over where space is tight. */
+.num-short {
+  display: none;
+}
+
+.stat.streak {
+  color: var(--muted);
+}
+
+.stat.streak .stat-value {
+  color: var(--text);
+}
+
+.stat.streak.hot {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.sound-toggle {
+  color: var(--text);
+}
+
+.sound-toggle.off {
+  color: var(--muted);
+}
+
+.sound-toggle:hover {
+  border-color: var(--accent);
+}
+
+.stat.troops svg {
+  color: var(--green);
+}
+
+.stat.countries svg {
+  color: var(--accent);
+}
+
+/* Tug of war */
+
+.tug-dock {
+  position: absolute;
+  left: 50%;
+  z-index: 9;
+  width: min(900px, calc(100% - 20px));
+  transform: translateX(-50%);
+}
+
+.tug {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+  border: 3px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.35);
+}
+
+.tug-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  max-width: 34%;
+  min-width: 0;
+}
+
+.tug-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 27px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tug-count {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.55);
+}
+
+.tug-side.you .tug-count {
+  color: var(--green);
+}
+
+.tug-side.them .tug-count {
+  color: var(--red);
+}
+
+.tug-name .px-flag {
+  flex: none;
+  width: auto;
+  height: 24px;
+}
+
+.delta {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  padding: 1px 8px;
+  border-radius: 0;
+  background: rgba(18, 10, 5, 0.94);
+  color: #fff;
+  font-size: 34px;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: delta 1.2s ease-out forwards;
+  font-family: var(--font);
+}
+
+@keyframes delta {
+  from {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, 22px);
+  }
+}
+
+.tug-track {
+  position: relative;
+  display: flex;
+  flex: 1;
+  height: 36px;
+  border: 3px solid #120a05;
+  border-radius: 0;
+  background: #120a05;
+  overflow: hidden;
+}
+
+.tug-fill {
+  height: 100%;
+  transition: width 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+.tug-fill.you {
+  background: repeating-linear-gradient(90deg, var(--green) 0 10px, #2fbf70 10px 20px);
+}
+
+.tug-fill.them {
+  background: repeating-linear-gradient(90deg, var(--red) 0 10px, #e0454a 10px 20px);
+}
+
+.tug-knot {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 6px;
+  margin-left: -3px;
+  background: #fff;
+  box-shadow: 0 0 0 2px #120a05;
+  transition: left 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+/* Battle progress */
+
+.progress {
+  position: absolute;
+  left: 10px;
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 84px;
+  min-height: 110px;
+  padding: 8px 0;
+  border: 3px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.35);
+}
+
+.progress-label,
+.progress-caption {
+  color: var(--muted);
+  font-size: 25px;
+}
+
+/* With little room between the battle bar and the question card, only the percentage is shown. */
+.progress.compact {
+  min-height: 0;
+  justify-content: center;
+  padding: 4px 0;
+}
+
+.progress.compact .progress-title,
+.progress.compact .progress-caption,
+.progress.compact .progress-track {
+  display: none;
+}
+
+.progress-title {
+  color: var(--muted);
+  font-size: 21px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.progress-caption {
+  color: var(--muted);
+}
+
+.progress-track {
+  position: relative;
+  flex: 1;
+  width: 40px;
+  border: 3px solid #120a05;
+  border-radius: 0;
+  background: #120a05;
+  overflow: hidden;
+}
+
+.progress-fill {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: repeating-linear-gradient(0deg, var(--green) 0 10px, #2fbf70 10px 20px);
+  transition: height 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+}
+
+.progress-tick {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: rgba(18, 10, 5, 0.6);
+}
+
+.progress.hit {
+  animation: shake 0.45s;
+}
+
+.progress.hit .progress-track {
+  animation: track-hit 0.9s;
+}
+
+.progress.hit .progress-fill {
+  animation: fill-drop 0.9s;
+}
+
+@keyframes shake {
+  20% {
+    transform: translate(-3px, 2px);
+  }
+  40% {
+    transform: translate(3px, 5px);
+  }
+  60% {
+    transform: translate(-2px, 3px);
+  }
+  80% {
+    transform: translate(2px, 1px);
+  }
+}
+
+@keyframes track-hit {
+  0%,
+  60% {
+    border-color: var(--red);
+    box-shadow: 0 0 10px var(--red);
+  }
+}
+
+/* The fill lurches down past its new level and settles, so the loss is unmissable. */
+@keyframes fill-drop {
+  0% {
+    background: var(--red);
+    transform: translateY(0);
+  }
+  35% {
+    background: var(--red);
+    transform: translateY(14%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* Toast and flash */
+
+.toast {
+  position: absolute;
+  left: 50%;
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: min(520px, calc(100% - 116px));
+  padding: 8px 16px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: toast-in 0.3s ease-out;
+  font-size: 27px;
+}
+
+.toast span {
+  color: var(--muted);
+  font-size: 23px;
+}
+
+.toast.good {
+  border-color: var(--green);
+}
+
+.toast.good strong {
+  color: var(--green);
+}
+
+.toast.bad {
+  border-color: var(--red);
+}
+
+.toast.bad strong {
+  color: var(--red);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+}
+
+.flash {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  opacity: 0;
+  pointer-events: none;
+  animation: flash 0.7s ease-out;
+}
+
+.flash.good {
+  background: radial-gradient(ellipse at center, rgba(61, 220, 132, 0.1), rgba(61, 220, 132, 0.5));
+}
+
+.flash.bad {
+  background: radial-gradient(ellipse at center, rgba(255, 60, 60, 0.14), rgba(255, 60, 60, 0.6));
+}
+
+@keyframes flash {
+  0% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ----------------------------------------------------------------- dock */
+
+.dock {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  z-index: 10;
+  width: min(780px, 100%);
+  padding: 0 10px calc(10px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 3px solid var(--line);
+  border-top-color: var(--gold-deep);
+  border-radius: 2px;
+  background: var(--panel);
+  box-shadow: 0 -6px 30px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+}
+
+.card.question {
+  padding-top: 20px;
+}
+
+/* Leave room for the countdown block. */
+.card.question .card-head {
+  padding-right: 122px;
+  min-height: 46px;
+}
+
+.card.was-right {
+  border-color: var(--green);
+}
+
+.card.was-wrong {
+  border-color: var(--red);
+}
+
+.card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 40px;
+}
+
+.prompt {
+  font-size: clamp(27px, 3.2vw, 34px);
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+.timer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 10px;
+  background: #120a05;
+}
+
+.timer-bar {
+  height: 100%;
+  background: repeating-linear-gradient(90deg, var(--accent) 0 10px, #c9963f 10px 20px);
+  transition: width 0.1s linear;
+}
+
+.timer.urgent .timer-bar {
+  background: repeating-linear-gradient(90deg, var(--red) 0 10px, #e0454a 10px 20px);
+}
+
+/* The clock: big, top right, sticking up out of the card. */
+.countdown {
+  position: absolute;
+  top: -38px;
+  right: 14px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 104px;
+  height: 92px;
+  border: 4px solid var(--accent);
+  background: var(--panel-inset);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.4);
+  line-height: 1;
+}
+
+.countdown-num {
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.6);
+}
+
+.countdown-unit {
+  color: var(--muted);
+  font-size: 23px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.countdown.urgent {
+  border-color: var(--red);
+  color: var(--red);
+  animation: countdown-alarm 0.5s steps(2) infinite;
+}
+
+.countdown.stopped {
+  border-color: var(--line);
+  color: var(--muted);
+}
+
+@keyframes countdown-alarm {
+  50% {
+    background: #3a0b10;
+    transform: translateY(-3px);
+  }
+}
+
+.options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 8px 12px;
+  border: 2px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel-raised);
+  text-align: left;
+  transition:
+    border-color 0.12s,
+    background 0.12s,
+    opacity 0.2s;
+}
+
+.option:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: #4d361e;
+}
+
+.option:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.option-key {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 2px;
+  background: #120a05;
+  color: var(--muted);
+  font-size: 23px;
+  font-weight: 700;
+}
+
+.option-label {
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  font-size: 27px;
+  line-height: 1;
+}
+
+.option.correct {
+  border-color: var(--green);
+  background: rgba(61, 220, 132, 0.2);
+}
+
+.option.correct .option-key {
+  background: var(--green);
+  color: #03240f;
+}
+
+.option.wrong {
+  border-color: var(--red);
+  background: rgba(255, 90, 95, 0.2);
+  animation: shake 0.4s;
+}
+
+.option.wrong .option-key {
+  background: var(--red);
+  color: #2d0406;
+}
+
+.option.dim {
+  opacity: 0.4;
+}
+
+.options.flags {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.options.flags .option {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding: 8px;
+}
+
+.options.flags .option-key {
+  position: absolute;
+  margin: 2px;
+}
+
+.options.flags .option {
+  position: relative;
+}
+
+.option-flag {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.option-flag img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: 64px;
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  border-radius: 0;
+}
+
+.flag-name {
+  font-size: 21px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.verdict {
+  min-width: 0;
+  font-size: 23px;
+}
+
+.verdict.good strong {
+  color: var(--green);
+}
+
+.verdict.bad strong {
+  color: var(--red);
+}
+
+.verdict b {
+  color: #fff;
+}
+
+.inline-flag {
+  display: inline-block;
+  width: auto;
+  height: 24px;
+  margin-right: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  vertical-align: -6px;
+}
+
+/* Attack panel */
+
+.legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 21px;
+}
+
+.swatch {
+  display: inline-block;
+  width: 18px;
+  height: 10px;
+  margin-left: 6px;
+  border-radius: 0px;
+}
+
+.swatch.land {
+  border: 2px solid #fff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+}
+
+.swatch.sea {
+  border: 2px dashed #d4ecff;
+}
+
+.hint.lead {
+  color: var(--text);
+  font-size: 23px;
+}
+
+.target {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--gold);
+  border-radius: 2px;
+  background: rgba(255, 209, 102, 0.08);
+}
+
+
+.target-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.target-info h2 {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.target-info p {
+  color: var(--muted);
+  font-size: 23px;
+}
+
+.target-info b {
+  color: var(--text);
+}
+
+.target-actions {
+  display: flex;
+  flex: none;
+  gap: 8px;
+}
+
+.target-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 84px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+.target-list:empty {
+  display: none;
+}
+
+.target-chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 10px 0 5px;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: 2px;
+  background: var(--panel-raised);
+  font-size: 25px;
+  white-space: nowrap;
+}
+
+.target-chip.sea {
+  border: 2px dashed #b9defc;
+}
+
+.target-chip:hover {
+  background: #4d361e;
+}
+
+.target-chip.wounded b {
+  color: var(--gold);
+}
+
+.target-chip b small {
+  color: var(--muted);
+}
+
+.target-info .wounded {
+  color: var(--gold);
+  font-style: normal;
+}
+
+.target-info .target-reward .gain {
+  color: var(--gold);
+}
+
+.target-chip {
+  max-width: 100%;
+}
+
+/* A very long country name gives way before the numbers do. */
+.target-chip .chip-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Troops a target is worth, on its chip. */
+.target-chip .chip-gain {
+  color: var(--gold);
+  font-size: 21px;
+  font-style: normal;
+}
+
+.target-chip.active {
+  border: 2px solid var(--gold);
+  background: rgba(255, 209, 102, 0.18);
+}
+
+
+.target-chip b {
+  color: #ff9c9f;
+  font-size: 21px;
+}
+
+/* --------------------------------------------------------- start screen */
+
+.start {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(440px, 100%);
+  padding: calc(14px + env(safe-area-inset-top)) 18px calc(12px + env(safe-area-inset-bottom));
+  border-right: 3px solid var(--gold-deep);
+  background: var(--panel);
+  box-shadow: 12px 0 40px rgba(0, 0, 0, 0.5);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+.start-head h1 {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 6.4vw, 24px);
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-shadow: 3px 3px 0 #5b3a08;
+  text-transform: uppercase;
+}
+
+.start-head h1 span {
+  color: var(--gold);
+}
+
+.tagline {
+  display: none;
+}
+
+.start-section {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.start-section.grow {
+  flex: 1 1 auto;
+  min-height: 250px;
+}
+
+.start-section h2 {
+  color: var(--gold);
+  font-size: 21px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.empire-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.empire-fields {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.flag-colours {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.slots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+/* One row of twelve, whatever the width. */
+.palette {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 3px;
+}
+
+.slot,
+.palette .colour {
+  min-width: 0;
+  padding: 0;
+  border: 2px solid #120a05;
+}
+
+/* The three colours of the flag: pick one, then pick its colour below. */
+.slot {
+  height: 22px;
+}
+
+.slot.active {
+  outline: 3px solid var(--gold);
+  outline-offset: 1px;
+}
+
+.palette .colour {
+  aspect-ratio: 1;
+}
+
+.palette .colour:hover,
+.palette .colour.active {
+  outline: 2px solid #fff;
+  outline-offset: 1px;
+}
+
+.flag-presets {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+}
+
+.preset {
+  display: block;
+  min-width: 0;
+  padding: 3px;
+  border: 2px solid var(--line);
+  background: var(--panel-raised);
+}
+
+.preset:hover {
+  border-color: var(--accent);
+}
+
+.preset.active {
+  border-color: var(--gold);
+  background: rgba(255, 209, 102, 0.18);
+}
+
+.modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 2px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel-raised);
+  font-size: 23px;
+}
+
+.mode small {
+  color: var(--muted);
+  font-size: 21px;
+}
+
+.mode:hover {
+  border-color: var(--accent);
+}
+
+.mode.active {
+  border-color: var(--gold);
+  background: rgba(255, 207, 74, 0.2);
+  color: var(--gold);
+}
+
+.search-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.search {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 2px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel-inset);
+  color: var(--text);
+  font: inherit;
+  /* 16px stops iOS zooming the page when the field is focused. */
+  font-size: 25px;
+}
+
+.search:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.filter small {
+  margin-left: 5px;
+  opacity: 0.7;
+}
+
+.filter {
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 21px;
+  font-weight: 600;
+}
+
+.filter.active {
+  border-color: var(--text);
+  color: var(--text);
+}
+
+.country-list {
+  flex: 1 1 0;
+  min-height: 96px;
+  margin: 0;
+  padding: 4px;
+  border: 2px solid var(--line-soft);
+  border-radius: 2px;
+  background: var(--panel-inset);
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+.country-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background: transparent;
+  text-align: left;
+}
+
+.country-row:hover {
+  background: var(--panel-raised);
+}
+
+.country-row.active {
+  border-color: var(--gold);
+  background: rgba(255, 209, 102, 0.12);
+}
+
+
+.country-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.country-reason {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.country-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 27px;
+}
+
+.badge {
+  flex: none;
+  padding: 2px 8px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  font-size: 21px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge b {
+
+}
+
+.empty {
+  padding: 18px 10px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.start-foot {
+  position: sticky;
+  bottom: calc(-12px - env(safe-area-inset-bottom));
+  z-index: 1;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 -18px calc(-12px - env(safe-area-inset-bottom));
+  padding: 10px 18px calc(12px + env(safe-area-inset-bottom));
+  border-top: 2px solid var(--line-soft);
+  background: #1d130a;
+}
+
+.pick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+
+.pick div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pick span {
+  color: var(--muted);
+  font-size: 21px;
+}
+
+
+/* ----------------------------------------------------------- end screen */
+
+.end-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(12, 7, 3, 0.8);
+  overflow-y: auto;
+  animation: fade-in 0.4s ease-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.end {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(520px, 100%);
+  padding: 24px;
+  border: 2px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  text-align: center;
+}
+
+.end.victory {
+  border-color: var(--gold);
+}
+
+.end.defeat {
+  border-color: var(--red);
+}
+
+.end-empire {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+}
+
+.end-empire div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.end-empire strong {
+  font-size: 38px;
+  line-height: 0.95;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.end-empire span {
+  color: var(--muted);
+  font-size: 21px;
+}
+
+.end-stats .continents {
+  grid-column: 1 / -1;
+}
+
+.end-stats .continents dd {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--font);
+  font-size: 25px;
+}
+
+.continent-chip {
+  padding: 1px 8px;
+  border: 2px solid var(--green);
+  color: var(--text);
+}
+
+.continent-chip b {
+  color: var(--green);
+}
+
+.end h1 {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 8vw, 40px);
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.end.victory h1 {
+  color: var(--gold);
+  text-shadow: 3px 3px 0 #5b3a08;
+}
+
+.end.defeat h1 {
+  color: var(--red);
+  text-shadow: 3px 3px 0 #4a0d10;
+}
+
+.end-sub {
+  color: var(--muted);
+}
+
+.end-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 6px 0;
+}
+
+.end-stats > div {
+  padding: 10px 6px;
+  border: 1px solid var(--line-soft);
+  border-radius: 2px;
+  background: var(--panel-inset);
+}
+
+.end-stats dt {
+  color: var(--muted);
+  font-size: 21px;
+}
+
+.end-stats dd {
+  margin: 2px 0 0;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.end-stats dd small {
+  color: var(--muted);
+  font-size: 25px;
+  font-weight: 500;
+  font-family: var(--font);
+}
+
+.end-stats .score {
+  grid-column: 1 / -1;
+  border-color: var(--gold);
+}
+
+.end-stats .score dd {
+  color: var(--gold);
+  font-size: 40px;
+}
+
+.end-stats .score p {
+  color: var(--muted);
+  font-size: 21px;
+}
+
+/* ---------------------------------------------------------------- rules */
+
+/* The button that opens the rule book: centred above the map on the start screen. */
+.rules-toggle {
+  position: absolute;
+  top: calc(10px + env(safe-area-inset-top));
+  left: 50%;
+  z-index: 32;
+  min-width: 132px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.rules-toggle:active:not(:disabled) {
+  transform: translateX(-50%) translateY(1px);
+}
+
+/* The same door from inside the start panel, for screens where that panel covers the map. */
+.rules-open {
+  display: none;
+  align-self: flex-start;
+  min-height: 34px;
+  margin-top: 6px;
+  padding: 2px 16px;
+  font-size: 25px;
+}
+
+/* The rule book takes the place of the map. */
+.rules {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  padding: 0 18px calc(28px + env(safe-area-inset-bottom));
+  background-color: #2a1a0c;
+  background-image: linear-gradient(rgba(26, 16, 8, 0.9), rgba(26, 16, 8, 0.9)), var(--wood, none);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+/* A plank across the top with a gold trim: the page scrolls under it, so the button on it never covers the text. */
+.rules-bar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: calc(66px + env(safe-area-inset-top));
+  margin: 0 -18px 14px;
+  border-bottom: 4px solid var(--gold);
+  background-color: #4e341c;
+  background-image: var(--wood, none);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
+.rules-page {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.rules-hero,
+.rules-foot,
+.rule.wide {
+  grid-column: 1 / -1;
+}
+
+.rules-hero {
+  padding: 6px 0 10px;
+  text-align: center;
+}
+
+.rules-kicker {
+  color: var(--muted);
+  font-size: 23px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.rules-hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 4.2vw, 44px);
+  line-height: 1.25;
+  text-shadow: 4px 4px 0 rgba(0, 0, 0, 0.55);
+}
+
+.rules-hero h1 span {
+  color: var(--gold);
+}
+
+.rules-lead {
+  margin-top: 8px;
+  color: var(--accent);
+  font-size: 29px;
+}
+
+.rule {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 16px 18px 18px;
+  border: 3px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.35);
+  font-size: 25px;
+  line-height: 1.12;
+}
+
+.rule h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 17px;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+/* The chapter number, as a gold coin. */
+.rule h2 i {
+  display: grid;
+  flex: none;
+  place-items: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 6px;
+  border: 2px solid #fff3c4;
+  background: #f0b92a;
+  color: #1d1305;
+  font-size: 14px;
+  font-style: normal;
+}
+
+.rule p {
+  color: var(--text);
+}
+
+.rule b {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.rule-note {
+  color: var(--muted) !important;
+  font-size: 23px;
+}
+
+.rule-formula {
+  padding: 10px 12px;
+  border: 2px dashed var(--gold-deep);
+  background: var(--panel-inset);
+  color: var(--gold) !important;
+  text-align: center;
+}
+
+.rule-formula em {
+  color: var(--text);
+  font-style: normal;
+}
+
+.rule-callout {
+  padding: 12px 14px;
+  border: 2px solid var(--gold-deep);
+  border-left-width: 8px;
+  background: rgba(255, 207, 74, 0.09);
+}
+
+.rule-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rule-chips li {
+  max-width: 100%;
+  padding: 3px 10px;
+  border: 2px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel-raised);
+}
+
+.rule-chips li.easy {
+  border-color: #3ddc84;
+}
+
+.rule-chips li.medium {
+  border-color: #ffcf4a;
+}
+
+.rule-chips li.hard {
+  border-color: #ff5a5f;
+}
+
+.rule-chips li.gold {
+  border-color: var(--gold);
+  background: rgba(255, 207, 74, 0.14);
+}
+
+/* The grading table scrolls sideways on a narrow screen rather than squeezing its badges. */
+.rule-scroll {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+.rule-grid {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse;
+}
+
+.rule-grid th,
+.rule-grid td {
+  padding: 8px 8px;
+  border: 2px solid var(--line-soft);
+  text-align: center;
+  vertical-align: middle;
+}
+
+.rule-grid th {
+  background: var(--panel-inset);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.rule-grid tbody th {
+  text-align: left;
+}
+
+.rule-grid small {
+  display: block;
+  color: var(--muted);
+  font-size: 21px;
+  font-weight: 400;
+}
+
+.rule-grid .badge {
+  display: inline-block;
+  font-size: 23px;
+}
+
+.rule-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.rule-table th,
+.rule-table td {
+  padding: 5px 10px;
+  border: 2px solid var(--line-soft);
+  text-align: left;
+}
+
+.rule-table th {
+  background: var(--panel-inset);
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.rule-table td:last-child {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+/* A perfect recruit round, climbing step by step. */
+.ladder {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: end;
+  gap: 6px;
+  margin: 0;
+  padding: 12px 10px 10px;
+  border: 2px solid var(--line-soft);
+  background: var(--panel-inset);
+  list-style: none;
+}
+
+/* Each step stands taller than the last, by how far the army has grown (--rise, 0 to 1). */
+.ladder li {
+  --rise: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  min-width: 0;
+  height: calc(76px + var(--rise) * 92px);
+  padding: 6px 2px;
+  border: 2px solid var(--green-deep);
+  border-bottom-width: 6px;
+  background: rgba(61, 220, 132, 0.13);
+  text-align: center;
+  line-height: 1;
+}
+
+.ladder li.from {
+  border-color: var(--line);
+  background: var(--panel-raised);
+}
+
+.ladder span {
+  color: var(--muted);
+  font-size: 21px;
+}
+
+.ladder em {
+  color: var(--green);
+  font-style: normal;
+}
+
+.ladder b {
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* What a number of defenders looks like. */
+.rule-countries {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.rule-country {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 12px 10px;
+  border: 2px solid var(--line-soft);
+  background: var(--panel-inset);
+}
+
+.country-pixels {
+  width: 100%;
+  max-width: 180px;
+  height: auto;
+  aspect-ratio: 60 / 44;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
+.rule-country figcaption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  text-align: center;
+  line-height: 1;
+}
+
+.rule-country strong {
+  font-size: 27px;
+}
+
+.rule-country .defenders {
+  color: #ff7d81;
+}
+
+.rule-country .questions {
+  color: var(--text);
+}
+
+.rule-country .worth {
+  color: var(--gold);
+}
+
+.ranks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px;
+  max-width: min(150px, 100%);
+}
+
+.helmet {
+  flex: none;
+  width: 15px;
+  height: 18px;
+}
+
+.rule-versus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px;
+  border: 2px solid var(--line-soft);
+  background: var(--panel-inset);
+}
+
+.rule-versus > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.rule-versus b {
+  flex: none;
+  font-family: var(--font-display);
+  font-size: 15px;
+}
+
+.rule-versus .you b {
+  color: var(--green);
+}
+
+.rule-versus .them b {
+  color: var(--red);
+}
+
+.rule-versus .vs {
+  flex: none;
+  color: var(--muted);
+}
+
+.rule-versus .ranks {
+  max-width: 190px;
+}
+
+.rule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding-left: 22px;
+}
+
+.rule-list li::marker {
+  color: var(--gold-deep);
+}
+
+.rule-list .good b {
+  color: var(--green);
+}
+
+.rule-list .bad b {
+  color: var(--red);
+}
+
+.rules-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 0 6px;
+}
+
+.rules-credit {
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  line-height: 1.6;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* ----------------------------------------------------------- responsive */
+
+/* Wide screens: the start panel sits beside the map rather than on top of it. */
+@media (min-width: 900px) {
+  .phase-start .map {
+    left: 440px;
+  }
+
+  /* The rule book and its button belong to the map's side of the screen. */
+  .rules {
+    left: 440px;
+  }
+
+  .rules-toggle {
+    left: calc(50% + 220px);
+  }
+}
+
+@media (max-width: 899px) {
+  /* The start panel covers the map here, so the way in to the rules is the button in its header. */
+  .rules-open {
+    display: block;
+  }
+
+  .app:not(.showing-rules) .rules-toggle {
+    display: none;
+  }
+
+  .rules-page {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rule-countries {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* The recruit ladder turns on its side: each step is a row, a little longer than the one before. */
+  .ladder {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    justify-items: start;
+  }
+
+  .ladder li {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    height: auto;
+    padding: 6px 10px;
+    border-bottom-width: 2px;
+    border-left-width: 6px;
+    /* The green fill reaches further across with every step. */
+    background: linear-gradient(to right, rgba(61, 220, 132, 0.24) calc(38% + var(--rise) * 62%), rgba(61, 220, 132, 0.06) 0);
+  }
+
+  .ladder li.from {
+    background: var(--panel-raised);
+  }
+
+  .start {
+    width: 100%;
+    border-right: 0;
+  }
+}
+
+/* The title is wide in the display font; drop it before it can collide with the stats. */
+@media (max-width: 1000px) {
+  .brand {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+
+  .stat-label {
+    display: none;
+  }
+
+  .topbar {
+    padding: 6px 8px 10px;
+    gap: 6px;
+  }
+
+  .stats {
+    gap: 4px;
+  }
+
+  .stat {
+    height: 30px;
+    padding: 0 7px;
+  }
+
+  .heart {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .sound-toggle {
+    flex: none !important;
+  }
+
+  .legend {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  /* Phones: thousands are written "20k" in the top bar and the battle bar. */
+  .topbar .num-full,
+  .tug .num-full {
+    display: none;
+  }
+
+  .topbar .num-short,
+  .tug .num-short {
+    display: inline;
+  }
+
+  /* The question card stays short so the country being fought over stays in view. */
+  .card.question .card-foot .hint {
+    display: none;
+  }
+
+  .card.question .card-foot {
+    justify-content: flex-end;
+    min-height: 0;
+  }
+
+  body {
+    font-size: 23px;
+  }
+
+  .topbar {
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .stats {
+    order: -1;
+    width: 100%;
+    justify-content: space-between;
+    gap: 3px;
+  }
+
+  .stat {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-width: 0;
+    padding: 0 5px;
+    gap: 4px;
+  }
+
+  /* The wide display font does not fit five stats across a phone; use the text font for the numbers. */
+  .stat-value {
+    font-family: var(--font);
+    font-size: 26px;
+  }
+
+  .stat-value small {
+    font-size: 23px;
+  }
+
+  .stat.countries svg {
+    display: none;
+  }
+
+  .stat.lives {
+    gap: 2px;
+  }
+
+
+  .dock {
+    padding: 0 6px calc(6px + env(safe-area-inset-bottom));
+  }
+
+  .card {
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .options {
+    gap: 6px;
+  }
+
+  .option {
+    min-height: 44px;
+    padding: 6px 8px;
+    gap: 8px;
+  }
+
+  .options.flags {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .option-flag img {
+    height: 64px;
+  }
+
+  .card-foot {
+    gap: 8px;
+  }
+
+  .card-foot .hint {
+    font-size: 21px;
+  }
+
+  .target {
+    flex-wrap: wrap;
+  }
+
+  .target-actions {
+    width: 100%;
+  }
+
+  .target-actions .btn {
+    flex: 1;
+  }
+
+  /* One swipeable row keeps the panel short so the map stays visible. */
+  .target-list {
+    flex-wrap: nowrap;
+    max-height: none;
+    padding-bottom: 2px;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .progress {
+    left: 6px;
+    width: 56px;
+    border-width: 2px;
+  }
+
+  .progress-track {
+    width: 26px;
+  }
+
+  .progress-label {
+    font-size: 25px;
+  }
+
+  .progress-caption {
+    font-size: 23px;
+  }
+
+  .progress-title {
+    display: none;
+  }
+
+  .tug {
+    gap: 8px;
+    padding: 7px 9px;
+  }
+
+  .tug-track {
+    height: 28px;
+  }
+
+  .tug-count {
+    font-size: 24px;
+  }
+
+  /* No room for both names: your side is the green number, and a long country name ends in an ellipsis. */
+  .tug-side.you .tug-name {
+    display: none;
+  }
+
+  .tug-name {
+    display: block;
+    font-size: 23px;
+  }
+
+  .tug-count {
+    flex: none;
+  }
+
+  .tug-name .px-flag {
+    display: none;
+  }
+
+  .countdown {
+    top: -30px;
+    right: 8px;
+    width: 84px;
+    height: 74px;
+  }
+
+  .countdown-num {
+    font-size: 32px;
+  }
+
+  .card.question .card-head {
+    padding-right: 96px;
+  }
+
+  .end {
+    padding: 18px 14px;
+  }
+
+  .end-stats dd {
+    font-size: 28px;
+  }
+}
+
+/* Short landscape screens (phones on their side): flatten the card so the map still shows. */
+@media (max-height: 520px) and (min-width: 561px) {
+  .options {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .option {
+    min-height: 40px;
+    padding: 5px 8px;
+  }
+
+  .option-flag img {
+    height: 32px;
+  }
+
+  .countdown {
+    top: -22px;
+    width: 76px;
+    height: 58px;
+    border-width: 3px;
+  }
+
+  .countdown-num {
+    font-size: 24px;
+  }
+
+  .countdown-unit {
+    display: none;
+  }
+
+  .tug {
+    padding: 3px 10px;
+    border-width: 2px;
+    box-shadow: none;
+  }
+
+  .tug-track {
+    height: 16px;
+    border-width: 2px;
+  }
+
+  .tug-count {
+    font-size: 16px;
+  }
+
+  .progress {
+    width: 60px;
+    min-height: 0;
+  }
+
+  .progress-title,
+  .progress-caption {
+    display: none;
+  }
+
+  .card {
+    gap: 5px;
+    padding: 8px 12px;
+  }
+
+  .card.question {
+    padding-top: 16px;
+  }
+
+  .card.question .card-head {
+    min-height: 0;
+    padding-right: 90px;
+  }
+
+  .card-foot .hint {
+    display: none;
+  }
+
+  .card-foot {
+    justify-content: flex-end;
+    min-height: 0;
+  }
+
+  .card-foot .btn {
+    min-height: 32px;
+    padding: 2px 14px;
+    font-size: 23px;
+  }
+
+  .verdict {
+    font-size: 21px;
+  }
+
+  .prompt {
+    font-size: 25px;
+  }
+
+  .option-label {
+    font-size: 23px;
+  }
+
+  .topbar {
+    padding: 4px 10px 8px;
+  }
+
+  .stat {
+    height: 32px;
+  }
+
+  .tug-name {
+    font-size: 21px;
+  }
+
+  .target-list {
+    flex-wrap: nowrap;
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .start {
+    gap: 8px;
+    padding-top: 10px;
+  }
+
+  .start-head h1 {
+    font-size: 28px;
+  }
+
+  .start-head h1 span {
+    display: inline;
+  }
+
+  .tagline {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

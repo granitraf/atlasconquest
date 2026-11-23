@@ -1,0 +1,107 @@
+{
+  "generatedAt": "2026-11-22T23:48:39.466Z",
+  "countryCount": 230,
+  "shapeSource": "world-atlas countries-50m.json (Natural Earth)",
+  "factSource": "https://gitlab.com/restcountries/restcountries/-/raw/master/src/main/resources/countriesV3.1.json",
+  "flagSource": "https://flagcdn.com",
+  "terrain": "bluemarble",
+  "terrainSource": "https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-topography-bathymetry/july/world.topo.bathy.200407.3x5400x2700.jpg",
+  "terrainSize": [
+    4096,
+    2048
+  ],
+  "flagSizes": {
+    "s": 12,
+    "l": 32
+  },
+  "dropped": [
+    {
+      "name": "Antarctica",
+      "reason": "incomplete facts: missing capital, subregion, playable continent, currencies, languages"
+    },
+    {
+      "name": "Bouvet Island",
+      "reason": "facts but no map shape"
+    },
+    {
+      "name": "British Indian Ocean Territory",
+      "reason": "incomplete facts: missing population"
+    },
+    {
+      "name": "Caribbean Netherlands",
+      "reason": "facts but no map shape"
+    },
+    {
+      "name": "Christmas Island",
+      "reason": "facts but no map shape"
+    },
+    {
+      "name": "Cocos (Keeling) Islands",
+      "reason": "facts but no map shape"
+    },
+    {
+      "name": "French Guiana",
+      "reason": "facts but no map shape"
+    },
+    {
+      "name": "French Southern and Antarctic Lands",
+      "reason": "incomplete facts: missing subregion, playable continent"
+    },
+    {
+      "name": "Gibraltar",
+      "reason": "facts but no map shape"
+    },
+    {
+      "name": "Guadeloupe",
+      "reason": "facts but no map shape"
+    },
+    {
+      "name": "Heard Island and McDonald Islands",
+      "reason": "incomplete facts: missing capital, subregion, playable continent, population, currencies"
+    },
+    {
+      "name": "Indian Ocean Ter.",
+      "reason": "map shape has no ISO numeric code and no fact record"
+    },
+    {
+      "name": "Macau",
+      "reason": "incomplete facts: missing capital"
+    },
+    {
+      "name": "Martinique",
+      "reason": "facts but no map shape"
+    },
+    {
+      "name": "Mayotte",
+      "reason": "facts but no map shape"
+    },
+    {
+      "name": "Réunion",
+      "reason": "facts but no map shape"
+    },
+    {
+      "name": "Siachen Glacier",
+      "reason": "map shape has no ISO numeric code and no fact record"
+    },
+    {
+      "name": "South Georgia",
+      "reason": "incomplete facts: missing subregion, playable continent, population"
+    },
+    {
+      "name": "Svalbard and Jan Mayen",
+      "reason": "facts but no map shape"
+    },
+    {
+      "name": "Tokelau",
+      "reason": "facts but no map shape"
+    },
+    {
+      "name": "Tuvalu",
+      "reason": "facts but no map shape"
+    },
+    {
+      "name": "United States Minor Outlying Islands",
+      "reason": "facts but no map shape"
+    }
+  ]
+}
