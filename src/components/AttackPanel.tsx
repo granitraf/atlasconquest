@@ -1,11 +1,11 @@
-import { DEFENDERS_PER_TROOP, SEA_TIMER_SECONDS, WOUND_HEAL_PER_BATTLE, conquestTroops, soldiers } from '../game/rules';
+import { SEA_TIMER_SECONDS, WOUND_HEAL_PER_BATTLE, conquestTroops, soldiers } from '../game/rules';
 import { sound } from '../sound';
 import type { Country, Targets } from '../game/types';
 
 interface Props {
   targets: Targets;
   byId: Record<string, Country>;
-  /** Extra defenders every country has because of the size of the player's empire. */
+  /** Extra defenders (shown as enemies) every country has because of the size of the player's empire. */
   escalation: number;
   /** Defenders a target has at full strength, and how many are standing if it is wounded. */
   strength: (id: string, sea: boolean) => { full: number; standing: number };
@@ -42,20 +42,19 @@ export function AttackPanel({ targets, byId, escalation, strength, selectedId, o
           <div className="target-info">
             <h2>{selected.name}</h2>
             <p data-standing={selectedStrength?.standing} data-full={selectedStrength?.full}>
-              <b>{selectedStrength && soldiers(selectedStrength.standing)}</b>
-              {selectedStrength && selectedStrength.standing < selectedStrength.full ? (
-                <>
-                  {' '}
-                  of {soldiers(selectedStrength.full)} defenders{' '}
-                  <em className="wounded">wounded, +{soldiers(WOUND_HEAL_PER_BATTLE)} back each time you attack elsewhere</em>
-                </>
-              ) : (
-                ' defenders'
+              {/* Enemies in the pink of the numbers below; a sea crossing in the blue of its dashed outline. */}
+              <b className="enemy">
+                {selectedStrength && soldiers(selectedStrength.standing)}
+                {selectedStrength && selectedStrength.standing < selectedStrength.full && ` of ${soldiers(selectedStrength.full)}`} enemies
+              </b>
+              {selectedStrength && selectedStrength.standing < selectedStrength.full && (
+                <em className="wounded"> wounded, +{soldiers(WOUND_HEAL_PER_BATTLE)} back each time you attack elsewhere</em>
               )}
-              {selectedSea ? ` · sea crossing (more defenders, ${SEA_TIMER_SECONDS}s per question)` : ' · land attack'}
+              {' · '}
+              {selectedSea ? <span className="sea">sea crossing (more enemies, {SEA_TIMER_SECONDS}s per question)</span> : 'land attack'}
             </p>
             <p className="target-reward" data-testid="target-reward" data-troops={selectedReward}>
-              <b className="gain">{troopsText(selectedReward)} when it falls</b> · 1 troop for every {DEFENDERS_PER_TROOP} defenders
+              <b className="gain">{troopsText(selectedReward)} upon victory</b>
             </p>
           </div>
           <div className="target-actions">
@@ -78,7 +77,7 @@ export function AttackPanel({ targets, byId, escalation, strength, selectedId, o
       ) : (
         <p className="hint lead">
           Pick a highlighted country on the map or from the list to attack. Recruiting is over: new troops come only from
-          conquests, 1 for every {DEFENDERS_PER_TROOP} defenders the country has.
+          conquests, and the more enemies a country has, the more it is worth.
         </p>
       )}
 
@@ -94,7 +93,7 @@ export function AttackPanel({ targets, byId, escalation, strength, selectedId, o
       <div className="card-foot">
         <p className="hint">
           {land.length} by land · {sea.length} by sea
-          {escalation > 0 && ` · every country +${soldiers(escalation)} defenders (your empire's size)`}
+          {escalation > 0 && ` · every country +${soldiers(escalation)} enemies (your empire's size)`}
           {targets.seaFallback && sea.length > 0 ? ' (few shores within 2,500 km: the nearest ones beyond are open too)' : ''}
         </p>
       </div>
@@ -131,7 +130,7 @@ function TargetChip({
       data-standing={strength.standing}
       data-full={strength.full}
       data-reward={reward}
-      title={`${country.name}: ${soldiers(strength.standing)}${strength.standing < strength.full ? ` of ${soldiers(strength.full)}` : ''} defenders${sea ? ', by sea' : ''}. Worth ${troopsText(reward)} when it falls.`}
+      title={`${country.name}: ${soldiers(strength.standing)}${strength.standing < strength.full ? ` of ${soldiers(strength.full)}` : ''} enemies${sea ? ', by sea' : ''}. Worth ${troopsText(reward)} upon victory.`}
     >
       <span className="chip-name">{country.name}</span>
       <b>

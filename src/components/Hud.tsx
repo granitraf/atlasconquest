@@ -195,7 +195,7 @@ export function TugOfWar({ troops, battle, feedback, targetName, targetFlag, seq
   const total = troops + battle.defenders;
   const share = total > 0 ? (troops / total) * 100 : 50;
   return (
-    <div className="tug" role="group" aria-label={`You have ${soldiers(troops)} troops against ${soldiers(battle.defenders)} defenders`}>
+    <div className="tug" role="group" aria-label={`You have ${soldiers(troops)} troops against ${soldiers(battle.defenders)} enemies`}>
       <div className="tug-side you">
         <span className="tug-name">You</span>
         <span className="tug-count" data-testid="battle-troops" data-value={troops}>

@@ -36,6 +36,8 @@ export function fake(id: string, over: Partial<Country> = {}): Country {
     tld: `.${id.toLowerCase().slice(0, 2)}`,
     fame: 1,
     waters: [],
+    // Every made-up coast is on the same sea, unless a test says otherwise.
+    lanes: ['Test Sea'],
     watersAvoid: [],
     features: [],
     featuresAvoid: [],

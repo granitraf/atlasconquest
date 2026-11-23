@@ -22,7 +22,12 @@ export async function launch(opts = {}) {
     if (m.type() === 'error' || m.type() === 'warning') problems.push(`console.${m.type()}: ${m.text()}`);
   });
   page.on('pageerror', (e) => problems.push(`pageerror: ${e.message}`));
-  page.on('requestfailed', (r) => problems.push(`requestfailed: ${r.url()} ${r.failure()?.errorText}`));
+  page.on('requestfailed', (r) => {
+    // A request the browser itself cancelled (an image still loading when the test reloads the page) is not a
+    // failure of the game. A file that is really missing arrives as a 404 below, and other network errors still count.
+    if (r.failure()?.errorText === 'net::ERR_ABORTED') return;
+    problems.push(`requestfailed: ${r.url()} ${r.failure()?.errorText}`);
+  });
   page.on('response', (r) => {
     if (r.status() >= 400) problems.push(`http ${r.status()}: ${r.url()}`);
   });

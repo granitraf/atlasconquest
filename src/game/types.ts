@@ -39,6 +39,11 @@ export interface Country {
   fame: 0 | 1 | 2;
   /** Seas and oceans the country clearly borders (config/geography.json). */
   waters: string[];
+  /**
+   * Sea lanes this country has a coast on ("Atlantic", "Mediterranean", "Baltic"…). A sea crossing
+   * needs a lane in common, so an enclosed sea can only be entered from a country on its shore.
+   */
+  lanes: string[];
   /** Seas and oceans it arguably touches: never the right answer, never offered as a wrong one. */
   watersAvoid: string[];
   /** Great rivers, deserts, mountain ranges and rainforests clearly found in the country. */

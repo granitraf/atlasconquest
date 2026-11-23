@@ -12,6 +12,10 @@ defenders as 9,000, a wrong answer as 2,000 lost, a conquest worth 3 as +3,000. 
 changes: every proportion is the same. This document gives the units; multiply by 1,000 for
 what the player sees. On phones the top bar and the battle bar write 20,000 as "20k".
 
+**Defenders are called "enemies" on screen.** This document and the code keep the word
+defenders for the rule; every label, tooltip and the rule book say enemies. One colour code
+is used throughout: enemies in pink, troops gained in green, sea crossings in light blue.
+
 ## 1. Setup
 
 - **Modes:** World (230 countries) or a single-continent campaign: Africa 56, Asia 49,
@@ -184,11 +188,21 @@ and 9). The question card shows the tier.
 **What can be attacked:**
 
 - **Land:** any unowned in-mode country sharing a land border with player territory.
-- **Sea:** if the player owns at least one coastal country, any unowned coastal country whose
-  centre is within 2,500 km of the centre of any owned country (`SEA_RANGE_KM`).
+- **Sea:** any unowned coastal country whose centre is within 2,500 km (`SEA_RANGE_KM`) of
+  the centre of an owned country **that has a coast on the same sea lane**.
+- **Sea lanes** (`config/geography.json`, `lanes`): Atlantic, Pacific, Indian Ocean, Arctic,
+  Mediterranean, Black Sea, Baltic, Red Sea, Persian Gulf, Caspian. Open seas belong to
+  their ocean (the North Sea, the Caribbean and the Gulf of Guinea are Atlantic; the South
+  China Sea is Pacific). Enclosed seas are lanes of their own, so they can only be entered
+  from a country with a coast on them. From Germany (Atlantic and Baltic) the Atlantic shore
+  is open as far as Morocco, and the Baltic; Italy, Greece, Turkey and Ukraine are not,
+  however near. Spain, France or Morocco (Atlantic and Mediterranean) open the
+  Mediterranean; Turkey or Russia open the Black Sea; Egypt links the Mediterranean and
+  the Red Sea. The map tooltip names the sea that is missing.
 - **Top-up to three:** an empire with a coast always has at least 3 targets (`MIN_TARGETS`)
   while that many remain. If land borders and the sea range together give fewer, the nearest
-  coastal countries beyond the range are added, nearest first, until there are 3. Pitcairn
+  coastal countries beyond the range are added, nearest first, until there are 3: shores on
+  its own sea lanes first, and other seas only if that is still not enough. Pitcairn
   has only French Polynesia within range (2,158 km), so the Cook Islands (3,057 km) and Niue
   (4,138 km) open up too. Australia, whose centre is far from every shore but one, gets 3 as
   well. Anyone who already has 3 or more targets is unaffected: the range does not change.

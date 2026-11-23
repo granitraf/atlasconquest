@@ -184,7 +184,7 @@ export function Rules({ data, onClose }: Props) {
           <p>
             Atlas Conquest is a game of conquest where <b>your knowledge is your army</b>. Pick a country, raise your troops, and take the map
             one country at a time. Every battle is a run of geography questions about the country you are attacking. Answer right and its
-            defenders fall. Answer wrong and your own troops do.
+            enemies fall. Answer wrong and your own troops do.
           </p>
           <p>Nobody attacks you back. The only thing between you and the whole map is what you know.</p>
         </article>
@@ -256,7 +256,7 @@ export function Rules({ data, onClose }: Props) {
           </div>
           <p>
             <b>Why?</b> The less famous a country, the harder its questions: fewer people know its flag, its capital or its neighbours. And an
-            island has no border to walk across, so every step is a sea crossing against extra defenders and half the time. The grade is the
+            island has no border to walk across, so every step is a sea crossing against extra enemies and half the time. The grade is the
             multiplier on your score, from ×{START_MULTIPLIER.Easy} to ×{START_MULTIPLIER.Extreme}: the harder the start, the more every
             conquest counts.
           </p>
@@ -320,13 +320,13 @@ export function Rules({ data, onClose }: Props) {
 
         <article className="rule wide" data-rule="defenders">
           <h2>
-            <i>6</i> Defenders
+            <i>6</i> Enemies
           </h2>
           <p>
-            Every country is held by defenders, from {soldiers(MIN_DEFENDERS)} for the smallest to {soldiers(defendersFor(1.4e9))} for the
+            Every country is held by enemies, from {soldiers(MIN_DEFENDERS)} for the smallest to {soldiers(defendersFor(1.4e9))} for the
             most populous. A right answer defeats {soldiers(defenderKills('easy'))} of them, so{' '}
             <b>
-              every {soldiers(1)} defenders is about one question
+              every {soldiers(1)} enemies is about one question
             </b>
             .
           </p>
@@ -336,8 +336,8 @@ export function Rules({ data, onClose }: Props) {
                 <CountryPixels shape={c.shape} name={c.name} />
                 <figcaption>
                   <strong>{c.name}</strong>
-                  <span className="defenders">{soldiers(c.defenders)} defenders</span>
-                  <Ranks units={c.defenders} tone="them" label={`${c.defenders} helmets, one for every thousand defenders`} />
+                  <span className="defenders">{soldiers(c.defenders)} enemies</span>
+                  <Ranks units={c.defenders} tone="them" label={`${c.defenders} helmets, one for every thousand enemies`} />
                   <span className="questions">about {c.defenders} questions</span>
                   <span className="worth">worth +{soldiers(c.worth)} troops</span>
                 </figcaption>
@@ -367,18 +367,20 @@ export function Rules({ data, onClose }: Props) {
           </div>
           <ul className="rule-list">
             <li>
-              You can attack any neighbour over a land border, and any shore within {SEA_RANGE_KM.toLocaleString('en-US')} km by sea. Far from
-              everything? The nearest shores open up, so there are always at least {MIN_TARGETS} countries to attack.
+              You can attack any neighbour over a land border, and by sea any shore within {SEA_RANGE_KM.toLocaleString('en-US')} km that lies
+              on a sea you already have a coast on. Ships follow the water: from the North Sea you can reach Morocco, but the Mediterranean
+              only opens once you hold a coast on it. Far from everything? The nearest shores open up, so there are always at least{' '}
+              {MIN_TARGETS} countries to attack.
             </li>
             <li>Every battle opens with the country's flag, then the questions get harder.</li>
             <li className="good">
-              Right answer: <b>−{soldiers(defenderKills('easy'))} defenders killed</b> (a Hard question: −{soldiers(defenderKills('hard'))}).
+              Right answer: <b>−{soldiers(defenderKills('easy'))} enemies killed</b> (a Hard question: −{soldiers(defenderKills('hard'))}).
             </li>
             <li className="bad">
               Wrong, or too slow: <b>−{soldiers(WRONG_ANSWER_TROOP_LOSS)} of your own troops</b>.
             </li>
             <li>
-              You have {QUESTION_TIMER_SECONDS} seconds a question. Across the sea it is {SEA_TIMER_SECONDS}, against a third more defenders (
+              You have {QUESTION_TIMER_SECONDS} seconds a question. Across the sea it is {SEA_TIMER_SECONDS}, against a third more enemies (
               {soldiers(6)} becomes {soldiers(6 + seaBonus(6))}).
             </li>
             <li>While a question is open the map hides the surrounding country names. No peeking.</li>
@@ -392,14 +394,14 @@ export function Rules({ data, onClose }: Props) {
           <p>
             A conquered country joins your empire and sends you troops:{' '}
             <b>
-              {soldiers(1)} for every {soldiers(DEFENDERS_PER_TROOP)} defenders it had
+              {soldiers(1)} for every {soldiers(DEFENDERS_PER_TROOP)} enemies it had
             </b>
             . The bigger the fight, the bigger the reward.
           </p>
           <table className="rule-table" data-testid="rules-spoils">
             <thead>
               <tr>
-                <th>Defenders</th>
+                <th>Enemies</th>
                 <th>You gain</th>
               </tr>
             </thead>
@@ -422,7 +424,7 @@ export function Rules({ data, onClose }: Props) {
           </h2>
           <p>
             Stuck on a question? <b>Retreat</b>. It costs a {RETREAT_SHARE * 100 === 25 ? 'quarter' : `${RETREAT_SHARE * 100}%`} of your army
-            and your streak, but you live. The country stays wounded: the defenders you beat stay down, and {soldiers(WOUND_HEAL_PER_BATTLE)}{' '}
+            and your streak, but you live. The country stays wounded: the enemies you beat stay down, and {soldiers(WOUND_HEAL_PER_BATTLE)}{' '}
             return each time you attack somewhere else.
           </p>
           <p className="rule-note">Your last {soldiers(1)} cannot retreat. They fight to the end.</p>
@@ -433,7 +435,7 @@ export function Rules({ data, onClose }: Props) {
             <i>10</i> A growing empire
           </h2>
           <p>
-            The world notices. For every {ESCALATION_EVERY} countries you hold, <b>every country gains {soldiers(1)} defenders</b>. The last
+            The world notices. For every {ESCALATION_EVERY} countries you hold, <b>every country gains {soldiers(1)} enemies</b>. The last
             conquests are the hardest, and the best paid.
           </p>
           <p className="rule-note">

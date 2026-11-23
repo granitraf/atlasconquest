@@ -108,7 +108,7 @@ export function QuestionCard({ question, feedback, context, onAnswer, onContinue
     const multiplier = streakMultiplier(context.streak + 1);
     reward = `+${soldiers(base * multiplier)} troops${multiplier > 1 ? ` (×${multiplier} streak)` : ''}`;
   } else {
-    reward = `defeats ${soldiers(defenderKills(question.difficulty))} defenders`;
+    reward = `defeats ${soldiers(defenderKills(question.difficulty))} enemies`;
   }
 
   let verdict: { title: string; detail: string } | null = null;
@@ -120,7 +120,7 @@ export function QuestionCard({ question, feedback, context, onAnswer, onContinue
           ? `${troops}${feedback.multiplier > 1 ? ` (×${feedback.multiplier} streak bonus)` : ''}.`
           : feedback.outcome === 'won'
             ? `${context.targetName} has fallen: ${troops}!`
-            : `${soldiers(feedback.defendersKilled)} defenders down.`;
+            : `${soldiers(feedback.defendersKilled)} enemies down.`;
       verdict = { title: 'Correct!', detail };
     } else {
       const cost =
@@ -224,7 +224,7 @@ export function QuestionCard({ question, feedback, context, onAnswer, onContinue
                 data-cost={context.canRetreat ? context.retreatCost : 0}
                 title={
                   context.canRetreat
-                    ? 'Pull out and keep your empire. It costs a quarter of your army and your streak; the defenders you have beaten stay down, recovering 2 each time you attack another country.'
+                    ? 'Pull out and keep your empire. It costs a quarter of your army and your streak; the enemies you have beaten stay down, and some return each time you attack another country.'
                     : 'You cannot retreat with your last troops.'
                 }
               >

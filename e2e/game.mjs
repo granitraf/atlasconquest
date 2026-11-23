@@ -119,7 +119,12 @@ section('germany', async (page) => {
   await page.mouse.move(fr.x, fr.y);
   await page.waitForTimeout(120);
   const tip = (await page.locator('.map-tooltip').innerText()).replace(/\n/g, ' | ');
-  check(results, 'tooltip on France: name + attackable + 9,000 defenders', /France/.test(tip) && /by land/.test(tip) && /9,000 defenders/.test(tip), tip);
+  check(results, 'tooltip on France: name + attackable + 9,000 enemies', /France/.test(tip) && /by land/.test(tip) && /9,000 enemies/.test(tip) && !/defenders/i.test(tip), tip);
+  // One colour code: enemies pink, troops gained green (and a sea crossing blue, further down).
+  const tones = () => page.evaluate(() => Object.fromEntries([...document.querySelectorAll('.map-tooltip [class^="tone-"]')].map((el) => [el.className, `${getComputedStyle(el).color} ${el.textContent}`])));
+  const PINK = 'rgb(255, 156, 159)', GREEN = 'rgb(61, 220, 132)', BLUE = 'rgb(212, 236, 255)', BROWN = 'rgb(194, 166, 122)';
+  const landTones = await tones();
+  check(results, 'in the tooltip the enemies are pink and the troops to gain are green', landTones['tone-enemy'] === `${PINK} 9,000 enemies` && landTones['tone-gain'] === `${GREEN} worth +3,000 troops`, JSON.stringify(landTones));
   await page.screenshot({ path: SHOTS + '20-germany-attack-phase.png' });
 
   // Clicking a non-attackable country does nothing harmful.
@@ -136,7 +141,19 @@ section('germany', async (page) => {
   await settle(page);
   const far = await tipOver('GBR');
   const tipBox = await page.evaluate(() => { const t = document.querySelector('.map-tooltip'); const r = t.getBoundingClientRect(); return { text: t.scrollWidth, box: t.clientWidth, left: r.left, right: r.right, w: innerWidth }; });
-  check(results, 'a long tooltip (sea crossing, defenders, reward, timer) fits inside its box', /Sea crossing · [\d,]+ defenders · worth \+[\d,]+ troops · 10s timer/.test(far) && tipBox.text <= tipBox.box + 1 && tipBox.left >= 0 && tipBox.right <= tipBox.w, `${far} — text ${tipBox.text}px in a ${tipBox.box}px box`);
+  check(results, 'a long tooltip (sea crossing, defenders, reward, timer) fits inside its box', /Sea crossing · [\d,]+ enemies · worth \+[\d,]+ troops · 10s timer/.test(far) && tipBox.text <= tipBox.box + 1 && tipBox.left >= 0 && tipBox.right <= tipBox.w, `${far} — text ${tipBox.text}px in a ${tipBox.box}px box`);
+  const seaTones = await tones();
+  check(results, 'in the tooltip "Sea crossing" is the light blue of the dashed outline', seaTones['tone-sea'] === `${BLUE} Sea crossing` && seaTones['tone-enemy']?.startsWith(PINK) && seaTones['tone-gain']?.startsWith(GREEN), JSON.stringify(seaTones));
+  // Ships follow the water: from Germany the Atlantic shore is open as far as Morocco, but not the Mediterranean or the Black Sea.
+  const bySea = await page.evaluate(() => [...document.querySelectorAll('.target-chip.sea')].map((c) => c.getAttribute('data-testid').slice(7)));
+  check(results, 'from Germany you can sail to Britain, Sweden, Spain, Portugal and Morocco', ['GBR', 'SWE', 'FIN', 'ESP', 'PRT', 'MAR'].every((id) => bySea.includes(id)), `${bySea.length} by sea`);
+  check(results, 'but not to Italy, Greece, Turkey or Ukraine: the Mediterranean and the Black Sea are closed to a North Sea power', ['ITA', 'GRC', 'TUR', 'UKR', 'ROU', 'TUN', 'HRV'].every((id) => !bySea.includes(id)), bySea.join(' '));
+  const blocked = await tipOver('ITA');
+  check(results, 'the tooltip on Italy says which sea is missing', /^Italy \| No sea route yet · take a coast on the Mediterranean first/.test(blocked), blocked);
+  check(results, 'the legend keeps its light brown text', (await page.locator('.legend').evaluate((el) => getComputedStyle(el).color)) === BROWN);
+  const gains = await page.evaluate(() => [...new Set([...document.querySelectorAll('.target-chip .chip-gain')].map((el) => getComputedStyle(el).color))]);
+  const strengths = await page.evaluate(() => [...new Set([...document.querySelectorAll('.target-chip b')].map((el) => getComputedStyle(el).color))]);
+  check(results, 'in the target list every enemy count is pink and every reward is green', gains.join() === GREEN && strengths.join() === PINK, `rewards ${gains.join()}; enemies ${strengths.join()}`);
   check(results, 'attack panel: every text fits its box', (await misfits(page)).length === 0, (await misfits(page)).join(' ; '));
 
   // The empty space under Antarctica can never be dragged into view, at any zoom; the top still behaves as before.
@@ -169,7 +186,9 @@ section('germany', async (page) => {
   await page.getByTestId('target-card').waitFor();
   check(results, 'clicking France on the map selects it as the target', /France/.test(await page.getByTestId('target-card').innerText()));
   const franceReward = page.getByTestId('target-reward');
-  check(results, 'the target card gives the reward and the rule behind it', (await franceReward.getAttribute('data-troops')) === '3' && /\+3,000 troops when it falls · 1 troop for every 3 defenders/.test(await franceReward.innerText()), await franceReward.innerText());
+  check(results, 'the target card gives the reward: "+3,000 troops upon victory", in green, and nothing about ratios', (await franceReward.getAttribute('data-troops')) === '3' && (await franceReward.innerText()).trim() === '+3,000 troops upon victory' && (await franceReward.locator('.gain').evaluate((el) => getComputedStyle(el).color)) === GREEN, await franceReward.innerText());
+  const franceCard = (await page.getByTestId('target-card').innerText()).replace(/\n/g, ' ');
+  check(results, 'the target card counts "9,000 enemies" in pink, and never says "defenders"', /9,000 enemies · land attack/.test(franceCard) && !/defenders|for every/i.test(franceCard) && (await page.locator('.target-info b.enemy').evaluate((el) => `${getComputedStyle(el).color} ${el.textContent.trim()}`)) === `${PINK} 9,000 enemies`, franceCard);
   const troopsBefore = (await hud(page)).troops;
   await page.getByTestId('attack-button').click();
   await page.getByTestId('question-card').waitFor();
@@ -185,7 +204,7 @@ section('germany', async (page) => {
   const side = await page.getByTestId('battle-progress').boundingBox();
   check(results, 'battle bars are large', bar.width >= 800 && track.height >= 34 && side.width >= 80, `tug ${Math.round(bar.width)}px wide with a ${Math.round(track.height)}px track; side bar ${Math.round(side.width)}px wide`);
   check(results, 'battle question: every text fits its box', (await misfits(page)).length === 0, (await misfits(page)).join(' ; '));
-  check(results, 'the question card speaks in thousands', /defeats 1,000 defenders/.test(await page.getByTestId('difficulty').innerText()) && /−2,000 troops/.test(await page.getByTestId('question-card').innerText()), await page.getByTestId('difficulty').innerText());
+  check(results, 'the question card speaks in thousands', /defeats 1,000 enemies/.test(await page.getByTestId('difficulty').innerText()) && /−2,000 troops/.test(await page.getByTestId('question-card').innerText()), await page.getByTestId('difficulty').innerText());
   check(results, 'tug-of-war bar shows both army sizes', (await page.getByTestId('battle-troops').innerText()).startsWith(k(troopsBefore)) && (await page.getByTestId('battle-defenders').innerText()).startsWith('9,000'));
   check(results, 'battle progress bar is visible and starts empty', (await page.getByTestId('battle-progress').getAttribute('data-value')) === '0');
 
@@ -291,7 +310,7 @@ section('germany', async (page) => {
   // A small country is worth less: Luxembourg has 3 defenders, +1.
   const beforeLux = (await hud(page)).troops;
   await page.getByTestId('target-LUX').click();
-  check(results, 'Luxembourg\'s card promises +1 troop', (await page.getByTestId('target-reward').getAttribute('data-troops')) === '1' && /\+1,000 troops when it falls/.test(await page.getByTestId('target-reward').innerText()), await page.getByTestId('target-reward').innerText());
+  check(results, 'Luxembourg\'s card promises +1 troop', (await page.getByTestId('target-reward').getAttribute('data-troops')) === '1' && /\+1,000 troops upon victory/.test(await page.getByTestId('target-reward').innerText()), await page.getByTestId('target-reward').innerText());
   await page.getByTestId('attack-button').click();
   await page.getByTestId('question-card').waitFor();
   s = await state(page);
@@ -473,8 +492,9 @@ section('iceland', async (page) => {
   await page.getByTestId('target-IRL').click();
   await settle(page);
   const card = await page.getByTestId('target-card').innerText();
-  check(results, 'sea target card explains the crossing', /sea crossing/i.test(card) && /10s per question/.test(card) && /^Ireland\s+8,000 defenders/.test(card), card.replace(/\n/g, ' '));
-  check(results, 'a sea crossing meets more defenders, so it is worth more: Ireland +3 by sea (it is +2 by land)', /\+3,000 troops when it falls/.test(card) && (await page.getByTestId('target-IRL').getAttribute('data-reward')) === '3', card.replace(/\n/g, ' '));
+  check(results, 'sea target card explains the crossing', /sea crossing/i.test(card) && /10s per question/.test(card) && /^Ireland\s+8,000 enemies/.test(card), card.replace(/\n/g, ' '));
+  check(results, 'on the target card the sea crossing text is the light blue of the dashed outline', (await page.locator('.target-info .sea').evaluate((el) => `${getComputedStyle(el).color} ${el.textContent}`)) === 'rgb(212, 236, 255) sea crossing (more enemies, 10s per question)');
+  check(results, 'a sea crossing meets more defenders, so it is worth more: Ireland +3 by sea (it is +2 by land)', /\+3,000 troops upon victory/.test(card) && (await page.getByTestId('target-IRL').getAttribute('data-reward')) === '3', card.replace(/\n/g, ' '));
   await page.getByTestId('attack-button').click();
   await page.getByTestId('question-card').waitFor();
   s = await state(page);
@@ -537,7 +557,7 @@ section('malta', async (page) => {
   await page.getByTestId('target-card').waitFor();
   const card = (await page.getByTestId('target-card').innerText()).replace(/\n/g, ' ');
   check(results, 'clicking Malta\'s marker on the map selects it', /Malta/.test(card), card);
-  check(results, 'Malta defends with 4 by sea (3 + 1), not 6', /^Malta\s+4,000 defenders/.test(card) && /sea crossing/.test(card), card);
+  check(results, 'Malta defends with 4 by sea (3 + 1), not 6', /^Malta\s+4,000 enemies/.test(card) && /sea crossing/.test(card), card);
   await page.getByTestId('attack-button').click();
   await page.getByTestId('question-card').waitFor();
   await settle(page, 1500);
@@ -907,7 +927,7 @@ section('rules', async (page) => {
 
   const text = (await rules.innerText()).replace(/\s+/g, ' ');
   const chapters = await page.locator('.rule h2').allInnerTexts();
-  check(results, 'ten chapters: the game, the goal, campaigns, the start, recruitment, defenders, battle, spoils, retreat, a growing empire', chapters.length === 10 && ['GAME', 'GOAL', 'CAMPAIGNS', 'START', 'RECRUITMENT', 'DEFENDERS', 'BATTLE', 'SPOILS', 'RETREAT', 'EMPIRE'].every((word, i) => chapters[i].toUpperCase().includes(word)), chapters.map((c) => c.replace(/\s+/g, ' ')).join(' | '));
+  check(results, 'ten chapters: the game, the goal, campaigns, the start, recruitment, enemies, battle, spoils, retreat, a growing empire', chapters.length === 10 && ['GAME', 'GOAL', 'CAMPAIGNS', 'START', 'RECRUITMENT', 'ENEMIES', 'BATTLE', 'SPOILS', 'RETREAT', 'EMPIRE'].every((word, i) => chapters[i].toUpperCase().includes(word)), chapters.map((c) => c.replace(/\s+/g, ' ')).join(' | '));
   const campaigns = await page.getByTestId('rules-campaigns').locator('li').allInnerTexts();
   const counts = await page.evaluate(() => Object.fromEntries(Object.entries(window.__atlas.data.worlds).map(([mode, w]) => [mode, w.ids.length])));
   check(results, 'it lists the 7 campaigns with their real sizes', campaigns.length === 7 && campaigns.every((c) => { const [, name, n] = /^(.*?)\s+(\d+)$/.exec(c.trim()); return counts[name] === Number(n); }) && /7 CAMPAIGNS/i.test(chapters[2]), campaigns.join(', '));
@@ -924,10 +944,10 @@ section('rules', async (page) => {
     return { id: el.dataset.id, defenders: Number(el.dataset.defenders), helmets: el.querySelectorAll('.helmet').length, drawn, pixelated: getComputedStyle(canvas).imageRendering, text: el.innerText.replace(/\s+/g, ' ') };
   }));
   check(results, 'it shows what a number of defenders looks like: Luxembourg 3,000, Ireland 6,000, France 9,000, India 13,000', countries.map((c) => `${c.id}:${c.defenders}`).join() === 'LUX:3,IRL:6,FRA:9,IND:13', countries.map((c) => c.text).join(' | '));
-  check(results, 'each is drawn in pixels with one helmet per 1,000 defenders and "about N questions"', countries.every((c) => c.helmets === c.defenders && c.drawn > 150 && c.pixelated === 'pixelated' && c.text.includes(`about ${c.defenders} questions`) && c.text.includes(`${k(c.defenders)} defenders`)) && /every 1,000 defenders is about one question/.test(text), countries.map((c) => `${c.id} ${c.helmets} helmets, ${c.drawn}px`).join(' ; '));
+  check(results, 'each is drawn in pixels with one helmet per 1,000 defenders and "about N questions"', countries.every((c) => c.helmets === c.defenders && c.drawn > 150 && c.pixelated === 'pixelated' && c.text.includes(`about ${c.defenders} questions`) && c.text.includes(`${k(c.defenders)} enemies`)) && /every 1,000 enemies is about one question/.test(text), countries.map((c) => `${c.id} ${c.helmets} helmets, ${c.drawn}px`).join(' ; '));
   const spoils = await page.getByTestId('rules-spoils').locator('tbody tr').allInnerTexts();
-  check(results, 'it gives the spoils: 1,000 troops for every 3,000 defenders', spoils.length === 4 && /3,000 – 4,000\s+\+1,000/.test(spoils[0]) && /11,000 – 13,000\s+\+4,000/.test(spoils[3]) && /1,000 for every 3,000 defenders/.test(text), spoils.map((r) => r.replace(/\s+/g, ' ')).join(' ; '));
-  check(results, 'it covers the goal, the single heart, the score, battles, the sea and retreat', /Fly your flag over every country/.test(text) && /single heart/.test(text) && /Score = countries conquered/.test(text) && /−2,000 of your own troops/.test(text) && /20 seconds/.test(text) && /third more defenders/.test(text) && /quarter of your army/.test(text) && /every country gains 1,000 defenders/.test(text));
+  check(results, 'it gives the spoils: 1,000 troops for every 3,000 defenders', spoils.length === 4 && /3,000 – 4,000\s+\+1,000/.test(spoils[0]) && /11,000 – 13,000\s+\+4,000/.test(spoils[3]) && /1,000 for every 3,000 enemies/.test(text), spoils.map((r) => r.replace(/\s+/g, ' ')).join(' ; '));
+  check(results, 'it covers the goal, the single heart, the score, battles, the sea and retreat', /Fly your flag over every country/.test(text) && /single heart/.test(text) && /Score = countries conquered/.test(text) && /−2,000 of your own troops/.test(text) && /20 seconds/.test(text) && /third more enemies/.test(text) && /quarter of your army/.test(text) && /every country gains 1,000 enemies/.test(text) && !/defenders/i.test(text) && /on a sea you already have a coast on/.test(text));
 
   // Nothing spills, and the page scrolls under its plank rather than under the button.
   const fit = await page.evaluate(() => {

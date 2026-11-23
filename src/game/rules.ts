@@ -166,17 +166,51 @@ export function battleProgress(defenders: number, maxDefenders: number, troops: 
   return advance * strength;
 }
 
+/** Do two countries have a coast on the same sea lane? */
+const shareLane = (a: Pick<World['byId'][string], 'lanes'>, b: Pick<World['byId'][string], 'lanes'>) =>
+  (a.lanes ?? []).some((lane) => (b.lanes ?? []).includes(lane));
+
+/**
+ * Distance by sea to a shore, in km: from the nearest of the given coastal
+ * countries that shares a sea lane with it. Infinity if none does.
+ */
+function seaRouteKm(world: World, ports: readonly World['byId'][string][], id: string): number {
+  const shore = world.byId[id];
+  let best = Infinity;
+  for (const port of ports) if (shareLane(port, shore)) best = Math.min(best, distanceKm(port, shore));
+  return best;
+}
+
+/**
+ * Why a coastal country close enough to sail to is still not a target: the sea
+ * lanes it lies on, none of which the player has a coast on. Null when lanes
+ * are not what is in the way (it is too far, landlocked, or already reachable).
+ */
+export function lanesNeeded(world: World, owned: readonly string[], id: string): string[] | null {
+  const shore = world.byId[id];
+  const ports = owned.map((o) => world.byId[o]).filter((c) => c && !c.landlocked);
+  if (!shore || shore.landlocked || ports.length === 0) return null;
+  if (ports.some((port) => shareLane(port, shore))) return null;
+  if (!ports.some((port) => distanceKm(port, shore) <= SEA_RANGE_KM)) return null;
+  return [...shore.lanes];
+}
+
 /**
  * Countries the player may attack.
  *
  * Land: any unowned country bordering player territory.
- * Sea: with at least one coastal country owned, any unowned coastal country
- * within SEA_RANGE_KM (centre to centre) of an owned country.
+ * Sea: any unowned coastal country within SEA_RANGE_KM (centre to centre) of
+ * an owned country that shares a sea lane with it. Ships follow the water: from
+ * Germany's North Sea and Baltic coasts the Atlantic shore is open as far as
+ * Morocco, but Italy, Turkey and Ukraine lie on the Mediterranean and the Black
+ * Sea, which can only be entered from a country with a coast there (Spain,
+ * France or Morocco for the Mediterranean; Turkey or Russia for the Black Sea).
  * Top-up: an isolated empire (a lone island far from anything, or a large
  * country whose centre is far from every shore) would have next to nothing to
  * attack. If land and sea together give fewer than MIN_TARGETS, the nearest
- * coastal countries beyond the range are added until there are MIN_TARGETS.
- * Well-connected empires are not affected: the range itself does not change.
+ * shores beyond the range are added until there are MIN_TARGETS: first on the
+ * lanes it can sail, then, only if that is still not enough, on any sea.
+ * Well-connected empires are not affected by the top-up.
  *
  * Whenever unowned countries remain the result is never empty: if neither rule
  * yields a target (e.g. only landlocked countries are left and none touch
@@ -205,14 +239,28 @@ export function getTargets(world: World, owned: readonly string[]): Targets {
   let sea: string[] = [];
   let seaFallback = false;
   const unowned = world.ids.filter((id) => !ownedSet.has(id) && !land.has(id));
-  if (ownedCountries.some((c) => !c.landlocked)) {
-    const ranked = byDistance(unowned.filter((id) => !world.byId[id].landlocked));
-    sea = ranked.filter((r) => r.km <= SEA_RANGE_KM).map((r) => r.id);
+  const ports = ownedCountries.filter((c) => !c.landlocked);
+  if (ports.length > 0) {
+    const shores = unowned.filter((id) => !world.byId[id].landlocked);
+    // How far a shore is by sea: from the nearest owned country with a coast on one of its lanes.
+    const routed = shores
+      .map((id) => ({ id, km: seaRouteKm(world, ports, id) }))
+      .filter((r) => r.km < Infinity)
+      .sort((a, b) => a.km - b.km || a.id.localeCompare(b.id));
+    sea = routed.filter((r) => r.km <= SEA_RANGE_KM).map((r) => r.id);
     // Short of options: the nearest shores beyond the range open up, nearest first.
-    const beyond = ranked.slice(sea.length, sea.length + Math.max(0, MIN_TARGETS - land.size - sea.length));
-    if (beyond.length > 0) {
-      sea = [...sea, ...beyond.map((r) => r.id)];
-      seaFallback = true;
+    const missing = MIN_TARGETS - land.size - sea.length;
+    if (missing > 0) {
+      const onLane = new Set(routed.map((r) => r.id));
+      const beyond = [
+        ...routed.slice(sea.length).map((r) => r.id),
+        // Seas it has no coast on come last of all, so that no empire is ever left stranded.
+        ...byDistance(shores.filter((id) => !onLane.has(id))).map((r) => r.id),
+      ].slice(0, missing);
+      if (beyond.length > 0) {
+        sea = [...sea, ...beyond];
+        seaFallback = true;
+      }
     }
   }
 

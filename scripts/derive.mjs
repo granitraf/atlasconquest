@@ -6,6 +6,7 @@
 //   features, featuresAvoid   great rivers, deserts, ranges and rainforests, from config/geography.json
 //   lines, linesAvoid         lines on the globe that cross it, computed from the map shapes
 //   languages, languagesAvoid corrections to the official languages, from config/languages.json
+//   lanes                     the sea lanes it has a coast on (where its ships can go), from config/geography.json
 // The setup script calls the same functions, so a full rebuild gives the same result.
 import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
@@ -152,6 +153,34 @@ export function applyGeography(countries, config, boxes) {
 }
 
 /**
+ * Sets `lanes`: the sea lanes each country has a coast on. A sea crossing needs a lane in common.
+ * Every coastal country must end up on at least one, or it could never be reached or leave by sea.
+ */
+export function applyLanes(countries, config) {
+  const byId = new Map(countries.map((c) => [c.id, c]));
+  const { byWater, add = {} } = config.lanes;
+  for (const c of countries) c.lanes = [];
+  const put = (id, lane, where) => {
+    const c = byId.get(id);
+    if (!c) throw new Error(`config/geography.json: unknown country code "${id}" in lanes (${where})`);
+    if (!c.landlocked && !c.lanes.includes(lane)) c.lanes.push(lane);
+  };
+  for (const water of config.waters) {
+    const lane = byWater[water.name];
+    if (!lane) throw new Error(`config/geography.json: "${water.name}" has no lane in lanes.byWater`);
+    for (const id of water.countries) put(id, lane, water.name);
+  }
+  const known = new Set(Object.values(byWater));
+  for (const [lane, ids] of Object.entries(add)) {
+    if (!known.has(lane)) throw new Error(`config/geography.json: lanes.add names an unknown lane "${lane}"`);
+    for (const id of ids) put(id, lane, `add.${lane}`);
+  }
+  const adrift = countries.filter((c) => !c.landlocked && c.lanes.length === 0).map((c) => c.name);
+  if (adrift.length > 0) throw new Error(`config/geography.json: coastal countries on no sea lane: ${adrift.join(', ')}`);
+  return countries;
+}
+
+/**
  * Applies config/languages.json: `ask` replaces a country's languages (only these can be the answer),
  * `avoid` lists languages never offered for it at all. Throws on a country it does not recognise.
  */
@@ -176,6 +205,7 @@ export async function deriveAll(countries, topology) {
   const geography = await loadConfig('geography');
   applyGeography(countries, geography, boxes);
   applyGlobeLines(countries, boxes, geography.linesAvoid);
+  applyLanes(countries, geography);
   applyLanguages(countries, await loadConfig('languages'));
   return countries;
 }
@@ -186,4 +216,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const count = (test) => countries.filter(test).length;
   console.log(`Fame: ${[0, 1, 2].map((f) => count((c) => c.fame === f)).join(' / ')} (famous / mid-known / obscure).`);
   console.log(`Waters: ${count((c) => c.waters.length > 0)} countries. Features: ${count((c) => c.features.length > 0)}. Globe lines: ${count((c) => c.lines.length > 0)}.`);
+  const lanes = [...new Set(countries.flatMap((c) => c.lanes))];
+  console.log(`Sea lanes: ${lanes.map((lane) => `${lane} ${count((c) => c.lanes.includes(lane))}`).join(', ')}.`);
 }

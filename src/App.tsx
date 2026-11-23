@@ -5,10 +5,10 @@ import { AnswerFlash, BattleProgress, Toast, TopBar, TugOfWar, type ToastMessage
 import { QuestionCard } from './components/QuestionCard';
 import { Rules } from './components/Rules';
 import { StartScreen } from './components/StartScreen';
-import { WorldMap, type CountryStatus, type FocusRequest, type MapPadding, type TooltipInfo } from './components/WorldMap';
+import { WorldMap, type CountryStatus, type FocusRequest, type MapPadding, type TooltipInfo, type TooltipPart } from './components/WorldMap';
 import { loadEmpire, loadGameData, loadSave, saveEmpire, writeSave, type GameData } from './data';
 import { cleanEmpireName, defaultEmpireName, type Empire } from './game/flag';
-import { CONTINENT_BONUS, SEA_TIMER_SECONDS, canRetreat, conquestTroops, escalation, getTargets, retreatCost, soldiers, startDifficulty } from './game/rules';
+import { CONTINENT_BONUS, SEA_TIMER_SECONDS, canRetreat, conquestTroops, escalation, getTargets, lanesNeeded, retreatCost, soldiers, startDifficulty } from './game/rules';
 import { sound, soundLog } from './sound';
 import { createGame, gameStats, reduce, targetStrength, type Action } from './game/state';
 import type { GameState, ModeId, Targets } from './game/types';
@@ -196,10 +196,13 @@ function Game({ data }: { data: GameData }) {
 
   const describe = useCallback(
     (id: string): TooltipInfo => {
-      const defendersText = (target: string, sea: boolean) => {
+      // Enemies in pink and what the conquest is worth in green: the same colours as the target list.
+      const strengthParts = (target: string, sea: boolean): TooltipPart[] => {
         const { full, standing } = targetStrength(world, game!, target, sea);
-        const held = standing < full ? `${soldiers(standing)} of ${soldiers(full)} defenders (wounded)` : `${soldiers(full)} defenders`;
-        return `${held} · worth +${soldiers(conquestTroops(full))} troops`;
+        return [
+          { text: standing < full ? `${soldiers(standing)} of ${soldiers(full)} enemies (wounded)` : `${soldiers(full)} enemies`, tone: 'enemy' },
+          { text: `worth +${soldiers(conquestTroops(full))} troops`, tone: 'gain' },
+        ];
       };
       const country = byId[id];
       if (!country) return { title: id };
@@ -217,15 +220,16 @@ function Game({ data }: { data: GameData }) {
       }
       if (game.owned.includes(id)) return { title, detail: 'Your territory' };
       if (targets.land.includes(id)) {
-        return { title, detail: `Attackable by land · ${defendersText(id, false)}` };
+        return { title, detail: [{ text: 'Attackable by land' }, ...strengthParts(id, false)] };
       }
       if (targets.sea.includes(id)) {
-        return {
-          title,
-          detail: `Sea crossing · ${defendersText(id, true)} · ${SEA_TIMER_SECONDS}s timer`,
-        };
+        return { title, detail: [{ text: 'Sea crossing', tone: 'sea' }, ...strengthParts(id, true), { text: `${SEA_TIMER_SECONDS}s timer` }] };
       }
-      return { title, detail: game.phase === 'attack' ? 'Out of reach for now' : country.continent };
+      if (game.phase !== 'attack') return { title, detail: country.continent };
+      // Near enough to sail to, but on a sea the empire has no coast on yet.
+      const lanes = lanesNeeded(world, game.owned, id);
+      if (lanes) return { title, detail: [{ text: 'No sea route yet' }, { text: `take a coast on the ${lanes.join(' or the ')} first`, tone: 'sea' }] };
+      return { title, detail: 'Out of reach for now' };
     },
     [byId, world, game, targets],
   );
@@ -318,7 +322,7 @@ function Game({ data }: { data: GameData }) {
           seq,
           tone: 'info',
           title: `Retreated from ${byId[event.countryId].name}`,
-          detail: `It cost ${soldiers(event.troopsLost)} troops and your streak. ${soldiers(event.defendersLeft)} of ${soldiers(event.defendersFull)} defenders still stand.`,
+          detail: `It cost ${soldiers(event.troopsLost)} troops and your streak. ${soldiers(event.defendersLeft)} of ${soldiers(event.defendersFull)} enemies still stand.`,
         };
     }
   }, [game?.eventSeq, game?.lastEvent, game?.phase, byId]); // eslint-disable-line react-hooks/exhaustive-deps

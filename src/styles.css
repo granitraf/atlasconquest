@@ -246,6 +246,21 @@ p {
   font-size: 21px;
 }
 
+/* One colour code everywhere: sea crossings in the blue of their dashed outline, enemies pink, troops gained green. */
+.map-tooltip .tone-sea,
+.target-info .sea {
+  color: #d4ecff;
+}
+
+.map-tooltip .tone-enemy,
+.target-info b.enemy {
+  color: #ff9c9f;
+}
+
+.map-tooltip .tone-gain {
+  color: var(--green);
+}
+
 .zoom-controls {
   position: absolute;
   right: 10px;
@@ -1402,7 +1417,7 @@ p {
 }
 
 .target-info .target-reward .gain {
-  color: var(--gold);
+  color: var(--green);
 }
 
 .target-chip {
@@ -1418,7 +1433,7 @@ p {
 
 /* Troops a target is worth, on its chip. */
 .target-chip .chip-gain {
-  color: var(--gold);
+  color: var(--green);
   font-size: 21px;
   font-style: normal;
 }

@@ -19,6 +19,7 @@ import {
   defendersFor,
   finalScore,
   getTargets,
+  lanesNeeded,
   questionSeconds,
   resolveBattleAnswer,
   resolveRecruitAnswer,
@@ -195,8 +196,63 @@ describe('attackable countries', () => {
         expect(id).not.toBe(start);
         expect(targets.land).not.toContain(id);
         expect(distanceKm(world.byId[start], world.byId[id])).toBeLessThanOrEqual(SEA_RANGE_KM);
+        // …and on a sea the start has a coast on.
+        expect(world.byId[id].lanes.some((lane) => world.byId[start].lanes.includes(lane)), `${start} -> ${id}`).toBe(true);
       }
     }
+  });
+
+  it('ships follow the water: an enclosed sea can only be entered from a country with a coast on it', () => {
+    // Every coastal country is on at least one sea lane; landlocked ones are on none.
+    for (const c of ALL) expect(c.lanes.length > 0, c.name).toBe(!c.landlocked);
+    expect(world.byId.DEU.lanes.sort()).toEqual(['Atlantic', 'Baltic']);
+    expect(world.byId.ITA.lanes).toEqual(['Mediterranean']);
+    expect(world.byId.UKR.lanes).toEqual(['Black Sea']);
+    expect(world.byId.MAR.lanes.sort()).toEqual(['Atlantic', 'Mediterranean']);
+    expect(world.byId.TUR.lanes.sort()).toEqual(['Black Sea', 'Mediterranean']);
+
+    // From Germany's North Sea and Baltic coasts: the Atlantic shore as far as Morocco, and the Baltic.
+    const germany = getTargets(world, ['DEU']).sea;
+    for (const id of ['GBR', 'IRL', 'NOR', 'SWE', 'FIN', 'EST', 'ESP', 'PRT', 'MAR', 'ISL']) expect(germany, id).toContain(id);
+    // Not the Mediterranean or the Black Sea, however near they are as the crow flies.
+    for (const id of ['ITA', 'GRC', 'TUR', 'UKR', 'ROU', 'BGR', 'HRV', 'TUN', 'MLT', 'ALB']) {
+      expect(germany, id).not.toContain(id);
+      expect(distanceKm(world.byId.DEU, world.byId[id]), id).toBeLessThanOrEqual(SEA_RANGE_KM);
+    }
+    expect(getTargets(world, ['DEU']).seaFallback).toBe(false);
+
+    // Spain, France or Morocco open the Mediterranean…
+    for (const key of ['ESP', 'FRA', 'MAR']) {
+      const opened = getTargets(world, ['DEU', key]);
+      const all = [...opened.land, ...opened.sea];
+      for (const id of ['TUN', 'MLT', 'HRV']) expect(all, `${key} -> ${id}`).toContain(id);
+      // …but not the Black Sea beyond it.
+      for (const id of ['UKR', 'ROU', 'BGR']) expect(all, `${key} -> ${id}`).not.toContain(id);
+    }
+    // Turkey, on both, opens the Black Sea.
+    const viaTurkey = getTargets(world, ['DEU', 'FRA', 'TUR']);
+    for (const id of ['UKR', 'ROU']) expect([...viaTurkey.land, ...viaTurkey.sea], id).toContain(id);
+
+    // The same the other way round, and for the Baltic.
+    const italy = getTargets(world, ['ITA']).sea;
+    for (const id of ['GRC', 'TUN', 'ESP', 'TUR', 'EGY']) expect(italy, id).toContain(id);
+    for (const id of ['DEU', 'GBR', 'PRT', 'UKR', 'POL']) expect(italy, id).not.toContain(id);
+    const britain = getTargets(world, ['GBR']).sea;
+    for (const id of ['DEU', 'NOR', 'ESP', 'MAR']) expect(britain, id).toContain(id);
+    for (const id of ['POL', 'FIN', 'EST', 'ITA']) expect(britain, id).not.toContain(id);
+    expect(getTargets(world, ['POL']).sea.every((id) => world.byId[id].lanes.includes('Baltic'))).toBe(true);
+  });
+
+  it('says which sea is missing when a shore is close enough but cannot be sailed to', () => {
+    expect(lanesNeeded(world, ['DEU'], 'ITA')).toEqual(['Mediterranean']);
+    expect(lanesNeeded(world, ['DEU'], 'UKR')).toEqual(['Black Sea']);
+    expect(lanesNeeded(world, ['DEU'], 'TUR')?.sort()).toEqual(['Black Sea', 'Mediterranean']);
+    // Reachable, too far, landlocked, or no coast of your own: lanes are not what is in the way.
+    expect(lanesNeeded(world, ['DEU'], 'MAR')).toBeNull();
+    expect(lanesNeeded(world, ['DEU'], 'JPN')).toBeNull();
+    expect(lanesNeeded(world, ['DEU'], 'CHE')).toBeNull();
+    expect(lanesNeeded(world, ['CHE'], 'ITA')).toBeNull();
+    expect(lanesNeeded(world, ['DEU', 'FRA'], 'ITA')).toBeNull();
   });
 
   it('an isolated start is topped up to three targets with the nearest shores beyond the range', () => {

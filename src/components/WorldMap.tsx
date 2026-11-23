@@ -24,9 +24,16 @@ export interface MapPadding {
   left: number;
 }
 
+/** One piece of a tooltip's second line. The tone colours it: sea crossings blue, enemies pink, troops gained green. */
+export interface TooltipPart {
+  text: string;
+  tone?: 'sea' | 'enemy' | 'gain';
+}
+
 export interface TooltipInfo {
   title: string;
-  detail?: string;
+  /** The second line: plain text, or parts that are joined with a dot between them. */
+  detail?: string | TooltipPart[];
 }
 
 interface Props {
@@ -741,7 +748,16 @@ export function WorldMap({ geometry, terrainUrl, status, focus, padding, pinBott
       tip.append(title);
       if (info.detail) {
         const detail = document.createElement('span');
-        detail.textContent = info.detail;
+        if (typeof info.detail === 'string') detail.textContent = info.detail;
+        else {
+          info.detail.forEach((part, i) => {
+            if (i > 0) detail.append(' · ');
+            const piece = document.createElement('span');
+            piece.textContent = part.text;
+            if (part.tone) piece.className = `tone-${part.tone}`;
+            detail.append(piece);
+          });
+        }
         tip.append(detail);
       }
     }

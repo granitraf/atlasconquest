@@ -1445,5 +1445,37 @@
     "MAR": [
       "Tropic of Cancer"
     ]
+  },
+  "lanes": {
+    "about": "Where ships can go. A sea crossing is only possible between two countries with a coast on the same lane. `byWater` puts each sea and ocean above into a lane: open seas (the North Sea, the Caribbean) belong to their ocean, while enclosed seas (the Mediterranean, the Black Sea, the Baltic, the Red Sea, the Persian Gulf) are lanes of their own, so they can only be entered from a country that has a coast on them. A country is on a lane if it is listed under `countries` for one of that lane's waters. `add` lists further coasts that count for sailing though they are too marginal to ask a question about.",
+    "byWater": {
+      "Atlantic Ocean": "Atlantic",
+      "North Sea": "Atlantic",
+      "Caribbean Sea": "Atlantic",
+      "Gulf of Mexico": "Atlantic",
+      "Gulf of Guinea": "Atlantic",
+      "Mediterranean Sea": "Mediterranean",
+      "Adriatic Sea": "Mediterranean",
+      "Aegean Sea": "Mediterranean",
+      "Black Sea": "Black Sea",
+      "Baltic Sea": "Baltic",
+      "Red Sea": "Red Sea",
+      "Persian Gulf": "Persian Gulf",
+      "Pacific Ocean": "Pacific",
+      "South China Sea": "Pacific",
+      "Sea of Japan": "Pacific",
+      "Yellow Sea": "Pacific",
+      "Indian Ocean": "Indian Ocean",
+      "Arabian Sea": "Indian Ocean",
+      "Bay of Bengal": "Indian Ocean",
+      "Arctic Ocean": "Arctic",
+      "Caspian Sea": "Caspian"
+    },
+    "add": {
+      "Atlantic": ["NOR", "SWE", "FRO", "GGY", "JEY", "IMN", "VEN", "LBR", "COG"],
+      "Pacific": ["IDN", "TLS", "CHN", "KOR", "PRK", "VNM", "MYS", "BRN", "HKG", "KHM", "THA", "SGP"],
+      "Indian Ocean": ["TLS", "MYS", "SGP", "THA", "IDN", "IRN", "ARE", "DJI", "SOM", "MDV", "LKA"],
+      "Persian Gulf": ["OMN"]
+    }
   }
 }
