@@ -5,6 +5,8 @@ import { sound } from '../sound';
 import type { Feedback, Question } from '../game/types';
 
 const LETTERS = ['A', 'B', 'C', 'D'];
+/** The countdown ticks aloud for this many of its last seconds. */
+const COUNTDOWN_TICKS = 5;
 /** How long answer feedback stays up before the game moves on by itself. */
 const ADVANCE_MS = { correct: 1200, wrong: 3000 };
 
@@ -61,9 +63,10 @@ export function QuestionCard({ question, feedback, context, onAnswer, onContinue
   // Every question is timed; running out counts as a wrong answer.
   const left = useCountdown(!answered, question.sig, seconds, () => onAnswer(null));
   const secondsShown = Math.ceil(left);
-  const urgent = !answered && left <= 3;
+  const urgent = !answered && left <= COUNTDOWN_TICKS;
   useEffect(() => {
-    if (!answered && secondsShown <= 3 && secondsShown > 0) sound.tick();
+    // A clock ticks through the last five seconds.
+    if (!answered && secondsShown <= COUNTDOWN_TICKS && secondsShown > 0) sound.tick(secondsShown);
   }, [secondsShown, answered]);
 
   // Feedback clears itself after a moment. There is no button to press: one that appears and

@@ -49,6 +49,8 @@ interface Props {
   flagOn: CountryStatus;
   describe: (id: string) => TooltipInfo;
   onCountryClick: (id: string) => void;
+  /** Called when a mouse pointer moves onto a different country. (Touch has no hover.) */
+  onCountryHover?: (id: string) => void;
 }
 
 /**
@@ -173,7 +175,7 @@ const HitShapes = memo(function HitShapes({
 const RING_SMALL = ringSprite(2);
 const RING_LARGE = ringSprite(3);
 
-export function WorldMap({ geometry, terrainUrl, status, focus, padding, pinBottom = false, scene, flash, empireFlag, flagOn, describe, onCountryClick }: Props) {
+export function WorldMap({ geometry, terrainUrl, status, focus, padding, pinBottom = false, scene, flash, empireFlag, flagOn, describe, onCountryClick, onCountryHover }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const baseCanvasRef = useRef<HTMLCanvasElement>(null);
   const fxCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -312,7 +314,8 @@ export function WorldMap({ geometry, terrainUrl, status, focus, padding, pinBott
 
     buf.fill(0);
     plotLines(buf, grid, geometry.borders, COLOUR.border);
-    for (const s of shown) if (statuses[s.id] === 'owned') plotLines(buf, grid, s.rings, COLOUR.ownedLine);
+    // Your territory is outlined as boldly as the countries you can attack: the same thick pixel line, in green.
+    for (const s of shown) if (statuses[s.id] === 'owned') plotLines(buf, grid, s.rings, COLOUR.ownedLine, { thick: true });
     flushLines(layer);
     place(layer, grid);
 
@@ -332,7 +335,7 @@ export function WorldMap({ geometry, terrainUrl, status, focus, padding, pinBott
     const statuses = statusRef.current;
     const t = transformRef.current;
     const now = performance.now();
-    const glow = reducedMotion ? 0.6 : pulse(now, 1600);
+    // Only a country under attack pulses. Attackable ones are marked by their outline alone.
     const throb = reducedMotion ? 0.6 : pulse(now, 850);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
@@ -350,12 +353,7 @@ export function WorldMap({ geometry, terrainUrl, status, focus, padding, pinBott
       if (st === 'out') continue;
       const path = pathFor(s);
       if (st === 'land') {
-        ctx.fillStyle = `rgba(255, 255, 255, ${0.08 + 0.1 * glow})`;
-        ctx.fill(path);
-        // Soft glow: a wide translucent stroke under the hard white outline.
-        ctx.strokeStyle = `rgba(255, 255, 255, ${0.14 + 0.3 * glow})`;
-        ctx.lineWidth = 4 * grid.cell;
-        ctx.stroke(path);
+        // A thick, hard white outline and nothing else: no tint, no glow, nothing that moves.
         plotLines(buf, grid, s.rings, COLOUR.landLine, { thick: true });
       } else if (st === 'sea') {
         ctx.fillStyle = 'rgba(150, 210, 255, 0.1)';
@@ -408,7 +406,8 @@ export function WorldMap({ geometry, terrainUrl, status, focus, padding, pinBott
         ring = COLOUR.ownedLine;
         fill = packColour(61, 220, 132, 215);
       } else if (st === 'land') {
-        fill = packColour(255, 255, 255, Math.round(70 + 150 * glow));
+        // A tiny attackable country: a steady white dot inside its ring.
+        fill = packColour(255, 255, 255, 160);
       } else if (st === 'sea') {
         ring = COLOUR.seaLine;
         every = 3;
@@ -492,7 +491,7 @@ export function WorldMap({ geometry, terrainUrl, status, focus, padding, pinBott
       }
       if (flashRef.current) return true;
       if (reducedMotion) return false;
-      return Object.values(statusRef.current).some((s) => s === 'land' || s === 'battle');
+      return Object.values(statusRef.current).some((s) => s === 'battle');
     };
     schedule(false);
     const timer = window.setInterval(() => {
@@ -765,8 +764,12 @@ export function WorldMap({ geometry, terrainUrl, status, focus, padding, pinBott
   const onPointerMove = (event: React.PointerEvent) => {
     if (event.pointerType === 'touch') return;
     const id = idAt(event.target);
-    if (id) showTooltip(id, event.clientX, event.clientY);
-    else hideTooltip();
+    if (id) {
+      const entered = hoverRef.current !== id;
+      showTooltip(id, event.clientX, event.clientY);
+      // Not while the map is being dragged: that is moving the map, not looking at a country.
+      if (entered && event.buttons === 0) onCountryHover?.(id);
+    } else hideTooltip();
   };
 
   const onClick = (event: React.MouseEvent) => {

@@ -1,6 +1,6 @@
 // Checklist 2-7: the game itself, played through the real UI in Chrome.
 // Run one section with: node e2e/game.mjs <section>
-import { launch, SHOTS, check, open, startGame, recruit, attack, answer, movedOn, k, misfits, mapEdges, fight, state, hud, classOf, clickCountry, pointOn, settle, sample, countPixels, sounds, isGreen } from './lib.mjs';
+import { launch, SHOTS, check, open, startGame, recruit, attack, answer, movedOn, k, misfits, mapEdges, lastSound, hush, fight, state, hud, classOf, clickCountry, pointOn, settle, sample, countPixels, sounds, isGreen } from './lib.mjs';
 
 const results = [];
 const allProblems = [];
@@ -83,12 +83,36 @@ section('germany', async (page) => {
   check(results, 'all 9 German neighbours are marked attackable', (await page.locator('path.country.s-land').count()) === 9, String(await page.locator('path.country.s-land').count()));
   const white = await countPixels(page, 'fx', [255, 255, 255]);
   check(results, 'attackable countries get a hard-edged white pixel outline', white > 300, `${white} pure white pixels`);
-  const glowA = (await sample(page, 'FRA', 'fx'))[3];
-  let glowChanged = false;
-  for (let i = 0; i < 12 && !glowChanged; i++) { await page.waitForTimeout(150); glowChanged = (await sample(page, 'FRA', 'fx'))[3] !== glowA; }
-  check(results, 'the attackable highlight glows (pulses)', glowChanged);
+  // Attackable countries are marked by their thick white outline alone: no tint over the country, and nothing pulses.
+  const still = [];
+  for (let i = 0; i < 12; i++) { still.push(`${(await sample(page, 'FRA', 'fx')).join()}|${await countPixels(page, 'fx', [255, 255, 255])}`); await page.waitForTimeout(150); }
+  check(results, 'attackable countries do not pulse: the white outline stays exactly as it is', new Set(still).size === 1 && still[0].startsWith('0,0,0,0|') && Number(still[0].split('|')[1]) === white, `${new Set(still).size} different frames over 1.8 s; inside France rgba(${still[0].split('|')[0]})`);
   const deu = await sample(page, 'DEU');
   check(results, 'Germany is tinted green', isGreen(deu), `rgb(${deu.slice(0, 3).join(', ')})`);
+  // Your own outline is as thick as the white one around the countries you can attack.
+  const lineWidth = (layer, rgb) => page.evaluate(({ layer, rgb }) => {
+    const canvas = document.querySelector(`.pixel-${layer}`);
+    const copy = document.createElement('canvas');
+    copy.width = canvas.width; copy.height = canvas.height;
+    const ctx = copy.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(canvas, 0, 0);
+    const d = ctx.getImageData(0, 0, copy.width, copy.height).data;
+    const is = (x, y) => { const i = (y * copy.width + x) * 4; return d[i] === rgb[0] && d[i + 1] === rgb[1] && d[i + 2] === rgb[2] && d[i + 3] === 255; };
+    // Width of the line wherever it runs roughly up and down: the commonest short run of its colour along a row.
+    const runs = {};
+    let pixels = 0;
+    for (let y = 0; y < copy.height; y++) {
+      let run = 0;
+      for (let x = 0; x <= copy.width; x++) {
+        if (x < copy.width && is(x, y)) { run++; pixels++; } else { if (run > 0 && run <= 4) runs[run] = (runs[run] ?? 0) + 1; run = 0; }
+      }
+    }
+    const width = Number(Object.entries(runs).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 0);
+    return { width, pixels };
+  }, { layer, rgb });
+  const greenLine = await lineWidth('base', [120, 255, 180]);
+  const whiteLine = await lineWidth('fx', [255, 255, 255]);
+  check(results, 'the green outline of your territory is as thick as the white outline of attackable countries', greenLine.width === whiteLine.width && greenLine.width >= 2 && greenLine.pixels > 200, `green ${greenLine.width}px wide (${greenLine.pixels} pixels), white ${whiteLine.width}px wide`);
   check(results, 'France is not green yet', !isGreen(await sample(page, 'FRA')));
   check(results, 'Spain is not attackable by land yet', !(await classOf(page, 'ESP')).includes('s-land'), await classOf(page, 'ESP'));
   const fr = await pointOn(page, 'FRA');
@@ -222,7 +246,7 @@ section('germany', async (page) => {
   check(results, 'answer feedback: every text fits its box', (await misfits(page)).length === 0, (await misfits(page)).join(' ; '));
   check(results, 'red flash on a wrong answer', (await page.locator('.flash.bad').count()) === 1);
   check(results, 'streak resets to 0 on a wrong answer', (await hud(page)).streak === 0);
-  check(results, 'a wrong answer plays the wrong sound', (await sounds(page)).at(-1).name === 'wrong');
+  check(results, 'a wrong answer plays the wrong sound', (await lastSound(page)) === 'wrong');
   await page.screenshot({ path: SHOTS + '22-battle-wrong-answer.png' });
   await movedOn(page, wrongQ.sig);
   const wrongWait = (Date.now() - wrongAt) / 1000;
@@ -246,7 +270,7 @@ section('germany', async (page) => {
   s = await state(page);
   h = await hud(page);
   check(results, 'winning the battle: France is now owned', s.owned.includes('FRA') && h.countries === 2, `owned ${s.owned.join(',')}`);
-  check(results, 'the conquest plays its fanfare', (await sounds(page)).at(-1).name === 'conquer');
+  check(results, 'the conquest plays its fanfare', (await lastSound(page)) === 'conquer');
   await page.waitForTimeout(1700);
   const fra = await sample(page, 'FRA');
   check(results, 'France turns green on the map', (await classOf(page, 'FRA')).includes('s-owned') && isGreen(fra), `rgb(${fra.slice(0, 3).join(', ')})`);
@@ -341,7 +365,8 @@ section('defeat', async (page) => {
   const waited = (Date.now() - t0) / 1000;
   let s0 = await state(page);
   check(results, 'a question times out after ~20 seconds and counts as wrong', waited > 18 && waited < 22.5 && s0.feedback.timedOut && !s0.feedback.correct && s0.troops === 8, `${waited.toFixed(1)}s, "${await page.getByTestId('verdict').innerText()}"`);
-  check(results, 'the countdown ticked in its last seconds', (await sounds(page)).filter((x) => x.name === 'tick').length >= 2);
+  const ticks = (await sounds(page)).filter((x) => x.name === 'tick').map((x) => x.hz);
+  check(results, 'a clock ticks through the last 5 seconds of the countdown: tick, tock, and sharper at the end', ticks.length === 5 && ticks[0] === ticks[2] && ticks[1] === ticks[3] && ticks[1] < ticks[0] && ticks[4] > ticks[0], ticks.join(', ') + ' Hz');
   // Nothing to press: the game moves on by itself.
   await movedOn(page, s0.battle.question.sig);
   check(results, 'after a timeout the next question arrives without any input', (await state(page)).battle.asked.length === 1);
@@ -365,7 +390,7 @@ section('defeat', async (page) => {
   let s = await state(page);
   const text = (await page.getByTestId('gameover-screen').innerText()).replace(/\s+/g, ' ');
   check(results, 'one life: losing a single battle ends the game, with no button pressed', s.phase === 'gameover' && s.lives === 0 && s.troops === 0 && /Game over/i.test(text));
-  check(results, 'the game over sound plays', (await sounds(page)).at(-1).name === 'gameOver');
+  check(results, 'the game over sound plays', (await lastSound(page)) === 'gameOver');
   check(results, 'game over shows the empire and its flag', (await page.getByTestId('end-empire').innerText()).toLowerCase().includes(s.empire.name.toLowerCase()) && (await page.getByTestId('end-empire').locator('canvas.empire-flag').count()) === 1, (await page.getByTestId('end-empire').innerText()).replace(/\n/g, ' '));
   check(results, 'game over shows countries conquered, best streak, battles fought, score', (await page.getByTestId('stat-conquered').innerText()).startsWith('0') && (await page.getByTestId('stat-streak').innerText()) === String(s.bestStreak) && (await page.getByTestId('stat-battles').innerText()) === '2' && s.battles === 2 && /Battles fought/i.test(text) && !/Turns/i.test(text) && (await page.getByTestId('stat-score').innerText()) === '0', text);
   check(results, 'with no continent conquered, the bonus is explained rather than awarded', (await page.getByTestId('stat-continents').getAttribute('data-value')) === '0' && /worth \+10/.test(await page.getByTestId('stat-continents').innerText()));
@@ -535,7 +560,7 @@ section('malta', async (page) => {
   await page.getByTestId('attack-panel').waitFor();
   s = await state(page);
   check(results, 'Malta falls after at most 4 correct answers', s.owned.includes('MLT') && answers <= 4, `${answers} correct answers`);
-  check(results, 'the conquest is announced', /Malta conquered/.test(await page.locator('.toast').innerText()) && (await sounds(page)).at(-1).name === 'conquer');
+  check(results, 'the conquest is announced', /Malta conquered/.test(await page.locator('.toast').innerText()) && (await lastSound(page)) === 'conquer');
   check(results, 'Malta had 4 defenders, so taking it adds 1 troop', s.troops === maltaBefore + 1 && s.lastEvent.troopsGained === 1 && /\+1,000 troops join/.test(await page.locator('.toast').innerText()), `${maltaBefore} -> ${s.troops} troops`);
   // The island blinks white, then stays marked in green.
   await page.waitForTimeout(250);
@@ -824,7 +849,7 @@ section('campaign-oceania', async (page) => {
     else {
       const first = page.locator('.target-chip').first();
       if ((await first.getAttribute('data-kind')) === 'sea') seaBattles++;
-      if (/nearest shores/.test(await page.getByTestId('attack-panel').innerText())) fallbackOffered = true;
+      if (/nearest ones beyond/.test(await page.getByTestId('attack-panel').innerText())) fallbackOffered = true;
       await first.click();
       await page.getByTestId('attack-button').click();
       await page.getByTestId('question-card').waitFor();
@@ -902,7 +927,7 @@ section('rules', async (page) => {
   check(results, 'each is drawn in pixels with one helmet per 1,000 defenders and "about N questions"', countries.every((c) => c.helmets === c.defenders && c.drawn > 150 && c.pixelated === 'pixelated' && c.text.includes(`about ${c.defenders} questions`) && c.text.includes(`${k(c.defenders)} defenders`)) && /every 1,000 defenders is about one question/.test(text), countries.map((c) => `${c.id} ${c.helmets} helmets, ${c.drawn}px`).join(' ; '));
   const spoils = await page.getByTestId('rules-spoils').locator('tbody tr').allInnerTexts();
   check(results, 'it gives the spoils: 1,000 troops for every 3,000 defenders', spoils.length === 4 && /3,000 – 4,000\s+\+1,000/.test(spoils[0]) && /11,000 – 13,000\s+\+4,000/.test(spoils[3]) && /1,000 for every 3,000 defenders/.test(text), spoils.map((r) => r.replace(/\s+/g, ' ')).join(' ; '));
-  check(results, 'it covers the goal, the single heart, the score, battles, the sea and retreat', /Fly your flag over every country/.test(text) && /single heart/.test(text) && /Score = countries conquered/.test(text) && /−2,000 of your troops/.test(text) && /20 seconds/.test(text) && /third more defenders/.test(text) && /quarter of your army/.test(text) && /every country gains 1,000 defenders/.test(text));
+  check(results, 'it covers the goal, the single heart, the score, battles, the sea and retreat', /Fly your flag over every country/.test(text) && /single heart/.test(text) && /Score = countries conquered/.test(text) && /−2,000 of your own troops/.test(text) && /20 seconds/.test(text) && /third more defenders/.test(text) && /quarter of your army/.test(text) && /every country gains 1,000 defenders/.test(text));
 
   // Nothing spills, and the page scrolls under its plank rather than under the button.
   const fit = await page.evaluate(() => {
@@ -958,6 +983,121 @@ section('rules', async (page) => {
   await rules.waitFor();
   await startGame(page, 'World', 'DEU');
   check(results, 'beginning a conquest closes the rules; in a game there is no Rules button', (await rules.count()) === 0 && (await toggle.count()) === 0 && (await page.getByTestId('question-card').isVisible()));
+});
+
+// ---------------------------------------------------------- sound effects
+// Which sound each thing makes. (The log records every sound the game asks for, audible or not.)
+section('sound-effects', async (page) => {
+  await open(page);
+  await settle(page);
+  const names = async () => (await sounds(page)).map((x) => x.name);
+  const heardAfter = async (act) => { await hush(page); await page.waitForTimeout(90); await act(); await page.waitForTimeout(90); return names(); };
+  const is = (list, expected) => list.join() === expected.join();
+
+  // Designing the flag: the same blip for the preset, for each of the three colour slots, and for the palette.
+  const preset = await heardAfter(() => page.getByTestId('flag-4').click());
+  const slots = [];
+  for (const i of [0, 1, 2]) slots.push((await heardAfter(() => page.getByTestId(`slot-${i}`).click())).join());
+  const colour = await heardAfter(() => page.getByTestId('colour-2b4fc4').click());
+  check(results, 'choosing a flag, a colour slot or a colour all make the same selection blip', is(preset, ['select']) && slots.every((x) => x === 'select') && is(colour, ['select']), `flag: ${preset}; slots: ${slots.join(' / ')}; colour: ${colour}`);
+
+  // Difficulty filters: the same blip.
+  const filters = [];
+  for (const tier of ['easy', 'medium', 'hard', 'very-hard', 'extreme', 'all']) filters.push((await heardAfter(() => page.getByTestId(`filter-${tier}`).click())).join());
+  check(results, 'All, Easy, Medium, Hard, Very Hard and Extreme make the selection blip', filters.every((x) => x === 'select'), filters.join(' / '));
+
+  // Campaigns are announced by a voice, by their full names.
+  const said = [];
+  for (const mode of ['World', 'Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania']) {
+    await hush(page);
+    await page.getByTestId(`mode-${mode}`).click();
+    const log = await sounds(page);
+    said.push(log.length === 1 && log[0].name === 'voice' ? log[0].text : `?${JSON.stringify(log)}`);
+  }
+  check(results, 'each campaign button says its name: World, Africa, Asia, Europe, North America, South America, Oceania', said.join('|') === 'World|Africa|Asia|Europe|North America|South America|Oceania' && (await page.getByTestId('mode-North America').innerText()).startsWith('N. America'), said.join(', '));
+  const voice = await page.evaluate(() => ({ can: 'speechSynthesis' in window, voices: speechSynthesis.getVoices().filter((v) => /^en[-_]GB/i.test(v.lang)).map((v) => v.name).slice(0, 6) }));
+  console.log(`      (speech synthesis ${voice.can ? 'available' : 'missing'} here; British voices: ${voice.voices.join(', ') || 'none listed'})`);
+  await page.getByTestId('mode-World').click();
+
+  // The Rules button: a pulse under the pointer, a snap when pressed.
+  await page.mouse.move(5, 5);
+  const rulesHover = await heardAfter(() => page.getByTestId('rules-toggle').hover());
+  const rulesClick = await heardAfter(() => page.getByTestId('rules-toggle').click());
+  const rulesBack = await heardAfter(() => page.getByTestId('rules-toggle').click());
+  check(results, 'Rules: a pulse on hover, a snap on click', is(rulesHover, ['pulse']) && is(rulesClick, ['snap']) && is(rulesBack, ['snap']), `hover: ${rulesHover}; click: ${rulesClick}; back: ${rulesBack}`);
+
+  // Starting countries in the list: a pulse for each one the pointer passes, then snap + whoosh when picked.
+  await page.getByTestId('search').fill('an');
+  await page.mouse.move(5, 5);
+  const rows = await page.locator('.country-row').evaluateAll((els) => els.slice(0, 3).map((el) => el.getAttribute('data-testid')));
+  const passes = [];
+  for (const row of rows) passes.push((await heardAfter(() => page.getByTestId(row).hover())).join());
+  check(results, 'moving over starting countries in the list: a pulse for each', rows.length === 3 && passes.every((x) => x === 'pulse'), passes.join(' / '));
+  await page.getByTestId('search').fill('germ');
+  const rowPick = await heardAfter(() => page.getByTestId('start-DEU').click());
+  check(results, 'picking a starting country: the snap, layered with a whoosh as the map zooms in', is(rowPick.filter((x) => x !== 'pulse'), ['snap', 'whoosh']), rowPick.join());
+  await page.getByTestId('search').fill('');
+
+  // The same on the map.
+  await page.getByLabel('Show whole world').click();
+  await settle(page);
+  const overMap = async (id) => { const p = await pointOn(page, id); await page.mouse.move(p.x + 2, p.y + 2); await page.mouse.move(p.x, p.y); };
+  await page.mouse.move(700, 40);
+  const mapHover = [];
+  for (const id of ['BRA', 'AUS', 'CHN']) mapHover.push((await heardAfter(() => overMap(id))).join());
+  check(results, 'moving over countries on the map before the game: a pulse for each', mapHover.every((x) => x === 'pulse'), mapHover.join(' / '));
+  const mapPick = await heardAfter(async () => { const p = await pointOn(page, 'BRA'); await page.mouse.click(p.x, p.y); });
+  check(results, 'picking a starting country on the map: snap + whoosh', is(mapPick.filter((x) => x !== 'pulse'), ['snap', 'whoosh']) && (await page.getByTestId('pick').innerText()).includes('Brazil'), mapPick.join());
+
+  // Begin conquest: a pulse on hover, then the siege call.
+  await page.getByTestId('search').fill('germ');
+  await page.getByTestId('start-DEU').click();
+  await page.mouse.move(700, 40);
+  const beginHover = await heardAfter(() => page.getByTestId('begin').hover());
+  const beginClick = await heardAfter(() => page.getByTestId('begin').click());
+  await page.getByTestId('question-card').waitFor();
+  const call = (await sounds(page)).find((x) => x.name === 'siege');
+  check(results, 'Begin conquest: a pulse on hover, then a trumpet call ("da-TUM") when pressed', is(beginHover, ['pulse']) && is(beginClick.filter((x) => x !== 'pulse'), ['siege']) && call.hz === 392, `hover: ${beginHover}; click: ${beginClick}`);
+
+  // While a question is open the map is silent: no pulse, no snap, however the pointer moves.
+  await settle(page);
+  const quiet = await heardAfter(async () => {
+    for (const id of ['FRA', 'POL', 'DEU', 'ITA']) { await overMap(id); await page.waitForTimeout(70); }
+    const p = await pointOn(page, 'FRA');
+    await page.mouse.click(p.x, p.y);
+  });
+  check(results, 'during recruit questions, moving over or clicking countries makes no sound', quiet.length === 0, quiet.join() || 'silence');
+  await recruit(page);
+  await settle(page);
+
+  // Choosing a target: a pulse over countries you can attack, a snap (and no whoosh) when you pick one.
+  await page.mouse.move(700, 40);
+  const targetHover = [];
+  for (const id of ['FRA', 'POL']) targetHover.push((await heardAfter(() => overMap(id))).join());
+  const ownHover = await heardAfter(() => overMap('DEU'));
+  check(results, 'choosing a target: a pulse over each attackable country, none over your own', targetHover.every((x) => x === 'pulse') && ownHover.length === 0, `targets: ${targetHover.join(' / ')}; own: ${ownHover.join() || 'silence'}`);
+  const targetPick = await heardAfter(async () => { const p = await pointOn(page, 'FRA'); await page.mouse.click(p.x, p.y); });
+  check(results, 'picking a target on the map: only the snap, no whoosh', is(targetPick.filter((x) => x !== 'pulse'), ['snap']) && /France/.test(await page.getByTestId('target-card').innerText()), targetPick.join());
+  await page.getByText('Cancel').click();
+  await page.mouse.move(700, 40);
+  const chipHover = await heardAfter(() => page.getByTestId('target-POL').hover());
+  const chipPick = await heardAfter(() => page.getByTestId('target-POL').click());
+  check(results, 'the same in the target list: pulse on hover, snap on click', is(chipHover, ['pulse']) && is(chipPick.filter((x) => x !== 'pulse'), ['snap']), `hover: ${chipHover}; click: ${chipPick}`);
+
+  // The Attack button fires: a deep "pew pew".
+  const fire = await heardAfter(() => page.getByTestId('attack-button').click());
+  await page.getByTestId('question-card').waitFor();
+  const shot = (await sounds(page)).find((x) => x.name === 'attack');
+  check(results, 'Attack: two deep shots ("pew pew"), low in pitch', is(fire.filter((x) => x !== 'pulse'), ['attack']) && shot.hz < 450, `${fire.join()} at ${shot?.hz} Hz`);
+
+  // In battle the map is silent again.
+  await settle(page, 1500);
+  const battleQuiet = await heardAfter(async () => {
+    for (const id of ['POL', 'DEU', 'CZE', 'UKR']) { const p = await pointOn(page, id); if (!p) continue; await page.mouse.move(p.x + 2, p.y + 2); await page.mouse.move(p.x, p.y); await page.waitForTimeout(70); }
+    const p = await pointOn(page, 'DEU');
+    if (p) await page.mouse.click(p.x, p.y);
+  });
+  check(results, 'during battle questions, moving over or clicking countries makes no sound', battleQuiet.length === 0, battleQuiet.join() || 'silence');
 });
 
 // ----------------------------------------------------------------- runner

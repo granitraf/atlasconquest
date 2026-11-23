@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   MAX_DEFENDERS,
+  MIN_TARGETS,
   MIN_DEFENDERS,
   START_LABELS,
   START_MULTIPLIER,
@@ -186,7 +187,7 @@ describe('attackable countries', () => {
   });
 
   it('sea targets are coastal, unowned, not land targets, and within range', () => {
-    for (const start of ['ISL', 'DEU', 'JPN', 'BRA', 'AUS']) {
+    for (const start of ['ISL', 'DEU', 'JPN', 'BRA']) {
       const targets = getTargets(world, [start]);
       expect(targets.seaFallback).toBe(false);
       for (const id of targets.sea) {
@@ -196,6 +197,52 @@ describe('attackable countries', () => {
         expect(distanceKm(world.byId[start], world.byId[id])).toBeLessThanOrEqual(SEA_RANGE_KM);
       }
     }
+  });
+
+  it('an isolated start is topped up to three targets with the nearest shores beyond the range', () => {
+    expect(SEA_RANGE_KM).toBe(2500);
+    expect(MIN_TARGETS).toBe(3);
+    // Pitcairn: only French Polynesia is within 2,500 km. The next two nearest shores open up as well.
+    const pitcairn = getTargets(world, ['PCN']);
+    expect(pitcairn).toEqual({ land: [], sea: ['PYF', 'COK', 'NIU'], seaFallback: true });
+    const km = (id: string) => distanceKm(world.byId.PCN, world.byId[id]);
+    expect(km('PYF')).toBeLessThanOrEqual(SEA_RANGE_KM);
+    expect(km('COK')).toBeGreaterThan(SEA_RANGE_KM);
+    expect(km('NIU')).toBeGreaterThan(km('COK'));
+    // Australia's centre is far from every shore but one: it gets three as well.
+    const australia = getTargets(world, ['AUS']);
+    expect(australia.sea).toHaveLength(3);
+    expect(australia.seaFallback).toBe(true);
+    // Taking French Polynesia from Pitcairn brings more shores into range: no top-up needed any more.
+    const grown = getTargets(world, ['PCN', 'PYF']);
+    expect(grown.sea.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('every start with a coast has at least three targets; the top-up changes nothing for anyone who already had three', () => {
+    for (const mode of MODES) {
+      const w = buildWorld(ALL, mode, FACTS);
+      for (const id of w.ids) {
+        const t = getTargets(w, [id]);
+        const total = t.land.length + t.sea.length;
+        const inRange = t.sea.filter((s) => distanceKm(w.byId[id], w.byId[s]) <= SEA_RANGE_KM);
+        expect(total, `${w.byId[id].name} in ${mode}`).toBeGreaterThan(0);
+        if (!w.byId[id].landlocked) {
+          const coastalLeft = w.ids.filter((o) => o !== id && !w.byId[o].landlocked && !t.land.includes(o)).length;
+          expect(total, `${w.byId[id].name} in ${mode}`).toBeGreaterThanOrEqual(Math.min(MIN_TARGETS, t.land.length + coastalLeft));
+        }
+        if (t.seaFallback) {
+          // Topped up: exactly enough to reach three, and nothing in range was left out.
+          expect(total, `${w.byId[id].name} in ${mode}`).toBeLessThanOrEqual(MIN_TARGETS);
+          expect(t.land.length + inRange.length).toBeLessThan(MIN_TARGETS);
+        } else {
+          // Not topped up: every sea target is within the range, exactly as before.
+          expect(inRange.length, `${w.byId[id].name} in ${mode}`).toBe(t.sea.length);
+        }
+      }
+    }
+    // Well-connected starts are untouched.
+    expect(getTargets(world, ['DEU']).seaFallback).toBe(false);
+    expect(getTargets(world, ['ITA']).seaFallback).toBe(false);
   });
 
   it('owned countries are never targets and conquering updates the set', () => {

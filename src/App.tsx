@@ -233,13 +233,29 @@ function Game({ data }: { data: GameData }) {
   const onCountryClick = useCallback(
     (id: string) => {
       if (!game) {
-        if (world.inPlay.has(id)) setStartId(id);
+        if (world.inPlay.has(id)) {
+          // Picking where to begin: a snap, and a whoosh as the map zooms in on it.
+          sound.zoom();
+          setStartId(id);
+        }
         return;
       }
       if (game.phase !== 'attack') return;
       const attackable = targets.land.includes(id) || targets.sea.includes(id);
+      if (attackable) sound.snap();
       setTargetId(attackable ? id : null);
       setTargetFocus(null);
+    },
+    [game, world, targets],
+  );
+
+  // A light pulse as the pointer passes over a country that can be picked: any country in the campaign
+  // before the game, any target between battles. While a question is open the map stays silent.
+  const onCountryHover = useCallback(
+    (id: string) => {
+      if (!game) {
+        if (world.inPlay.has(id)) sound.pulse();
+      } else if (game.phase === 'attack' && (targets.land.includes(id) || targets.sea.includes(id))) sound.pulse();
     },
     [game, world, targets],
   );
@@ -247,6 +263,8 @@ function Game({ data }: { data: GameData }) {
   const startGame = (id: string) => {
     const seed = (Math.random() * 4294967296) >>> 0;
     seenSeq.current = 0;
+    // The siege begins.
+    sound.siege();
     setRulesOpen(false);
     setTargetId(null);
     setTargetFocus(null);
@@ -357,6 +375,7 @@ function Game({ data }: { data: GameData }) {
         flagOn={game ? 'owned' : 'selected'}
         describe={describe}
         onCountryClick={onCountryClick}
+        onCountryHover={onCountryHover}
       />
 
       {!game && rulesOpen && <Rules data={data} onClose={closeRules} />}
@@ -364,7 +383,11 @@ function Game({ data }: { data: GameData }) {
         <button
           type="button"
           className="btn primary rules-toggle"
-          onClick={() => setRulesOpen((open) => !open)}
+          onMouseEnter={() => sound.pulse()}
+          onClick={() => {
+            sound.snap();
+            setRulesOpen((open) => !open);
+          }}
           aria-expanded={rulesOpen}
           data-testid="rules-toggle"
         >

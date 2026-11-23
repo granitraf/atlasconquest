@@ -28,7 +28,12 @@ export const CONTINENT_BONUS = 10;
 export const RECRUIT_QUESTIONS = 5;
 export const WRONG_ANSWER_TROOP_LOSS = 2;
 export const SEA_RANGE_KM = 2500;
-export const SEA_FALLBACK_COUNT = 3;
+/**
+ * An empire with a coast always has at least this many countries to attack (while that many
+ * remain): if its borders and the sea range give fewer, the nearest shores beyond the range
+ * are offered until there are this many.
+ */
+export const MIN_TARGETS = 3;
 /** Every question is on the clock; running out counts as a wrong answer. */
 export const QUESTION_TIMER_SECONDS = 20;
 /** Sea crossings are harder: half the time. */
@@ -166,8 +171,12 @@ export function battleProgress(defenders: number, maxDefenders: number, troops: 
  *
  * Land: any unowned country bordering player territory.
  * Sea: with at least one coastal country owned, any unowned coastal country
- * within SEA_RANGE_KM (centre to centre) of an owned country; if none are in
- * range, the SEA_FALLBACK_COUNT nearest.
+ * within SEA_RANGE_KM (centre to centre) of an owned country.
+ * Top-up: an isolated empire (a lone island far from anything, or a large
+ * country whose centre is far from every shore) would have next to nothing to
+ * attack. If land and sea together give fewer than MIN_TARGETS, the nearest
+ * coastal countries beyond the range are added until there are MIN_TARGETS.
+ * Well-connected empires are not affected: the range itself does not change.
  *
  * Whenever unowned countries remain the result is never empty: if neither rule
  * yields a target (e.g. only landlocked countries are left and none touch
@@ -198,17 +207,18 @@ export function getTargets(world: World, owned: readonly string[]): Targets {
   const unowned = world.ids.filter((id) => !ownedSet.has(id) && !land.has(id));
   if (ownedCountries.some((c) => !c.landlocked)) {
     const ranked = byDistance(unowned.filter((id) => !world.byId[id].landlocked));
-    const inRange = ranked.filter((r) => r.km <= SEA_RANGE_KM);
-    if (inRange.length > 0) sea = inRange.map((r) => r.id);
-    else if (ranked.length > 0) {
-      sea = ranked.slice(0, SEA_FALLBACK_COUNT).map((r) => r.id);
+    sea = ranked.filter((r) => r.km <= SEA_RANGE_KM).map((r) => r.id);
+    // Short of options: the nearest shores beyond the range open up, nearest first.
+    const beyond = ranked.slice(sea.length, sea.length + Math.max(0, MIN_TARGETS - land.size - sea.length));
+    if (beyond.length > 0) {
+      sea = [...sea, ...beyond.map((r) => r.id)];
       seaFallback = true;
     }
   }
 
   if (land.size === 0 && sea.length === 0 && unowned.length > 0 && ownedCountries.length > 0) {
     sea = byDistance(unowned)
-      .slice(0, SEA_FALLBACK_COUNT)
+      .slice(0, MIN_TARGETS)
       .map((r) => r.id);
     seaFallback = true;
   }

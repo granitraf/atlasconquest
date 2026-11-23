@@ -185,8 +185,13 @@ and 9). The question card shows the tier.
 
 - **Land:** any unowned in-mode country sharing a land border with player territory.
 - **Sea:** if the player owns at least one coastal country, any unowned coastal country whose
-  centre is within 2,500 km of the centre of any owned country. If none are in range, the
-  3 nearest coastal countries are offered instead.
+  centre is within 2,500 km of the centre of any owned country (`SEA_RANGE_KM`).
+- **Top-up to three:** an empire with a coast always has at least 3 targets (`MIN_TARGETS`)
+  while that many remain. If land borders and the sea range together give fewer, the nearest
+  coastal countries beyond the range are added, nearest first, until there are 3. Pitcairn
+  has only French Polynesia within range (2,158 km), so the Cook Islands (3,057 km) and Niue
+  (4,138 km) open up too. Australia, whose centre is far from every shore but one, gets 3 as
+  well. Anyone who already has 3 or more targets is unaffected: the range does not change.
 - **Last resort:** if neither rule yields a target while countries remain, the 3 nearest
   countries of any kind are offered as crossings. Every country is reachable from every start
   in every mode (covered by a test).

@@ -1,4 +1,5 @@
 import { DEFENDERS_PER_TROOP, SEA_TIMER_SECONDS, WOUND_HEAL_PER_BATTLE, conquestTroops, soldiers } from '../game/rules';
+import { sound } from '../sound';
 import type { Country, Targets } from '../game/types';
 
 interface Props {
@@ -64,7 +65,10 @@ export function AttackPanel({ targets, byId, escalation, strength, selectedId, o
             <button
               type="button"
               className="btn danger"
-              onClick={() => onAttack(selected.id)}
+              onClick={() => {
+                sound.attack();
+                onAttack(selected.id);
+              }}
               data-testid="attack-button"
             >
               Attack
@@ -91,7 +95,7 @@ export function AttackPanel({ targets, byId, escalation, strength, selectedId, o
         <p className="hint">
           {land.length} by land · {sea.length} by sea
           {escalation > 0 && ` · every country +${soldiers(escalation)} defenders (your empire's size)`}
-          {targets.seaFallback && sea.length > 0 ? ' (nothing within 2,500 km: nearest shores offered)' : ''}
+          {targets.seaFallback && sea.length > 0 ? ' (few shores within 2,500 km: the nearest ones beyond are open too)' : ''}
         </p>
       </div>
     </section>
@@ -117,7 +121,11 @@ function TargetChip({
       type="button"
       role="listitem"
       className={`target-chip ${sea ? 'sea' : 'land'} ${active ? 'active' : ''} ${strength.standing < strength.full ? 'wounded' : ''}`}
-      onClick={() => onSelect(active ? null : country.id)}
+      onMouseEnter={() => sound.pulse()}
+      onClick={() => {
+        sound.snap();
+        onSelect(active ? null : country.id);
+      }}
       data-testid={`target-${country.id}`}
       data-kind={sea ? 'sea' : 'land'}
       data-standing={strength.standing}

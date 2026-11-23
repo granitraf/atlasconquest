@@ -265,5 +265,9 @@ export function countPixels(page, layer, [r, g, b, a = 255]) {
   }, { layer, r, g, b, a });
 }
 
-export const sounds = (page) => page.evaluate(() => window.__atlas.sounds.map((s) => ({ name: s.name, hz: Math.round(s.hz) })));
+export const sounds = (page) => page.evaluate(() => window.__atlas.sounds.map((s) => ({ name: s.name, hz: Math.round(s.hz), text: s.text })));
+/** The last sound that was not just the pointer passing over something. */
+export const lastSound = async (page) => (await sounds(page)).filter((s) => s.name !== 'pulse').at(-1)?.name;
+/** Forgets the sounds heard so far. */
+export const hush = (page) => page.evaluate(() => { window.__atlas.sounds.length = 0; });
 export const isGreen = ([r, g, b]) => g > r + 25 && g > b + 25;

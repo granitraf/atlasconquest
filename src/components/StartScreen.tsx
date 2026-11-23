@@ -74,7 +74,16 @@ export function StartScreen({ data, mode, selectedId, empire, onEmpire, onMode, 
           Atlas <span>Conquest</span>
         </h1>
         <p className="tagline">Conquer the map. Geography knowledge is your army.</p>
-        <button type="button" className="btn primary rules-open" onClick={onRules} data-testid="rules-open">
+        <button
+          type="button"
+          className="btn primary rules-open"
+          onMouseEnter={() => sound.pulse()}
+          onClick={() => {
+            sound.snap();
+            onRules();
+          }}
+          data-testid="rules-open"
+        >
           Rules
         </button>
       </div>
@@ -107,7 +116,10 @@ export function StartScreen({ data, mode, selectedId, empire, onEmpire, onMode, 
                     aria-label={`Flag colour ${i + 1}`}
                     className={`slot ${slot === i ? 'active' : ''}`}
                     style={{ background: colour }}
-                    onClick={() => setSlot(i)}
+                    onClick={() => {
+                      sound.select();
+                      setSlot(i);
+                    }}
                     data-testid={`slot-${i}`}
                   />
                 ))}
@@ -159,7 +171,11 @@ export function StartScreen({ data, mode, selectedId, empire, onEmpire, onMode, 
               aria-checked={m === mode}
               aria-label={`${m}, ${data.worlds[m].ids.length} countries`}
               className={`mode ${m === mode ? 'active' : ''}`}
-              onClick={() => onMode(m)}
+              onClick={() => {
+                // The campaign is announced by name: "North America", not the short label on the button.
+                sound.say(m);
+                onMode(m);
+              }}
               data-testid={`mode-${m}`}
             >
               {MODE_LABEL[m] ?? m}
@@ -190,7 +206,10 @@ export function StartScreen({ data, mode, selectedId, empire, onEmpire, onMode, 
                 type="button"
                 className={`filter ${slug(f)} ${f === filter ? 'active' : ''}`}
                 aria-pressed={f === filter}
-                onClick={() => setFilter(f)}
+                onClick={() => {
+                  sound.select();
+                  setFilter(f);
+                }}
                 data-testid={`filter-${slug(f)}`}
               >
                 {f}
@@ -205,7 +224,11 @@ export function StartScreen({ data, mode, selectedId, empire, onEmpire, onMode, 
               <button
                 type="button"
                 className={`country-row ${country.id === selectedId ? 'active' : ''}`}
-                onClick={() => onSelect(country.id)}
+                onMouseEnter={() => sound.pulse()}
+                onClick={() => {
+                  sound.zoom();
+                  onSelect(country.id);
+                }}
                 onDoubleClick={() => onStart(country.id)}
                 data-id={country.id}
                 data-testid={`start-${country.id}`}
@@ -245,6 +268,7 @@ export function StartScreen({ data, mode, selectedId, empire, onEmpire, onMode, 
           type="button"
           className="btn primary big"
           disabled={!selected}
+          onMouseEnter={() => sound.pulse()}
           onClick={() => selected && onStart(selected.country.id)}
           data-testid="begin"
         >

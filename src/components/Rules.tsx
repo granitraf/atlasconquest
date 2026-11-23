@@ -5,9 +5,11 @@ import {
   DEFENDERS_PER_TROOP,
   ESCALATION_EVERY,
   MIN_DEFENDERS,
+  MIN_TARGETS,
   QUESTION_TIMER_SECONDS,
   RECRUIT_QUESTIONS,
   RETREAT_SHARE,
+  SEA_RANGE_KM,
   SEA_TIMER_SECONDS,
   START_LABELS,
   START_MULTIPLIER,
@@ -364,18 +366,22 @@ export function Rules({ data, onClose }: Props) {
             </span>
           </div>
           <ul className="rule-list">
+            <li>
+              You can attack any neighbour over a land border, and any shore within {SEA_RANGE_KM.toLocaleString('en-US')} km by sea. Far from
+              everything? The nearest shores open up, so there are always at least {MIN_TARGETS} countries to attack.
+            </li>
             <li>Every battle opens with the country's flag, then the questions get harder.</li>
             <li className="good">
-              Right: <b>−{soldiers(defenderKills('easy'))} defenders</b> (a Hard question: −{soldiers(defenderKills('hard'))}).
+              Right answer: <b>−{soldiers(defenderKills('easy'))} defenders killed</b> (a Hard question: −{soldiers(defenderKills('hard'))}).
             </li>
             <li className="bad">
-              Wrong, or too slow: <b>−{soldiers(WRONG_ANSWER_TROOP_LOSS)} of your troops</b>.
+              Wrong, or too slow: <b>−{soldiers(WRONG_ANSWER_TROOP_LOSS)} of your own troops</b>.
             </li>
             <li>
               You have {QUESTION_TIMER_SECONDS} seconds a question. Across the sea it is {SEA_TIMER_SECONDS}, against a third more defenders (
               {soldiers(6)} becomes {soldiers(6 + seaBonus(6))}).
             </li>
-            <li>While a question is open the map hides its names. No peeking.</li>
+            <li>While a question is open the map hides the surrounding country names. No peeking.</li>
           </ul>
         </article>
 

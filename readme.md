@@ -6,7 +6,8 @@ your neighbours to conquer them. After that, new troops come only from conquests
 
 Vite + React + TypeScript, with D3 (`d3-geo`, `d3-zoom`) and `topojson-client` for the map. There is no
 backend: the game saves to `localStorage`, and all data, fonts and flags are bundled, so it never calls a
-live API while you play. Sound effects are synthesised in the browser; there are no audio files.
+live API while you play. Sound effects are synthesised in the browser; there are no audio files. The campaign
+names are spoken by the browser's own speech synthesis, using a British English voice when the device has one.
 
 The whole game is pixel art. The map is drawn on a single pixel grid (terrain, territory tints, borders,
 outlines and markers all share it), text is set in VT323 and Press Start 2P, and flags are low-resolution
@@ -95,7 +96,7 @@ src/map/
   raster.ts              the pixel rasteriser: grid sizing, hard-edged lines, dashes, marker sprites
   terrain.ts             procedural terrain fallback
 src/components/          rendering only: map, HUD, question card, attack panel, start and end screens
-src/sound.ts             synthesised sound effects
+src/sound.ts             synthesised sound effects (hover pulse, snap, whoosh, trumpet call, countdown tick) and the campaign voice
 src/App.tsx              wires state to components
 tests/                   unit tests for src/game, the rasteriser and the sound pitch
 e2e/                     browser checks

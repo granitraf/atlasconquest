@@ -146,7 +146,7 @@ export interface Targets {
   land: string[];
   /** Unowned countries reachable by sea crossing. */
   sea: string[];
-  /** True when nothing was in sea range and the nearest few were offered instead. */
+  /** True when too few countries were in reach and the nearest shores beyond the sea range were added. */
   seaFallback: boolean;
 }
 
