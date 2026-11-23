@@ -892,6 +892,43 @@ section('rules', async (page) => {
   const edges = await mapEdges(page);
   check(results, 'a Rules button sits above the map, in the centre', (await toggle.innerText()).trim() === 'Rules' && Math.abs(box.centre - (440 + view.w) / 2) <= 2 && box.top >= 0 && box.bottom < edges.top, `centre ${Math.round(box.centre)} of map area ${(440 + view.w) / 2}, bottom ${Math.round(box.bottom)}, map top ${Math.round(edges.top)}`);
 
+  // The emblem: two crossed gold swords in pixel art, right of the word Conquest, and the same drawing as the favicon.
+  const logo = await page.evaluate(async () => {
+    const svg = document.querySelector('.start-head h1 [data-testid="logo"]');
+    const word = document.querySelector('.start-head h1 span').getBoundingClientRect();
+    const r = svg.getBoundingClientRect();
+    const panel = document.querySelector('.start').getBoundingClientRect();
+    const colours = new Set([...svg.querySelectorAll('rect')].map((el) => el.getAttribute('fill')));
+    const icon = document.querySelector('link[rel="icon"][type="image/svg+xml"]').getAttribute('href');
+    const favicon = await (await fetch(icon)).text();
+    return {
+      label: svg.getAttribute('aria-label'),
+      text: document.querySelector('.start-head h1').innerText.replace(/\s+/g, ' ').trim(),
+      rightOfWord: r.left >= word.right && r.left - word.right < 24,
+      sameLine: r.top < word.bottom && r.bottom > word.top,
+      inPanel: r.right <= panel.right - 8,
+      size: Math.round(r.width),
+      pixels: svg.querySelectorAll('rect').length,
+      crisp: svg.getAttribute('shape-rendering'),
+      fills: [...colours].sort(),
+      cells: [...svg.querySelectorAll('rect')].map((el) => `${el.getAttribute('x')},${el.getAttribute('y')},${el.getAttribute('fill')}`).sort().join(' '),
+      icons: document.querySelectorAll('link[rel~="icon"], link[rel="apple-touch-icon"]').length,
+      favicon,
+    };
+  });
+  check(results, 'the crossed gold swords sit to the right of the word Conquest, on the same line', logo.text === 'ATLAS CONQUEST' && logo.rightOfWord && logo.sameLine && logo.inPanel && /crossed gold swords/i.test(logo.label), JSON.stringify({ rightOfWord: logo.rightOfWord, sameLine: logo.sameLine, inPanel: logo.inPanel, size: logo.size }));
+  check(results, 'the emblem is pixel art in gold: hard-edged squares, two screen pixels each', logo.crisp === 'crispEdges' && logo.pixels > 70 && logo.size === 32 && logo.fills.every((fill) => ['#150d05', '#a8760f', '#c8961c', '#ffcf4a', '#ffd95c', '#fff0b8'].includes(fill)) && logo.fills.includes('#ffcf4a'), `${logo.pixels} pixels at ${logo.size}px in ${logo.fills.join(' ')}`);
+  const background = /<rect width="16" height="16" fill="(#[0-9a-f]{6})"\/>/.exec(logo.favicon)?.[1];
+  const swords = [...logo.favicon.matchAll(/<rect x="(\d+)" y="(\d+)" width="1" height="1" fill="(#[0-9a-f]{6})"\/>/g)].map((m) => ({ x: Number(m[1]), y: Number(m[2]), fill: m[3] }));
+  const golds = swords.filter((p) => p.fill !== '#150d05');
+  const span = { left: Math.min(...golds.map((p) => p.x)), right: Math.max(...golds.map((p) => p.x)), top: Math.min(...golds.map((p) => p.y)), bottom: Math.max(...golds.map((p) => p.y)) };
+  const at = new Map(swords.map((p) => [`${p.x},${p.y}`, p.fill]));
+  // Both points and both pommels: a sword runs from each bottom corner to the opposite top corner.
+  const corners = [[1, 1], [14, 1], [1, 14], [14, 14]].every(([x, y]) => at.has(`${x},${y}`));
+  check(results, 'the favicon is two crossed gold swords on plain dark brown, with no globe', logo.icons === 1 && background === '#2a1a0c' && !/circle|rx=|#1d4f91|#3ddc84/.test(logo.favicon) && golds.length > 70 && new Set(golds.map((p) => p.fill)).size >= 4 && golds.every((p) => ['#fff0b8', '#ffcf4a', '#ffd95c', '#c8961c', '#a8760f'].includes(p.fill)), `${golds.length} gold pixels on ${background}`);
+  check(results, 'the title emblem and the favicon are the same drawing, pixel for pixel', swords.map((p) => `${p.x},${p.y},${p.fill}`).sort().join(' ') === logo.cells, `${swords.length} pixels in the favicon, ${logo.pixels} in the title`);
+  check(results, 'the swords are as large as the icon allows: they start one pixel in from every edge', corners && span.left === 1 && span.top === 1 && span.right === 14 && span.bottom === 14, JSON.stringify(span));
+
   // Gold that pops: bright at rest, brighter with a glow under the pointer. Same for Begin conquest.
   const look = (testid) => page.getByTestId(testid).evaluate((el) => { const cs = getComputedStyle(el); return { bg: cs.backgroundColor, glow: cs.boxShadow.split('rgba(255, 214, 90').length - 1, opacity: cs.opacity }; });
   const light = (rgb) => { const [r, g, b] = rgb.match(/\d+/g).map(Number); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };

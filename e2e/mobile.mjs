@@ -27,6 +27,12 @@ async function phone(viewport, tag) {
   const begin = await page.getByTestId('begin').boundingBox();
   check(results, `${tag}: the Begin button is always on screen`, begin.y >= 0 && begin.y + begin.height <= viewport.height, `bottom at ${Math.round(begin.y + begin.height)} of ${viewport.height}`);
   await page.screenshot({ path: SHOTS + `60-${tag}-start.png` });
+  const title = await page.evaluate(() => {
+    const word = document.querySelector('.start-head h1 span').getBoundingClientRect();
+    const logo = document.querySelector('.start-head h1 [data-testid="logo"]').getBoundingClientRect();
+    return { right: logo.right, left: logo.left, wordRight: word.right, sameLine: logo.top < word.bottom && logo.bottom > word.top, w: innerWidth };
+  });
+  check(results, `${tag}: the title and its logo share one line and fit the screen`, title.sameLine && title.left >= title.wordRight && title.right <= title.w - 8, JSON.stringify(title));
   // The start panel covers the map on a phone, so the rules open from a button in its header and fill the screen.
   check(results, `${tag}: the Rules button is in the menu header (the one above the map is hidden)`, (await page.getByTestId('rules-open').isVisible()) && !(await page.getByTestId('rules-toggle').isVisible()));
   await page.getByTestId('rules-open').tap();

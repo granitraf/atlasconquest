@@ -11,7 +11,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "verify": "node e2e/run.mjs",
-    "derive": "node scripts/derive.mjs"
+    "derive": "node scripts/derive.mjs",
+    "logo": "node scripts/logo.mjs"
   },
   "dependencies": {
     "@fontsource/press-start-2p": "^5.3.0",

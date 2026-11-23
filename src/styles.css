@@ -1473,7 +1473,9 @@ p {
 
 .start-head h1 {
   font-family: var(--font-display);
-  font-size: clamp(20px, 6.4vw, 24px);
+  /* Small enough on a phone for the title and its logo to share one line. */
+  font-size: clamp(17px, 5.2vw, 24px);
+  white-space: nowrap;
   font-weight: 700;
   letter-spacing: 0;
   line-height: 1.2;
@@ -1483,6 +1485,17 @@ p {
 
 .start-head h1 span {
   color: var(--gold);
+}
+
+/* The crossed gold swords, to the right of the title: 16 pixels across, two screen pixels each at full size. */
+.logo {
+  display: inline-block;
+  width: calc(4em / 3);
+  height: calc(4em / 3);
+  margin-left: 0.45em;
+  vertical-align: middle;
+  transform: translateY(-0.08em);
+  filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.45));
 }
 
 .tagline {
@@ -2851,7 +2864,7 @@ p {
   }
 
   .start-head h1 {
-    font-size: 28px;
+    font-size: 24px;
   }
 
   .start-head h1 span {

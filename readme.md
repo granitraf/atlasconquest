@@ -97,6 +97,7 @@ src/map/
   raster.ts              the pixel rasteriser: grid sizing, hard-edged lines, dashes, marker sprites
   terrain.ts             procedural terrain fallback
 src/components/          rendering only: map, HUD, question card, attack panel, start and end screens
+src/logo.json            the emblem's pixels: two crossed gold swords (drawn, with the favicon, by `npm run logo`)
 src/sound.ts             synthesised sound effects (hover pulse, snap, whoosh, trumpet call, countdown tick) and the campaign voice
 src/App.tsx              wires state to components
 tests/                   unit tests for src/game, the rasteriser and the sound pitch

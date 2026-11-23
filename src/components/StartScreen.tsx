@@ -4,6 +4,7 @@ import { EMPIRE_NAME_MAX, FLAG_COLOURS, FLAG_PATTERNS, type Empire } from '../ga
 import { START_LABELS, START_TROOPS, soldiers, startDifficulty } from '../game/rules';
 import { sound } from '../sound';
 import { FlagIcon } from './FlagIcon';
+import { Logo } from './Logo';
 import { MODES, type ModeId, type StartLabel } from '../game/types';
 
 interface Props {
@@ -72,6 +73,7 @@ export function StartScreen({ data, mode, selectedId, empire, onEmpire, onMode, 
       <div className="start-head">
         <h1>
           Atlas <span>Conquest</span>
+          <Logo />
         </h1>
         <p className="tagline">Conquer the map. Geography knowledge is your army.</p>
         <button
