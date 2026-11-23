@@ -23,7 +23,7 @@ async function noOverflow(page, label) {
 async function phone(viewport, tag) {
   const { browser, context, page, problems, board } = await launch({ viewport, touch: true, mobile: true, dpr: 2 });
   // Runs already on the leaderboard, one of them under the longest name the game allows.
-  for (const [name, score] of [['Holy Empire of Liechten', 687], ['Bravo', 36.5], ['Charlie', 30], ['Delta', 24], ['Echo', 12]]) board.add('World', name.slice(0, 22), score);
+  for (const [name, score] of [['Greatest Kingdom', 687], ['Bravo', 36.5], ['Charlie', 30], ['Delta', 24], ['Echo', 12]]) board.add('World', name, score);
   board.add('Europe', 'Solo', 3);
   await open(page);
   await noOverflow(page, `${tag} start screen`);

@@ -2,6 +2,8 @@
 // Patterns are functions of position, so the same flag can be drawn at any pixel size
 // (12x8 in the menu, 9x6 on the map).
 
+import { NEW_EMPIRE, countryEmpireName, validateEmpireName } from '../names/validateEmpireName';
+
 export const FLAG_W = 12;
 export const FLAG_H = 8;
 
@@ -17,7 +19,7 @@ export interface Empire {
   flag: EmpireFlag;
 }
 
-export const EMPIRE_NAME_MAX = 22;
+export { EMPIRE_NAME_MAX, EMPIRE_NAME_MIN } from '../names/validateEmpireName';
 
 export const FLAG_COLOURS = [
   '#f4f4ec',
@@ -103,16 +105,22 @@ export function sanitizeEmpire(raw: unknown): Empire | null {
   if (!Number.isInteger(pattern) || pattern! < 0 || pattern! >= FLAG_PATTERNS.length) return null;
   if (!Array.isArray(colours) || colours.length !== 3 || !colours.every((c) => typeof c === 'string' && HEX.test(c))) return null;
   return {
-    name: cleanEmpireName(name),
+    name: savedEmpireName(name),
     flag: { pattern: pattern!, colours: [colours[0], colours[1], colours[2]] },
   };
 }
 
-export function cleanEmpireName(name: string): string {
-  return name.replace(/\s+/g, ' ').trim().slice(0, EMPIRE_NAME_MAX);
+/**
+ * A name read back from saved data: kept if it still passes validateEmpireName, left empty if it was empty
+ * (the field had not been filled in), and otherwise replaced with "New Empire".
+ */
+export function savedEmpireName(name: string): string {
+  const checked = validateEmpireName(name);
+  if (checked.valid) return checked.name;
+  return checked.reason === 'empty' ? '' : NEW_EMPIRE;
 }
 
-/** The name used when the player leaves the field empty. */
+/** The name used when the player leaves the field empty: "Empire of Japan", "Germany Empire", or "New Empire". */
 export function defaultEmpireName(startCountryName: string): string {
-  return cleanEmpireName(`Empire of ${startCountryName}`) || 'The Empire';
+  return countryEmpireName(startCountryName);
 }

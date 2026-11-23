@@ -33,6 +33,7 @@ Other scripts:
 | --- | --- |
 | `npm test` | Unit tests for the game logic (Vitest) |
 | `npm run verify` | Plays the game in headless Google Chrome and checks it end to end |
+| `npm run names` | Copies the empire name blocklist and allowlist into `supabase/schema.sql` |
 | `npm run build` | Type-checks and builds to `dist/` |
 | `npm run preview` | Serves the production build |
 
@@ -59,7 +60,7 @@ is shipped to every player. The public key is meant to be public; the database i
 
 **What the database allows.** Anyone may read the leaderboard. Nobody may insert, update or delete rows
 directly. A run is recorded only through the function `submit_run`, which checks the campaign, the name
-(length, and a filter on slurs, hate terms, sexual terms and swearing), the flag (one of the game's patterns and palette colours), that the
+(letters and single spaces, 3 to 16 characters, and the custom blocklist and allowlist), the flag (one of the game's patterns and palette colours), that the
 score is one the game can produce for that campaign, that a victory really is every country, and that
 there are at least as many battles as conquests. It keeps one row per run id and stamps the time itself.
 
@@ -73,9 +74,10 @@ only ever hears what a browser tells it.
 - Looking up answers, or reading the game's state in the browser's developer tools, cannot be detected.
 - One person can submit any number of runs under any number of names; nothing ties a run to a player, by
   design, so there is no per-player limit and no rate limit.
-- The name filter sees through numbers for letters (n1gga), spaced or stretched letters, starred-out letters and
-  look-alike letters from other alphabets, but no word list is complete and it only knows English. A determined
-  player will eventually find a spelling it misses.
+- The database checks names against the custom blocklist only. The obscenity library's list runs in the game,
+  so a name only that list refuses (common swear words with no slur in them) can still be sent to the database
+  by hand. No word list is complete and both only know English: a determined player will eventually find a
+  spelling neither catches.
 
 Closing these would need the game to be replayed and judged on a server, or player accounts. Until then,
 remove a bad row by hand in the SQL editor: `delete from public.runs where run_id = '...';`
@@ -134,7 +136,6 @@ src/game/                pure game logic, no React or DOM
   questions.ts           question generation and difficulty scoring (type weight + fame + closeness)
   brands.ts              hand-picked brands by founding country, for the brand question
   flag.ts                the empire flag: preset patterns, colours, validation
-  names.ts               the filter on empire names: slurs, hate, sexual terms, swearing, and their disguises
   state.ts               the reducer: (state, action) -> state, plus save validation
   world.ts, rng.ts, types.ts
 src/map/
@@ -143,6 +144,8 @@ src/map/
   terrain.ts             procedural terrain fallback
 src/components/          rendering only: map, HUD, question card, attack panel, start and end screens
 src/logo.json            the emblem's pixels: two crossed gold swords (drawn, with the favicon, by `npm run logo`)
+src/names/               the empire name check: validateEmpireName.ts, blocked-names.json, allowed-names.json
+                         (after editing a list: `npm run names`, then re-run supabase/schema.sql in Supabase)
 src/leaderboard.ts       the leaderboard client: sends a finished run, reads the top five (plain fetch, no library)
 src/sound.ts             synthesised sound effects (hover pulse, snap, whoosh, trumpet call, countdown tick) and the campaign voice
 src/App.tsx              wires state to components

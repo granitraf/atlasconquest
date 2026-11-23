@@ -5,8 +5,8 @@
 // The project is reached over its REST interface with plain fetch, through the two database functions
 // in supabase/schema.sql: submit_run (which validates and stores a run) and top_runs.
 
-import { DEFAULT_FLAG, FLAG_COLOURS, FLAG_PATTERNS, cleanEmpireName, type EmpireFlag } from './game/flag';
-import { nameAllowed } from './game/names';
+import { DEFAULT_FLAG, FLAG_COLOURS, FLAG_PATTERNS, type EmpireFlag } from './game/flag';
+import { NEW_EMPIRE, validateEmpireName } from './names/validateEmpireName';
 import type { GameStats } from './game/state';
 import { MODES, type GameState, type ModeId } from './game/types';
 
@@ -14,8 +14,8 @@ import { MODES, type GameState, type ModeId } from './game/types';
 export const LEADERBOARD_SIZE = 5;
 /** A request that takes longer than this counts as unreachable. */
 export const LEADERBOARD_TIMEOUT_MS = 8000;
-/** Shown in place of a stored name the filter would not have let through. */
-export const UNNAMED_EMPIRE = 'Unnamed empire';
+/** Shown in place of a stored name that does not pass validateEmpireName. */
+export const UNNAMED_EMPIRE = NEW_EMPIRE;
 
 export type Outcome = 'victory' | 'defeat';
 
@@ -152,7 +152,7 @@ export function parseRow(raw: unknown): LeaderboardRow | null {
   const r = raw as Record<string, unknown>;
   if (typeof r.run_id !== 'string' || typeof r.campaign !== 'string' || !MODES.includes(r.campaign as ModeId)) return null;
   if (typeof r.score !== 'number' || !Number.isFinite(r.score) || typeof r.rank !== 'number' || r.rank < 1) return null;
-  const name = cleanEmpireName(typeof r.empire_name === 'string' ? r.empire_name : '');
+  const checked = validateEmpireName(r.empire_name);
   const colours = Array.isArray(r.flag_colours) ? r.flag_colours.map((c) => String(c).toLowerCase()) : [];
   const palette = FLAG_COLOURS as readonly string[];
   const pattern = r.flag_pattern;
@@ -160,7 +160,7 @@ export function parseRow(raw: unknown): LeaderboardRow | null {
   return {
     runId: r.run_id,
     campaign: r.campaign as ModeId,
-    empireName: name && nameAllowed(name) ? name : UNNAMED_EMPIRE,
+    empireName: checked.valid ? checked.name : UNNAMED_EMPIRE,
     flag: flagOk ? { pattern: pattern as number, colours: [colours[0], colours[1], colours[2]] } : DEFAULT_FLAG,
     startCountry: typeof r.start_country === 'string' ? r.start_country : '',
     score: r.score,

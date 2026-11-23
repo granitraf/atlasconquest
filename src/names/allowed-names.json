@@ -1,0 +1,19 @@
+{
+  "about": "Innocent words and place names that contain a blocked term (Essex, Scunthorpe, Pakistan). They are taken out of a name before it is checked, so \"Essex Rising\" passes. Only whole words count: \"Essex\" is allowed, \"Essexsex\" is not. Lower-case letters, with a single space for a name of two words. After editing, run `npm run names` and re-run supabase/schema.sql in the Supabase SQL editor.",
+  "allowed": [
+    "essex", "sussex", "middlesex", "wessex", "scunthorpe", "cockburn", "penistone", "princestown", "princes town",
+
+    "montenegro", "montenegrin", "negroni", "pakistan", "pakistani", "japan", "japanese", "naypyidaw", "yiddish",
+
+    "raccoon", "raccoons", "cocoon", "cocoons", "tycoon", "tycoons",
+    "spice", "spices", "spiced", "spicy", "allspice", "aspic", "auspice", "auspices", "auspicious", "despicable",
+    "conspicuous", "inconspicuous", "suspicion", "suspicions", "suspicious", "perspicacious",
+    "snigger", "sniggers", "sniggering", "niggard", "niggardly", "niggle", "niggling",
+    "pedagogy", "pedagogue", "pedagogic", "pedagogical", "dagoba", "twopence", "twopenny", "swop", "swops",
+    "squawk", "squawks", "squawking", "injunction", "injunctions", "polliwog", "pollywog", "hornswoggle",
+    "sauerkraut", "spoof", "spoofs", "retardant", "retardants", "retardation",
+    "ashkenazi", "ashkenazim", "ashkenazic", "sheila", "sheilas", "heilbronn", "crisis", "maryann", "maryanne",
+    "torpedo", "torpedoes", "pedometer", "therapist", "therapists", "physiotherapist", "psychotherapist",
+    "unmolested", "cushite", "cushitic", "shiitake"
+  ]
+}

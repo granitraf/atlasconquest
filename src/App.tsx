@@ -8,8 +8,8 @@ import { Rules } from './components/Rules';
 import { StartScreen } from './components/StartScreen';
 import { WorldMap, type CountryStatus, type FocusRequest, type MapPadding, type TooltipInfo, type TooltipPart } from './components/WorldMap';
 import { loadEmpire, loadGameData, loadSave, runIdFor, saveEmpire, writeSave, type GameData } from './data';
-import { cleanEmpireName, defaultEmpireName, type Empire } from './game/flag';
-import { nameAllowed } from './game/names';
+import { defaultEmpireName, type Empire } from './game/flag';
+import { validateEmpireName } from './names/validateEmpireName';
 import { runRecord } from './leaderboard';
 import { CONTINENT_BONUS, SEA_TIMER_SECONDS, canRetreat, conquestTroops, escalation, getTargets, lanesNeeded, retreatCost, soldiers, startDifficulty } from './game/rules';
 import { sound, soundLog } from './sound';
@@ -275,9 +275,10 @@ function Game({ data }: { data: GameData }) {
     setPanel(null);
     setTargetId(null);
     setTargetFocus(null);
-    // An empire left unnamed is named after its home country, and so is one whose name the leaderboard would refuse.
-    const typed = cleanEmpireName(empire.name);
-    const name = typed && nameAllowed(typed) ? typed : defaultEmpireName(byId[id].name);
+    // An empire left unnamed is named after its home country. (A name that fails cannot get this far:
+    // the Begin button is disabled until it is changed.)
+    const checked = validateEmpireName(empire.name);
+    const name = checked.valid ? checked.name : defaultEmpireName(byId[id].name);
     setGame(createGame(data.worlds[mode], id, seed, { name, flag: empire.flag }));
   };
 

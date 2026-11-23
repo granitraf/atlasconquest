@@ -6,7 +6,6 @@ import {
   FLAG_H,
   FLAG_PATTERNS,
   FLAG_W,
-  cleanEmpireName,
   defaultEmpireName,
   flagPixels,
   hexToRgb,
@@ -76,18 +75,16 @@ describe('empire flags', () => {
 });
 
 describe('empire details', () => {
-  it('tidies names and limits their length', () => {
-    expect(cleanEmpireName('  The   Grand \n Duchy  ')).toBe('The Grand Duchy');
-    expect(cleanEmpireName('x'.repeat(80))).toHaveLength(EMPIRE_NAME_MAX);
-  });
-
   it('names an empire after its home country when the player leaves the name empty', () => {
-    expect(defaultEmpireName('Germany')).toBe('Empire of Germany');
+    expect(defaultEmpireName('Peru')).toBe('Empire of Peru');
     expect(defaultEmpireName('Saint Vincent and the Grenadines').length).toBeLessThanOrEqual(EMPIRE_NAME_MAX);
   });
 
   it('accepts a valid saved empire and rejects anything else', () => {
     expect(sanitizeEmpire({ name: ' Rome ', flag: DEFAULT_FLAG })).toEqual({ name: 'Rome', flag: DEFAULT_FLAG });
+    // A saved name that no longer passes becomes "New Empire"; the flag is kept.
+    expect(sanitizeEmpire({ name: 'Nazi Empire', flag: DEFAULT_FLAG })).toEqual({ name: 'New Empire', flag: DEFAULT_FLAG });
+    expect(sanitizeEmpire({ name: 'x'.repeat(80), flag: DEFAULT_FLAG })!.name).toBe('New Empire');
     expect(sanitizeEmpire(null)).toBeNull();
     expect(sanitizeEmpire({ name: 'Rome' })).toBeNull();
     expect(sanitizeEmpire({ name: 'Rome', flag: { pattern: 16, colours: DEFAULT_FLAG.colours } })).toBeNull();

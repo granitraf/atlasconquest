@@ -692,7 +692,7 @@ section('empire', async (page) => {
   await page.getByTestId('empire-name').fill('   ');
   await startGame(page, 'World', 'ISL');
   s = await state(page);
-  check(results, 'an unnamed empire is named after its home country', s.empire.name === 'Empire of Iceland', s.empire.name);
+  check(results, 'an unnamed empire is named after its home country', s.empire.name === 'Iceland Empire', s.empire.name);
 
   const look = await page.evaluate(() => ({
     cursor: getComputedStyle(document.querySelector('.map-hit .country')).cursor,
@@ -1223,14 +1223,29 @@ section('leaderboard', async (page, board) => {
   await page.keyboard.press('Escape');
   check(results, 'Escape returns to the map', (await hall.count()) === 0 && (await page.getByTestId('leaderboard-toggle').innerText()).trim() === 'Leaderboard');
 
-  // Names: the length limit is unchanged, and a rude name is not carried into a run.
+  // Names: letters and single spaces, 3 to 16 characters, and nothing offensive.
+  await page.getByTestId('mode-Europe').click();
+  await page.getByTestId('start-DEU').click();
   const field = page.getByTestId('empire-name');
+  const begin = page.getByTestId('begin');
+  const hint = page.getByTestId('name-hint');
+  check(results, 'the name field carries the hint "Letters only, 3 to 16 characters"', (await hint.innerText()).trim() === 'Letters only, 3 to 16 characters' && !(await hint.evaluate((el) => el.classList.contains('bad'))));
+  await field.fill('');
+  await field.pressSequentially('N1gg@  88 Empire!!');
+  check(results, 'numbers, symbols and double spaces never reach the field while typing', (await field.inputValue()) === 'Ngg Empire', await field.inputValue());
   await field.fill('x'.repeat(40));
-  check(results, 'the empire name keeps its 22 character limit', (await field.inputValue()).length === 22);
+  check(results, 'the field stops at 16 characters', (await field.inputValue()).length === 16);
+  await field.fill('Ro');
+  check(results, 'a name under 3 letters turns the hint red and disables Begin conquest', (await begin.isDisabled()) && (await hint.evaluate((el) => el.classList.contains('bad'))));
   await field.fill('Essex Rising');
-  const innocent = await page.getByTestId('name-warning').count();
-  await field.fill('Sh1t Kingdom');
-  check(results, 'a rude name is flagged as soon as it is typed; an innocent one that contains a rude word is not', innocent === 0 && /not allowed/i.test(await page.getByTestId('name-warning').innerText()));
+  check(results, 'an innocent name that contains a blocked word is accepted', (await page.getByTestId('name-warning').count()) === 0 && (await begin.isEnabled()));
+  await field.fill('Kikeland');
+  const warning = (await page.getByTestId('name-warning').innerText()).trim();
+  check(results, 'an offensive name gets a neutral message that never repeats the word, and Begin conquest is disabled', warning === "That name isn't allowed. Try another." && (await begin.isDisabled()), warning);
+  await page.getByTestId('start-DEU').dblclick();
+  check(results, 'double-clicking a country does not start a game under it either', (await page.getByTestId('start-screen').isVisible()) && (await state(page)) === null);
+  await field.fill('');
+  check(results, 'an empty name is fine: the empire is named after its home country', await begin.isEnabled());
 
   /** Starts a game and loses it at once: every recruit question wrong, then every answer of the first battle. */
   const lose = async (mode, id) => {
@@ -1250,16 +1265,16 @@ section('leaderboard', async (page, board) => {
 
   // A run that ends outside the top five.
   let s = await lose('Europe', 'DEU');
-  check(results, 'a run started under a rude name is named after its home country instead', s.empire.name === 'Empire of Germany', s.empire.name);
+  check(results, 'a run started with no name is named after its home country, in a name that passes', s.empire.name === 'Germany Empire', s.empire.name);
   await ready();
   const sent = board.requests.filter((r) => r.name === 'submit_run');
   const run = sent[0]?.args ?? {};
   const fields = ['p_battles', 'p_best_streak', 'p_campaign', 'p_conquered', 'p_continents', 'p_empire_name', 'p_flag_colours', 'p_flag_pattern', 'p_outcome', 'p_run_id', 'p_score', 'p_start_country'];
   check(results, 'the finished run is sent once, with exactly the agreed fields and nothing personal', sent.length === 1 && Object.keys(run).sort().join() === fields.join() && sent[0].url === 'https://leaderboard.invalid/rest/v1/rpc/submit_run', `${sent.length} sent: ${Object.keys(run).sort().join()}`);
-  check(results, 'it carries the campaign, empire name, flag, start, score, conquests, continents, battles, streak and outcome', run.p_campaign === 'Europe' && run.p_empire_name === 'Empire of Germany' && run.p_flag_pattern === s.empire.flag.pattern && run.p_flag_colours.join() === s.empire.flag.colours.join() && run.p_start_country === 'DEU' && run.p_score === 0 && run.p_conquered === 0 && run.p_continents === 0 && run.p_battles === 1 && run.p_best_streak === s.bestStreak && run.p_outcome === 'defeat' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(run.p_run_id), JSON.stringify(run));
+  check(results, 'it carries the campaign, empire name, flag, start, score, conquests, continents, battles, streak and outcome', run.p_campaign === 'Europe' && run.p_empire_name === 'Germany Empire' && run.p_flag_pattern === s.empire.flag.pattern && run.p_flag_colours.join() === s.empire.flag.colours.join() && run.p_start_country === 'DEU' && run.p_score === 0 && run.p_conquered === 0 && run.p_continents === 0 && run.p_battles === 1 && run.p_best_streak === s.bestStreak && run.p_outcome === 'defeat' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(run.p_run_id), JSON.stringify(run));
   let rows = await endRows();
   check(results, 'the end screen shows the global top five for that campaign', /Global top 5\s+Europe/i.test((await endBoard.innerText()).replace(/\s+/g, ' ')) && rows.slice(0, 5).map((r) => r.name).join(' > ') === 'Fewer battles > More battles > Third > Fourth > Fifth' && rows.every((r) => r.flag), JSON.stringify(rows));
-  check(results, 'a run outside the top five is added below it, highlighted, with its rank', rows.length === 6 && rows[5].mine && rows[5].rank === '6' && rows[5].name === 'Empire of Germany' && rows.filter((r) => r.mine).length === 1 && /ranks #6/.test(await page.getByTestId('board-standing').innerText()), JSON.stringify(rows[5]) + ' ' + (await page.getByTestId('board-standing').innerText()));
+  check(results, 'a run outside the top five is added below it, highlighted, with its rank', rows.length === 6 && rows[5].mine && rows[5].rank === '6' && rows[5].name === 'Germany Empire' && rows.filter((r) => r.mine).length === 1 && /ranks #6/.test(await page.getByTestId('board-standing').innerText()), JSON.stringify(rows[5]) + ' ' + (await page.getByTestId('board-standing').innerText()));
   const endFit = await page.evaluate(() => { const end = document.querySelector('.end').getBoundingClientRect(); return [...document.querySelectorAll('.end-board, .end-board .board-row')].filter((el) => { const r = el.getBoundingClientRect(); return r.left < end.left || r.right > end.right || el.scrollWidth > el.clientWidth + 1; }).length; });
   check(results, 'end screen: the leaderboard fits inside the panel, and Play again is still there', endFit === 0 && (await misfits(page)).length === 0 && (await page.getByTestId('play-again').isVisible()), `${endFit} outside; ${(await misfits(page)).join(' ; ')}`);
   await page.screenshot({ path: SHOTS + '86-end-leaderboard.png' });

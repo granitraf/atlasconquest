@@ -429,14 +429,24 @@ the same.
   until that page is opened or a run ends.
 - **One row per run.** Each game gets a random id, kept beside the save. Looking at the end
   screen again after a refresh sends the same id, and the database keeps one row for it.
-- **Names** keep their 22-character limit and must pass a filter (`src/game/names.ts`) that
-  refuses slurs, racist and extremist terms (and the numbers 1488), sexual terms, swearing and
-  self-harm taunts. It reads a name the way a player meant it: numbers and symbols as letters
-  (n1gga, sh!t), letters spaced, dotted, stretched or starred out (N I G G A, niiigga, f*ck),
-  and look-alike letters from other alphabets (fцck). Terms that hide inside innocent words
-  are refused only as whole words, so Scunthorpe, Essex, Ashkenazi and Niger pass. A name that
-  fails is flagged as it is typed, and a run started under it is named after its home country
-  instead ("Empire of Germany"). The database applies the same filter again.
+- **Names** are checked by one pure function, `validateEmpireName` in
+  `src/names/validateEmpireName.ts`, which returns valid or invalid and a reason code
+  (`empty`, `invalid_characters`, `too_short`, `too_long`, `not_allowed`):
+  - Letters A to Z and single spaces only, 3 to 16 characters after trimming. Anything else
+    never reaches the field while typing; the hint under it reads "Letters only, 3 to 16
+    characters".
+  - Words on the allowlist (`src/names/allowed-names.json`: Essex, Scunthorpe, Pakistan,
+    Japan, spice, raccoon...) are taken out first, as whole words only.
+  - The rest is checked as typed, with the spaces removed, and with letters repeated three or
+    more times squeezed, against the obscenity library's English list and the custom
+    blocklist (`src/names/blocked-names.json`), whose terms are refused anywhere inside the
+    name.
+  - A name that fails shows "That name isn't allowed. Try another." (never the word) and
+    disables Begin conquest. An empty name is allowed: the empire is named after its home
+    country ("Empire of Japan", "Germany Empire", or "New Empire" where the country's name is
+    too long). A saved name that no longer passes becomes "New Empire".
+  - The database repeats the format rules and the custom lists (`npm run names` copies them
+    into `supabase/schema.sql`), but not the obscenity library.
 - **The database** is a Supabase project set up by `supabase/schema.sql`. Anyone may read
   the table; nobody may insert, update or delete rows directly. A run gets in only through
   the function `submit_run`, which refuses anything the game could not have produced: an

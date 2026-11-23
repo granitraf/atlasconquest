@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "verify": "node e2e/run.mjs",
     "derive": "node scripts/derive.mjs",
-    "logo": "node scripts/logo.mjs"
+    "logo": "node scripts/logo.mjs",
+    "names": "node scripts/names-sql.mjs"
   },
   "dependencies": {
     "@fontsource/press-start-2p": "^5.3.0",
@@ -21,6 +22,7 @@
     "d3-selection": "^3.0.1",
     "d3-transition": "^3.0.2",
     "d3-zoom": "^3.0.1",
+    "obscenity": "^0.4.6",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "topojson-client": "^3.1.0"

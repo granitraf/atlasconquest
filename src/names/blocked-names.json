@@ -1,0 +1,26 @@
+{
+  "about": "Terms no empire name may contain, checked on top of the obscenity library's English list. Lower-case letters only, no spaces: write \"white power\" as \"whitepower\". A term is refused anywhere inside a name, so a short one also refuses every innocent word that contains it; add those words to allowed-names.json. After editing, run `npm run names` and re-run supabase/schema.sql in the Supabase SQL editor so the leaderboard refuses the same terms.",
+  "blocked": [
+    "nigger", "nigga", "niggah", "nigguh", "niggaz", "niqqa", "niqqer", "nlgger", "nlgga", "niglet", "nignog", "negro",
+    "coon", "spic", "spick", "chink", "chinky", "chingchong", "gook", "kike", "kyke", "jewboy", "wetback", "beaner",
+    "paki", "jap", "wog", "golliwog", "gollywog", "raghead", "towelhead", "dothead", "cameljockey", "redskin",
+    "halfbreed", "zipperhead", "slanteye", "chinaman", "darkie", "darky", "sambo", "jigaboo", "porchmonkey",
+    "junglebunny", "pickaninny", "piccaninny", "kraut", "yid", "heeb", "dago", "wop", "squaw", "injun", "gyppo", "gypo",
+    "pikey", "honky", "whitey", "wigger", "coolie", "kaffir", "kafir", "boong",
+
+    "faggot", "fagot", "faggit", "fagget", "lesbo", "poofter", "shemale", "ladyboy", "battyboy", "battyman",
+    "sodomite", "tranny", "trannie",
+
+    "bitch", "biatch", "whore", "slut", "skank",
+
+    "retard", "spaz", "spastic", "mongoloid", "cripple",
+
+    "hitler", "himmler", "goebbels", "mengele", "nazi", "heil", "siegheil", "reich", "fuhrer", "swastika", "aryan",
+    "whitepower", "whitepride", "kkk", "kukluxklan", "isis", "taliban", "alqaeda", "alqaida", "jihad", "binladen",
+    "terrorist", "holocaust", "genocide",
+
+    "pedo", "paedo", "rapist", "molest", "incest",
+
+    "fuck", "cunt", "shit", "penis", "vagina", "dildo", "blowjob", "porn", "killyourself"
+  ]
+}

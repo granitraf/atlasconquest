@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { GameData } from '../data';
-import { EMPIRE_NAME_MAX, FLAG_COLOURS, FLAG_PATTERNS, cleanEmpireName, type Empire } from '../game/flag';
-import { nameAllowed } from '../game/names';
+import { FLAG_COLOURS, FLAG_PATTERNS, type Empire } from '../game/flag';
+import { EMPIRE_NAME_MAX, EMPIRE_NAME_MIN, typedName, validateEmpireName } from '../names/validateEmpireName';
 import { START_LABELS, START_TROOPS, soldiers, startDifficulty } from '../game/rules';
 import { sound } from '../sound';
 import { FlagIcon } from './FlagIcon';
@@ -48,6 +48,9 @@ export function StartScreen({ data, mode, selectedId, empire, onEmpire, onMode, 
     setFlag({ colours });
   };
   const world = data.worlds[mode];
+  // An empty name is fine (the empire is named after its home country); any other name must pass.
+  const nameCheck = validateEmpireName(empire.name);
+  const nameBlocks = !nameCheck.valid && nameCheck.reason !== 'empty';
   const listRef = useRef<HTMLUListElement>(null);
 
   const rows = useMemo(
@@ -118,15 +121,22 @@ export function StartScreen({ data, mode, selectedId, empire, onEmpire, onMode, 
               placeholder="Name your empire"
               value={empire.name}
               maxLength={EMPIRE_NAME_MAX}
-              onChange={(e) => onEmpire({ ...empire, name: e.target.value })}
+              // Anything but letters and single spaces never reaches the field.
+              onChange={(e) => onEmpire({ ...empire, name: typedName(e.target.value) })}
               aria-label="Empire name"
+              aria-describedby="empire-name-hint"
+              aria-invalid={nameBlocks}
               data-testid="empire-name"
               autoComplete="off"
               spellCheck={false}
             />
-            {!nameAllowed(cleanEmpireName(empire.name)) && (
-              <p className="name-warning" role="alert" data-testid="name-warning">
-                That name is not allowed. Your empire will be named after its home country.
+            {nameCheck.reason === 'not_allowed' ? (
+              <p id="empire-name-hint" className="name-hint bad" role="alert" data-testid="name-warning">
+                That name isn't allowed. Try another.
+              </p>
+            ) : (
+              <p id="empire-name-hint" className={`name-hint ${nameBlocks ? 'bad' : ''}`} data-testid="name-hint">
+                Letters only, {EMPIRE_NAME_MIN} to {EMPIRE_NAME_MAX} characters
               </p>
             )}
             <div className="flag-colours">
@@ -253,7 +263,7 @@ export function StartScreen({ data, mode, selectedId, empire, onEmpire, onMode, 
                   sound.zoom();
                   onSelect(country.id);
                 }}
-                onDoubleClick={() => onStart(country.id)}
+                onDoubleClick={() => !nameBlocks && onStart(country.id)}
                 data-id={country.id}
                 data-testid={`start-${country.id}`}
                 data-difficulty={difficulty.label}
@@ -291,9 +301,9 @@ export function StartScreen({ data, mode, selectedId, empire, onEmpire, onMode, 
         <button
           type="button"
           className="btn primary big"
-          disabled={!selected}
+          disabled={!selected || nameBlocks}
           onMouseEnter={() => sound.pulse()}
-          onClick={() => selected && onStart(selected.country.id)}
+          onClick={() => selected && !nameBlocks && onStart(selected.country.id)}
           data-testid="begin"
         >
           Begin conquest

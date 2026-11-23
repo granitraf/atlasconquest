@@ -2005,10 +2005,14 @@ p {
   font-size: 25px;
 }
 
-.name-warning {
-  color: var(--red);
-  font-size: 21px;
+.name-hint {
+  color: var(--muted);
+  font-size: 19px;
   line-height: 1.1;
+}
+
+.name-hint.bad {
+  color: var(--red);
 }
 
 /* The rule book takes the place of the map. */
