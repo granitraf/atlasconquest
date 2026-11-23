@@ -11,7 +11,7 @@
 --   * top_runs, which returns the best runs of a campaign in ranking order.
 --
 -- The numbers in here (countries per campaign, start multipliers, the flag palette, the name
--- rules, the name rules) mirror the game's own. tests/leaderboard.test.ts and tests/empireName.test.ts fail if they drift.
+-- rules) mirror the game's own. tests/leaderboard.test.ts and tests/empireName.test.ts fail if they drift.
 
 -- ------------------------------------------------------------------ the table
 
@@ -32,12 +32,13 @@ create table if not exists public.runs (
   created_at    timestamptz  not null default now()
 );
 
--- Empire names: letters and single spaces, 3 to 16 characters. (Replaced rather than declared in the
--- table, so running this file again updates a table made by an earlier version. Rows already stored
--- are left alone; the game hides any stored name that no longer passes.)
+-- Empire names: letters, apostrophes inside or at the end of a word, and single spaces, 3 to 24
+-- characters. (Replaced rather than declared in the table, so running this file again updates a table
+-- made by an earlier version. Rows already stored are left alone; the game hides any stored name that
+-- no longer passes.)
 alter table public.runs drop constraint if exists runs_empire_name_check;
 alter table public.runs add constraint runs_empire_name_check
-  check (char_length(empire_name) between 3 and 16 and empire_name ~ '^[A-Za-z]+( [A-Za-z]+)*$') not valid;
+  check (char_length(empire_name) between 3 and 24 and empire_name ~ '^[A-Za-z]+(''[A-Za-z]+)*''?( [A-Za-z]+(''[A-Za-z]+)*''?)*$') not valid;
 
 -- The ranking order: best score first, then fewer battles, then the earlier run.
 create index if not exists runs_ranking on public.runs (campaign, score desc, battles, created_at, run_id);
@@ -72,14 +73,14 @@ begin
   if p_name is null then
     return false;
   end if;
-  -- Letters and single spaces only, 3 to 16 characters.
-  v_typed := btrim(regexp_replace(p_name, '\s+', ' ', 'g'));
-  if v_typed !~ '^[A-Za-z]+( [A-Za-z]+)*$' or char_length(v_typed) not between 3 and 16 then
+  -- Letters, apostrophes inside or at the end of a word, and single spaces; 3 to 24 characters.
+  v_typed := btrim(regexp_replace(translate(p_name, '‘’', ''''''), '\s+', ' ', 'g'));
+  if v_typed !~ '^[A-Za-z]+(''[A-Za-z]+)*''?( [A-Za-z]+(''[A-Za-z]+)*''?)*$' or char_length(v_typed) not between 3 and 24 then
     return false;
   end if;
-  -- Allowlisted words out, then the name as typed, with the spaces taken out, and with letters
-  -- repeated three or more times squeezed to one and to two.
-  v_typed := btrim(regexp_replace(' ' || lower(v_typed) || ' ', ' (physiotherapist|psychotherapist|inconspicuous|perspicacious|princes town|conspicuous|hornswoggle|injunctions|montenegrin|pedagogical|princestown|retardation|ashkenazic|ashkenazim|auspicious|despicable|injunction|montenegro|retardants|sauerkraut|scunthorpe|sniggering|suspicions|suspicious|therapists|unmolested|ashkenazi|heilbronn|middlesex|naypyidaw|niggardly|pakistani|pedagogic|pedagogue|pedometer|penistone|retardant|squawking|suspicion|therapist|torpedoes|allspice|auspices|cockburn|cushitic|japanese|maryanne|niggling|pakistan|pedagogy|polliwog|pollywog|raccoons|shiitake|sniggers|twopence|twopenny|auspice|cocoons|cushite|maryann|negroni|niggard|raccoon|sheilas|snigger|squawks|torpedo|tycoons|yiddish|cocoon|crisis|dagoba|niggle|sheila|spiced|spices|spoofs|squawk|sussex|tycoon|wessex|aspic|essex|japan|spice|spicy|spoof|swops|swop)(?= )', ' ', 'g'));
+  -- Apostrophes ignored and allowlisted words out, then the name as typed, with the spaces taken out,
+  -- and with letters repeated three or more times squeezed to one and to two.
+  v_typed := btrim(regexp_replace(' ' || replace(lower(v_typed), '''', '') || ' ', ' (physiotherapist|psychotherapist|inconspicuous|perspicacious|princes town|conspicuous|hornswoggle|injunctions|montenegrin|pedagogical|princestown|retardation|ashkenazic|ashkenazim|auspicious|despicable|injunction|montenegro|retardants|sauerkraut|scunthorpe|sniggering|suspicions|suspicious|therapists|unmolested|ashkenazi|heilbronn|middlesex|naypyidaw|niggardly|pakistani|pedagogic|pedagogue|pedometer|penistone|retardant|squawking|suspicion|therapist|torpedoes|allspice|auspices|cockburn|cushitic|japanese|maryanne|niggling|pakistan|pedagogy|polliwog|pollywog|raccoons|shiitake|sniggers|twopence|twopenny|auspice|cocoons|cushite|maryann|negroni|niggard|raccoon|sheilas|snigger|squawks|torpedo|tycoons|yiddish|cocoon|crisis|dagoba|niggle|sheila|spiced|spices|spoofs|squawk|sussex|tycoon|wessex|aspic|essex|japan|spice|spicy|spoof|swops|swop)(?= )', ' ', 'g'));
   v_joined := replace(v_typed, ' ', '');
   return not (v_typed ~ '(killyourself|cameljockey|junglebunny|porchmonkey|chingchong|kukluxklan|piccaninny|pickaninny|whitepower|whitepride|zipperhead|halfbreed|holocaust|mongoloid|terrorist|towelhead|battyboy|battyman|binladen|chinaman|genocide|goebbels|golliwog|gollywog|siegheil|slanteye|sodomite|swastika|alqaeda|alqaida|blowjob|cripple|dothead|himmler|jigaboo|ladyboy|mengele|poofter|raghead|redskin|shemale|spastic|taliban|trannie|wetback|beaner|biatch|chinky|coolie|darkie|fagget|faggit|faggot|fuhrer|hitler|incest|jewboy|kaffir|molest|niggah|niggaz|nigger|nigguh|niglet|nignog|niqqer|nlgger|rapist|retard|tranny|vagina|whitey|wigger|aryan|bitch|boong|chink|darky|dildo|fagot|gyppo|honky|injun|jihad|kafir|kraut|lesbo|negro|nigga|niqqa|nlgga|paedo|penis|pikey|reich|sambo|skank|spick|squaw|whore|coon|cunt|dago|fuck|gook|gypo|heeb|heil|isis|kike|kyke|nazi|paki|pedo|porn|shit|slut|spaz|spic|jap|kkk|wog|wop|yid)'
     or v_joined ~ '(killyourself|cameljockey|junglebunny|porchmonkey|chingchong|kukluxklan|piccaninny|pickaninny|whitepower|whitepride|zipperhead|halfbreed|holocaust|mongoloid|terrorist|towelhead|battyboy|battyman|binladen|chinaman|genocide|goebbels|golliwog|gollywog|siegheil|slanteye|sodomite|swastika|alqaeda|alqaida|blowjob|cripple|dothead|himmler|jigaboo|ladyboy|mengele|poofter|raghead|redskin|shemale|spastic|taliban|trannie|wetback|beaner|biatch|chinky|coolie|darkie|fagget|faggit|faggot|fuhrer|hitler|incest|jewboy|kaffir|molest|niggah|niggaz|nigger|nigguh|niglet|nignog|niqqer|nlgger|rapist|retard|tranny|vagina|whitey|wigger|aryan|bitch|boong|chink|darky|dildo|fagot|gyppo|honky|injun|jihad|kafir|kraut|lesbo|negro|nigga|niqqa|nlgga|paedo|penis|pikey|reich|sambo|skank|spick|squaw|whore|coon|cunt|dago|fuck|gook|gypo|heeb|heil|isis|kike|kyke|nazi|paki|pedo|porn|shit|slut|spaz|spic|jap|kkk|wog|wop|yid)'
@@ -141,8 +142,8 @@ begin
     raise exception 'Unknown campaign.';
   end if;
 
-  -- The empire's name: letters and single spaces, 3 to 16 characters, and the name rules.
-  v_name := btrim(regexp_replace(p_empire_name, '\s+', ' ', 'g'));
+  -- The empire's name: letters, apostrophes and single spaces, 3 to 24 characters, and the name rules.
+  v_name := btrim(regexp_replace(translate(p_empire_name, '‘’', ''''''), '\s+', ' ', 'g'));
   if not public.atlas_name_allowed(v_name) then
     raise exception 'That empire name is not allowed.';
   end if;

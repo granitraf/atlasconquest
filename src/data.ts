@@ -1,5 +1,6 @@
 import type { Topology } from 'topojson-specification';
 import { DEFAULT_FLAG, sanitizeEmpire, type Empire } from './game/flag';
+import { NEW_EMPIRE } from './names/validateEmpireName';
 import { reviveGame } from './game/state';
 import { MODES, type Country, type Fact, type GameState, type ModeId } from './game/types';
 import { buildWorld, type World } from './game/world';
@@ -103,7 +104,9 @@ export function writeSave(state: GameState | null): void {
 export function loadEmpire(): Empire {
   try {
     const saved = sanitizeEmpire(JSON.parse(localStorage.getItem(EMPIRE_KEY) ?? 'null'));
-    if (saved) return saved;
+    // The name field starts empty rather than with a stand-in: a saved name that no longer passes comes back
+    // as "New Empire", and so does one an earlier version stored that way, and neither is the player's own.
+    if (saved) return { ...saved, name: saved.name === NEW_EMPIRE ? '' : saved.name };
   } catch {
     // Fall through to a fresh empire.
   }

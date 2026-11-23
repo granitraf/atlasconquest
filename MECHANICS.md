@@ -432,19 +432,21 @@ the same.
 - **Names** are checked by one pure function, `validateEmpireName` in
   `src/names/validateEmpireName.ts`, which returns valid or invalid and a reason code
   (`empty`, `invalid_characters`, `too_short`, `too_long`, `not_allowed`):
-  - Letters A to Z and single spaces only, 3 to 16 characters after trimming. Anything else
-    never reaches the field while typing; the hint under it reads "Letters only, 3 to 16
-    characters".
+  - Letters A to Z, apostrophes inside or at the end of a word (O'Brien, King's, Dragons')
+    and single spaces, 3 to 24 characters after trimming. A curly apostrophe (as phones type
+    it) becomes a straight one. Anything else never reaches the field while typing; the hint
+    under it reads "Letters and apostrophes, 3 to 24 characters".
   - Words on the allowlist (`src/names/allowed-names.json`: Essex, Scunthorpe, Pakistan,
     Japan, spice, raccoon...) are taken out first, as whole words only.
-  - The rest is checked as typed, with the spaces removed, and with letters repeated three or
+  - The rest is checked with apostrophes ignored (so N'igger is caught), as typed, with the
+    spaces removed, and with letters repeated three or
     more times squeezed, against the obscenity library's English list and the custom
     blocklist (`src/names/blocked-names.json`), whose terms are refused anywhere inside the
     name.
   - A name that fails shows "That name isn't allowed. Try another." (never the word) and
     disables Begin conquest. An empty name is allowed: the empire is named after its home
-    country ("Empire of Japan", "Germany Empire", or "New Empire" where the country's name is
-    too long). A saved name that no longer passes becomes "New Empire".
+    country ("Empire of Germany", or the country's own name, or "New Empire" where the country's
+    name is too long). A saved name that no longer passes becomes "New Empire".
   - The database repeats the format rules and the custom lists (`npm run names` copies them
     into `supabase/schema.sql`), but not the obscenity library.
 - **The database** is a Supabase project set up by `supabase/schema.sql`. Anyone may read

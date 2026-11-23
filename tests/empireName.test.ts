@@ -28,7 +28,7 @@ const NAMES = JSON.parse(readFileSync(new URL('./fixtures/empire-names.json', im
 const SLURS = Object.values(NAMES.slurs).flat();
 const reasonOf = (name: string) => validateEmpireName(name).reason;
 
-/** Every country, capital and city in the game, as a player could type it: letters only, 3 to 16 characters. */
+/** Every country, capital and city in the game, as a player could type it: letters and apostrophes, 3 to 24 characters. */
 const PLACES = [...new Set(ALL.flatMap((c) => [c.name, c.capital, ...(c.cities ?? [])]))]
   .filter(Boolean)
   .map((place) => place.normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z]+/g, ' ').replace(/\s+/g, ' ').trim())
@@ -45,11 +45,12 @@ describe('validateEmpireName: the format', () => {
     expect(reasonOf(42 as unknown as string)).toBe('invalid_characters');
   });
 
-  it('refuses names shorter than 3 or longer than 16 characters, and says which', () => {
+  it('refuses names shorter than 3 or longer than 24 characters, and says which', () => {
     for (const name of NAMES.tooShort) expect(reasonOf(name), name).toBe('too_short');
     for (const name of NAMES.tooLong) expect(reasonOf(name), name).toBe('too_long');
     expect(reasonOf('Abc')).toBe('ok');
-    expect(reasonOf('Abcdefghijklmnop')).toBe('ok');
+    expect(reasonOf('Abcdefghijklmnopqrstuvwx')).toBe('ok');
+    expect(reasonOf('Abcdefghijklmnopqrstuvwxy')).toBe('too_long');
     expect(reasonOf('   ')).toBe('empty');
   });
 
@@ -59,6 +60,9 @@ describe('validateEmpireName: the format', () => {
     expect(typedName(' Rome')).toBe('Rome');
     expect(typedName('New ')).toBe('New ');
     expect(typedName('Café 🦅 Royale')).toBe('Caf Royale');
+    expect(typedName('King’s Realm')).toBe("King's Realm");
+    expect(typedName("'Rome''s  Land")).toBe("Rome's Land");
+    expect(validateEmpireName('King’s Realm')).toEqual({ valid: true, reason: 'ok', name: "King's Realm" });
     expect(typedName('x'.repeat(40))).toHaveLength(EMPIRE_NAME_MAX);
   });
 });
@@ -99,8 +103,9 @@ describe('validateEmpireName: slurs and profanity', () => {
 describe('names the game makes or loads', () => {
   it('names an unnamed empire after its home country with a name that passes, for every country', () => {
     expect(defaultEmpireName('Japan')).toBe('Empire of Japan');
-    expect(defaultEmpireName('Germany')).toBe('Germany Empire');
-    expect(defaultEmpireName('Côte d’Ivoire')).toBe('Cote d Ivoire');
+    expect(defaultEmpireName('Germany')).toBe('Empire of Germany');
+    expect(defaultEmpireName('Côte d’Ivoire')).toBe("Empire of Cote d'Ivoire");
+    expect(defaultEmpireName('Bosnia and Herzegovina')).toBe('Bosnia and Herzegovina');
     expect(defaultEmpireName('Saint Vincent and the Grenadines')).toBe(NEW_EMPIRE);
     for (const c of ALL) expect(validateEmpireName(defaultEmpireName(c.name)).valid, c.name).toBe(true);
   });
@@ -109,7 +114,8 @@ describe('names the game makes or loads', () => {
     expect(savedEmpireName('Granit Empire')).toBe('Granit Empire');
     expect(savedEmpireName(' New   Rome ')).toBe('New Rome');
     expect(savedEmpireName('')).toBe('');
-    for (const name of ['Empire of Germany', 'Sh1t Kingdom', 'Nazi Empire', 'Ro']) expect(savedEmpireName(name), name).toBe(NEW_EMPIRE);
+    expect(savedEmpireName('Empire of Germany')).toBe('Empire of Germany');
+    for (const name of ['The Greatest Empire Ever Built', 'Sh1t Kingdom', 'Nazi Empire', 'Ro']) expect(savedEmpireName(name), name).toBe(NEW_EMPIRE);
     expect(validateEmpireName(NEW_EMPIRE).valid).toBe(true);
   });
 });
@@ -145,8 +151,8 @@ describe('the database applies the same name rules', () => {
   it('refuses a run under a name that fails, and stores one that passes', async () => {
     const submit = (name: string) =>
       db.query("select public.submit_run('00000000-0000-4000-8000-000000000001', 'Europe', $1, 0, array['#d8343c','#f4f4ec','#2b4fc4'], 'DEU', 0, 0, 0, 1, 0, 'defeat') as rank", [name]);
-    for (const name of ['N I G G A', 'Kikeland', 'N1gga', 'Ro', 'Seventeen Letters']) await expect(submit(name), name).rejects.toThrow('That empire name is not allowed.');
-    expect((await submit('  Essex   Rising ')).rows).toEqual([{ rank: 1 }]);
-    expect((await db.query('select empire_name from public.runs')).rows).toEqual([{ empire_name: 'Essex Rising' }]);
+    for (const name of ['N I G G A', 'Kikeland', "N'igger Land", 'N1gga', 'Ro', 'The Greatest Empire Ever Built', "'Tis Rome"]) await expect(submit(name), name).rejects.toThrow('That empire name is not allowed.');
+    expect((await submit('  King’s   Realm ')).rows).toEqual([{ rank: 1 }]);
+    expect((await db.query('select empire_name from public.runs')).rows).toEqual([{ empire_name: "King's Realm" }]);
   });
 });

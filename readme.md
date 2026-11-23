@@ -60,7 +60,7 @@ is shipped to every player. The public key is meant to be public; the database i
 
 **What the database allows.** Anyone may read the leaderboard. Nobody may insert, update or delete rows
 directly. A run is recorded only through the function `submit_run`, which checks the campaign, the name
-(letters and single spaces, 3 to 16 characters, and the custom blocklist and allowlist), the flag (one of the game's patterns and palette colours), that the
+(letters, apostrophes and single spaces, 3 to 24 characters, and the custom blocklist and allowlist), the flag (one of the game's patterns and palette colours), that the
 score is one the game can produce for that campaign, that a victory really is every country, and that
 there are at least as many battles as conquests. It keeps one row per run id and stamps the time itself.
 

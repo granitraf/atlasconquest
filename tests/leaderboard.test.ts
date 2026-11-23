@@ -42,7 +42,7 @@ describe('supabase/schema.sql mirrors the game', () => {
 
   it('applies the same name rules: the length limit and the same filter, word for word', () => {
     expect(SQL).toContain(`char_length(v_typed) not between 3 and ${EMPIRE_NAME_MAX}`);
-    expect(SQL).toContain(`check (char_length(empire_name) between 3 and ${EMPIRE_NAME_MAX} and empire_name ~ '^[A-Za-z]+( [A-Za-z]+)*$')`);
+    expect(SQL).toContain(`check (char_length(empire_name) between 3 and ${EMPIRE_NAME_MAX} and empire_name ~ '^[A-Za-z]+(''[A-Za-z]+)*''?( [A-Za-z]+(''[A-Za-z]+)*''?)*$')`);
     for (const part of [ALLOWED_PATTERN, BLOCKED_PATTERN]) expect(SQL).toContain(`'${part}'`);
   });
 
@@ -59,8 +59,8 @@ describe('supabase/schema.sql mirrors the game', () => {
   });
 });
 
-const run: RunRecord = { runId: '1b663b9a-0bcf-461d-bbc7-7dde5db0f976', campaign: 'Europe', empireName: 'Germany Empire', flag: DEFAULT_FLAG, startCountry: 'DEU', score: 37.5, conquered: 15, continents: 0, battles: 19, bestStreak: 11, outcome: 'defeat' };
-const stored = { rank: 2, run_id: run.runId, campaign: 'Europe', empire_name: 'Germany Empire', flag_pattern: 4, flag_colours: ['#d8343c', '#f4f4ec', '#2b4fc4'], start_country: 'DEU', score: 37.5, conquered: 15, continents: 0, battles: 19, best_streak: 11, outcome: 'defeat', created_at: '2026-01-01T00:00:00Z' };
+const run: RunRecord = { runId: '1b663b9a-0bcf-461d-bbc7-7dde5db0f976', campaign: 'Europe', empireName: 'Empire of Germany', flag: DEFAULT_FLAG, startCountry: 'DEU', score: 37.5, conquered: 15, continents: 0, battles: 19, bestStreak: 11, outcome: 'defeat' };
+const stored = { rank: 2, run_id: run.runId, campaign: 'Europe', empire_name: 'Empire of Germany', flag_pattern: 4, flag_colours: ['#d8343c', '#f4f4ec', '#2b4fc4'], start_country: 'DEU', score: 37.5, conquered: 15, continents: 0, battles: 19, best_streak: 11, outcome: 'defeat', created_at: '2026-01-01T00:00:00Z' };
 const answer = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 const configure = () => {
   vi.stubEnv('VITE_SUPABASE_URL', 'https://example.supabase.co/');
@@ -108,7 +108,7 @@ describe('the leaderboard client', () => {
     expect(init.method).toBe('POST');
     expect(init.headers).toMatchObject({ apikey: 'public-key', Authorization: 'Bearer public-key' });
     expect(JSON.parse(init.body)).toEqual({
-      p_run_id: run.runId, p_campaign: 'Europe', p_empire_name: 'Germany Empire', p_flag_pattern: 0, p_flag_colours: DEFAULT_FLAG.colours,
+      p_run_id: run.runId, p_campaign: 'Europe', p_empire_name: 'Empire of Germany', p_flag_pattern: 0, p_flag_colours: DEFAULT_FLAG.colours,
       p_start_country: 'DEU', p_score: 37.5, p_conquered: 15, p_continents: 0, p_battles: 19, p_best_streak: 11, p_outcome: 'defeat',
     });
     // The same run asked about again is not sent twice.
@@ -162,9 +162,9 @@ describe('the leaderboard client', () => {
 
   it('turns a finished game into a run with no personal data in it', () => {
     const world = buildWorld(ALL, 'Europe');
-    const game = { ...createGame(world, 'DEU', 7, { name: 'Germany Empire', flag: DEFAULT_FLAG }), phase: 'gameover' as const, owned: ['DEU', 'LUX', 'BEL'], battles: 4, bestStreak: 6 };
+    const game = { ...createGame(world, 'DEU', 7, { name: 'Empire of Germany', flag: DEFAULT_FLAG }), phase: 'gameover' as const, owned: ['DEU', 'LUX', 'BEL'], battles: 4, bestStreak: 6 };
     const record = runRecord(game, gameStats(world, game), 'some-id');
-    expect(record).toEqual({ runId: 'some-id', campaign: 'Europe', empireName: 'Germany Empire', flag: DEFAULT_FLAG, startCountry: 'DEU', score: 2 * game.multiplier, conquered: 2, continents: 0, battles: 4, bestStreak: 6, outcome: 'defeat' });
+    expect(record).toEqual({ runId: 'some-id', campaign: 'Europe', empireName: 'Empire of Germany', flag: DEFAULT_FLAG, startCountry: 'DEU', score: 2 * game.multiplier, conquered: 2, continents: 0, battles: 4, bestStreak: 6, outcome: 'defeat' });
     expect(runRecord({ ...game, phase: 'victory' }, gameStats(world, game), 'x').outcome).toBe('victory');
     expect(Object.keys(record).sort()).toEqual(['battles', 'bestStreak', 'campaign', 'conquered', 'continents', 'empireName', 'flag', 'outcome', 'runId', 'score', 'startCountry']);
   });

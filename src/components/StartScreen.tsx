@@ -121,7 +121,7 @@ export function StartScreen({ data, mode, selectedId, empire, onEmpire, onMode, 
               placeholder="Name your empire"
               value={empire.name}
               maxLength={EMPIRE_NAME_MAX}
-              // Anything but letters and single spaces never reaches the field.
+              // Anything but letters, apostrophes and single spaces never reaches the field.
               onChange={(e) => onEmpire({ ...empire, name: typedName(e.target.value) })}
               aria-label="Empire name"
               aria-describedby="empire-name-hint"
@@ -136,7 +136,7 @@ export function StartScreen({ data, mode, selectedId, empire, onEmpire, onMode, 
               </p>
             ) : (
               <p id="empire-name-hint" className={`name-hint ${nameBlocks ? 'bad' : ''}`} data-testid="name-hint">
-                Letters only, {EMPIRE_NAME_MIN} to {EMPIRE_NAME_MAX} characters
+                Letters and apostrophes, {EMPIRE_NAME_MIN} to {EMPIRE_NAME_MAX} characters
               </p>
             )}
             <div className="flag-colours">
