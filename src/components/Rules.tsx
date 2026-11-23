@@ -197,6 +197,9 @@ export function Rules({ data, onClose }: Props) {
           <p className="rule-formula">
             Score = countries conquered <em>×</em> your start's multiplier <em>+</em> {CONTINENT_BONUS} for every continent you hold in full
           </p>
+          <p className="rule-note">
+            Every finished run goes on the global leaderboard under your empire's name and flag: the top five of each campaign.
+          </p>
         </article>
 
         <article className="rule" data-rule="campaigns">
@@ -370,6 +373,10 @@ export function Rules({ data, onClose }: Props) {
               {MIN_TARGETS} countries to attack.
             </li>
             <li>Every battle opens with the country's flag, then the questions get harder.</li>
+            <li>
+              Anything about the country can come up: its capital, borders and seas, and also its national sport, its biggest export, its
+              famous people and the year it gained independence.
+            </li>
             <li className="good">
               Right answer: <b>−{soldiers(defenderKills('easy'))} enemies killed</b> (a Hard question: −{soldiers(defenderKills('hard'))}).
             </li>

@@ -1967,29 +1967,48 @@ p {
 
 /* ---------------------------------------------------------------- rules */
 
-/* The button that opens the rule book: centred above the map on the start screen. */
-.rules-toggle {
+/* The buttons above the map on the start screen. The box is exactly as wide as the Rules button,
+   so that button is centred over the map; Leaderboard hangs off its right-hand side. */
+.map-buttons {
   position: absolute;
   top: calc(10px + env(safe-area-inset-top));
   left: 50%;
   z-index: 32;
-  min-width: 132px;
+  display: flex;
+  gap: 10px;
   transform: translateX(-50%);
+}
+
+.rules-toggle {
+  min-width: 132px;
   white-space: nowrap;
 }
 
-.rules-toggle:active:not(:disabled) {
-  transform: translateX(-50%) translateY(1px);
+.leaderboard-toggle {
+  position: absolute;
+  top: 0;
+  left: calc(100% + 10px);
+  white-space: nowrap;
 }
 
-/* The same door from inside the start panel, for screens where that panel covers the map. */
-.rules-open {
+/* The same doors from inside the start panel, for screens where that panel covers the map. */
+.start-doors {
   display: none;
-  align-self: flex-start;
-  min-height: 34px;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-top: 6px;
+}
+
+.rules-open {
+  min-height: 34px;
   padding: 2px 16px;
   font-size: 25px;
+}
+
+.name-warning {
+  color: var(--red);
+  font-size: 21px;
+  line-height: 1.1;
 }
 
 /* The rule book takes the place of the map. */
@@ -2437,6 +2456,190 @@ p {
   text-transform: uppercase;
 }
 
+/* ---------------------------------------------------------- leaderboard */
+
+/* Runs of one campaign, best first: place, flag, empire, score. */
+.board-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.board-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 2px solid var(--line-soft);
+  border-radius: 2px;
+  background: var(--panel-inset);
+  color: var(--text);
+  text-align: left;
+}
+
+/* The player's own run, picked out in gold. */
+.board-row.mine {
+  border-color: var(--gold);
+  background: #3a2a0c;
+}
+
+.board-rank {
+  flex: none;
+  min-width: 34px;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 13px;
+  text-align: center;
+}
+
+.board-row[data-rank='1'] .board-rank {
+  color: var(--gold);
+}
+
+.board-row .empire-flag {
+  flex: none;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.board-who {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.board-name,
+.board-detail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.board-name {
+  font-size: 27px;
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+.board-detail {
+  color: var(--muted);
+  font-size: 21px;
+  line-height: 1.1;
+}
+
+.board-detail .inline-flag {
+  height: 14px;
+  vertical-align: -2px;
+}
+
+.board-score {
+  flex: none;
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 15px;
+}
+
+.board-note {
+  color: var(--muted) !important;
+  font-size: 23px;
+}
+
+.board-gap {
+  color: var(--muted);
+  font-size: 21px;
+  line-height: 0.6;
+  text-align: center;
+}
+
+/* The campaign's top five on the end screen. */
+.end-board {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 2px;
+  background: rgba(23, 14, 7, 0.6);
+}
+
+.end-board h2 {
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 13px;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.end-board h2 span {
+  color: var(--muted);
+}
+
+/* With room to spare the top five stands beside the reckoning, so Play again stays in view. */
+@media (min-width: 1000px) {
+  .end {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    column-gap: 20px;
+    width: min(940px, 100%);
+  }
+
+  .end > * {
+    grid-column: 1;
+  }
+
+  .end > .end-board {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+  }
+
+  .end > .btn {
+    grid-column: 1 / -1;
+  }
+}
+
+/* The hall of empires, which borrows the rule book's page. */
+.board-card h2 {
+  justify-content: space-between;
+}
+
+.board-card h2 small {
+  flex: none;
+  white-space: nowrap;
+  color: var(--muted);
+  font-family: var(--font);
+  font-size: 23px;
+  font-weight: 400;
+  text-transform: none;
+}
+
+.board-message {
+  align-items: center;
+  text-align: center;
+}
+
+/* On a phone a long empire name takes a second line rather than being cut short. */
+@media (max-width: 560px) {
+  .board-row {
+    gap: 8px;
+    padding: 6px 8px;
+  }
+
+  .board-rank {
+    min-width: 22px;
+  }
+
+  .board-name,
+  .board-detail {
+    overflow: visible;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+}
+
 /* ----------------------------------------------------------- responsive */
 
 /* Wide screens: the start panel sits beside the map rather than on top of it. */
@@ -2450,19 +2653,33 @@ p {
     left: 440px;
   }
 
-  .rules-toggle {
+  .map-buttons {
     left: calc(50% + 220px);
+  }
+}
+
+/* A narrow map leaves no room to the right of a centred Rules button: the two share the centre instead. */
+@media (min-width: 900px) and (max-width: 1099px) {
+  .leaderboard-toggle {
+    position: static;
   }
 }
 
 @media (max-width: 899px) {
   /* The start panel covers the map here, so the way in to the rules is the button in its header. */
-  .rules-open {
-    display: block;
+  .start-doors {
+    display: flex;
   }
 
-  .app:not(.showing-rules) .rules-toggle {
+  /* Only the way back is shown above an open page. */
+  .app:not(.showing-rules):not(.showing-leaderboard) .map-buttons,
+  .app.showing-rules .leaderboard-toggle,
+  .app.showing-leaderboard .rules-toggle {
     display: none;
+  }
+
+  .leaderboard-toggle {
+    position: static;
   }
 
   .rules-page {

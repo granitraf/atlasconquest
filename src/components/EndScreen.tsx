@@ -2,20 +2,24 @@ import { flagUrl } from '../data';
 import { CONTINENT_BONUS } from '../game/rules';
 import type { GameStats } from '../game/state';
 import type { Country, GameState } from '../game/types';
+import { formatScore, type RunRecord } from '../leaderboard';
 import { FlagIcon } from './FlagIcon';
+import { RunBoard } from './Leaderboard';
 
 interface Props {
   state: GameState;
   stats: GameStats;
   start: Country;
+  /** This run as the leaderboard records it. */
+  run: RunRecord;
+  byId: Record<string, Country>;
   onPlayAgain: () => void;
 }
 
-const formatScore = (score: number) => (Number.isInteger(score) ? String(score) : score.toFixed(1));
 const plural = (n: number, word: string, many = `${word}s`) => `${n} ${n === 1 ? word : many}`;
 
 /** The reckoning: your empire, how much it took, and what that was worth. */
-export function EndScreen({ state, stats, start, onPlayAgain }: Props) {
+export function EndScreen({ state, stats, start, run, byId, onPlayAgain }: Props) {
   const won = state.phase === 'victory';
   const landScore = stats.score - stats.continentBonus;
   return (
@@ -79,6 +83,7 @@ export function EndScreen({ state, stats, start, onPlayAgain }: Props) {
             </p>
           </div>
         </dl>
+        <RunBoard run={run} byId={byId} />
         <button type="button" className="btn primary big" onClick={onPlayAgain} data-testid="play-again" autoFocus>
           Play again
         </button>

@@ -21,7 +21,10 @@ async function noOverflow(page, label) {
 }
 
 async function phone(viewport, tag) {
-  const { browser, context, page, problems } = await launch({ viewport, touch: true, mobile: true, dpr: 2 });
+  const { browser, context, page, problems, board } = await launch({ viewport, touch: true, mobile: true, dpr: 2 });
+  // Runs already on the leaderboard, one of them under the longest name the game allows.
+  for (const [name, score] of [['Holy Empire of Liechten', 687], ['Bravo', 36.5], ['Charlie', 30], ['Delta', 24], ['Echo', 12]]) board.add('World', name.slice(0, 22), score);
+  board.add('Europe', 'Solo', 3);
   await open(page);
   await noOverflow(page, `${tag} start screen`);
   const begin = await page.getByTestId('begin').boundingBox();
@@ -50,6 +53,21 @@ async function phone(viewport, tag) {
   check(results, `${tag}: the rules end with the credit`, /Created by Granit Raf/i.test(await page.getByTestId('rules-credit').innerText()) && (await page.getByTestId('rules-credit').isVisible()));
   await page.getByTestId('rules-toggle').tap();
   check(results, `${tag}: Back to the map returns to the menu`, (await page.getByTestId('rules').count()) === 0 && (await page.getByTestId('begin').isVisible()));
+  // The leaderboard opens the same way, from a button beside Rules in the menu header.
+  const doors = await page.evaluate(() => { const a = document.querySelector('[data-testid="rules-open"]').getBoundingClientRect(); const b = document.querySelector('[data-testid="leaderboard-open"]').getBoundingClientRect(); return { rightOf: b.left >= a.right, sameLine: Math.abs(a.top - b.top) < 2, onScreen: b.right <= innerWidth }; });
+  check(results, `${tag}: a Leaderboard button sits to the right of Rules in the menu header`, (await page.getByTestId('leaderboard-open').isVisible()) && doors.rightOf && doors.sameLine && doors.onScreen && !(await page.getByTestId('leaderboard-toggle').isVisible()), JSON.stringify(doors));
+  await page.getByTestId('leaderboard-open').tap();
+  await page.locator('[data-testid="leaderboard"][data-status="ready"]').waitFor();
+  const hall = await page.evaluate(() => {
+    const el = document.querySelector('.leaderboard');
+    const r = el.getBoundingClientRect();
+    const back = document.querySelector('[data-testid="leaderboard-toggle"]').getBoundingClientRect();
+    return { full: r.left === 0 && r.top === 0 && r.right === innerWidth && r.bottom === innerHeight, sideways: el.scrollWidth > el.clientWidth + 1, wide: [...el.querySelectorAll('.board-row, .board-card, .board-card h2, .rules-hero')].filter((x) => x.scrollWidth > x.clientWidth + 1).map((x) => x.className), cards: el.querySelectorAll('.board-card').length, rows: el.querySelectorAll('.board-row').length, back: back.left >= 0 && back.right <= innerWidth && back.top >= 0, rulesButtonHidden: getComputedStyle(document.querySelector('[data-testid="rules-toggle"]')).display === 'none' };
+  });
+  check(results, `${tag}: the leaderboard fills the screen, nothing in it is too wide, and the way back is on screen`, hall.full && !hall.sideways && hall.wide.length === 0 && hall.cards === 7 && hall.rows === 6 && hall.back && hall.rulesButtonHidden, JSON.stringify(hall));
+  await page.screenshot({ path: SHOTS + `61-${tag}-leaderboard.png` });
+  await page.getByTestId('leaderboard-toggle').tap();
+  check(results, `${tag}: Back to the map returns from the leaderboard to the menu`, (await page.getByTestId('leaderboard').count()) === 0 && (await page.getByTestId('begin').isVisible()));
   await page.getByTestId('search').fill('germ');
   await page.getByTestId('start-DEU').tap();
   await page.getByTestId('begin').tap();

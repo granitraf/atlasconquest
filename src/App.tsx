@@ -3,11 +3,14 @@ import { AttackPanel } from './components/AttackPanel';
 import { EndScreen } from './components/EndScreen';
 import { AnswerFlash, BattleProgress, Toast, TopBar, TugOfWar, type ToastMessage } from './components/Hud';
 import { QuestionCard } from './components/QuestionCard';
+import { Leaderboard } from './components/Leaderboard';
 import { Rules } from './components/Rules';
 import { StartScreen } from './components/StartScreen';
 import { WorldMap, type CountryStatus, type FocusRequest, type MapPadding, type TooltipInfo, type TooltipPart } from './components/WorldMap';
-import { loadEmpire, loadGameData, loadSave, saveEmpire, writeSave, type GameData } from './data';
+import { loadEmpire, loadGameData, loadSave, runIdFor, saveEmpire, writeSave, type GameData } from './data';
 import { cleanEmpireName, defaultEmpireName, type Empire } from './game/flag';
+import { nameAllowed } from './game/names';
+import { runRecord } from './leaderboard';
 import { CONTINENT_BONUS, SEA_TIMER_SECONDS, canRetreat, conquestTroops, escalation, getTargets, lanesNeeded, retreatCost, soldiers, startDifficulty } from './game/rules';
 import { sound, soundLog } from './sound';
 import { createGame, gameStats, reduce, targetStrength, type Action } from './game/state';
@@ -78,9 +81,9 @@ function Game({ data }: { data: GameData }) {
   const [startId, setStartId] = useState<string | null>(null);
   const [empire, setEmpire] = useState<Empire>(loadEmpire);
   useEffect(() => saveEmpire(empire), [empire]);
-  /** The rule book, which takes the place of the map on the start screen. */
-  const [rulesOpen, setRulesOpen] = useState(false);
-  const closeRules = useCallback(() => setRulesOpen(false), []);
+  /** The rule book or the leaderboard, either of which takes the place of the map on the start screen. */
+  const [panel, setPanel] = useState<'rules' | 'leaderboard' | null>(null);
+  const closePanel = useCallback(() => setPanel(null), []);
   const [targetId, setTargetId] = useState<string | null>(null);
   /** Set when a target is chosen from the list, so the camera goes and finds it. */
   const [targetFocus, setTargetFocus] = useState<string | null>(null);
@@ -269,11 +272,12 @@ function Game({ data }: { data: GameData }) {
     seenSeq.current = 0;
     // The siege begins.
     sound.siege();
-    setRulesOpen(false);
+    setPanel(null);
     setTargetId(null);
     setTargetFocus(null);
-    // An empire left unnamed is named after its home country.
-    const name = cleanEmpireName(empire.name) || defaultEmpireName(byId[id].name);
+    // An empire left unnamed is named after its home country, and so is one whose name the leaderboard would refuse.
+    const typed = cleanEmpireName(empire.name);
+    const name = typed && nameAllowed(typed) ? typed : defaultEmpireName(byId[id].name);
     setGame(createGame(data.worlds[mode], id, seed, { name, flag: empire.flag }));
   };
 
@@ -361,9 +365,14 @@ function Game({ data }: { data: GameData }) {
 
   const answerSeq = game ? game.answersCorrect + game.answersWrong : 0;
   const ended = phase === 'gameover' || phase === 'victory';
+  // The finished run as the leaderboard records it. Its id is made once and kept beside the save.
+  const run = useMemo(
+    () => (game && ended ? runRecord(game, gameStats(world, game), runIdFor(game.seed)) : null),
+    [game, ended, world],
+  );
 
   return (
-    <div className={`app ${game ? `phase-${game.phase}` : 'phase-start'} ${!game && rulesOpen ? 'showing-rules' : ''}`} data-terrain={data.terrainKind}>
+    <div className={`app ${game ? `phase-${game.phase}` : 'phase-start'} ${!game && panel ? `showing-${panel}` : ''}`} data-terrain={data.terrainKind}>
       <WorldMap
         geometry={geometry}
         terrainUrl={data.terrainUrl}
@@ -382,21 +391,38 @@ function Game({ data }: { data: GameData }) {
         onCountryHover={onCountryHover}
       />
 
-      {!game && rulesOpen && <Rules data={data} onClose={closeRules} />}
+      {!game && panel === 'rules' && <Rules data={data} onClose={closePanel} />}
+      {!game && panel === 'leaderboard' && <Leaderboard data={data} onClose={closePanel} />}
       {!game && (
-        <button
-          type="button"
-          className="btn primary rules-toggle"
-          onMouseEnter={() => sound.pulse()}
-          onClick={() => {
-            sound.snap();
-            setRulesOpen((open) => !open);
-          }}
-          aria-expanded={rulesOpen}
-          data-testid="rules-toggle"
-        >
-          {rulesOpen ? 'Back to the map' : 'Rules'}
-        </button>
+        // Rules stays centred above the map; Leaderboard sits to its right.
+        <div className="map-buttons">
+          <button
+            type="button"
+            className="btn primary rules-toggle"
+            onMouseEnter={() => sound.pulse()}
+            onClick={() => {
+              sound.snap();
+              setPanel((open) => (open === 'rules' ? null : 'rules'));
+            }}
+            aria-expanded={panel === 'rules'}
+            data-testid="rules-toggle"
+          >
+            {panel === 'rules' ? 'Back to the map' : 'Rules'}
+          </button>
+          <button
+            type="button"
+            className="btn primary leaderboard-toggle"
+            onMouseEnter={() => sound.pulse()}
+            onClick={() => {
+              sound.snap();
+              setPanel((open) => (open === 'leaderboard' ? null : 'leaderboard'));
+            }}
+            aria-expanded={panel === 'leaderboard'}
+            data-testid="leaderboard-toggle"
+          >
+            {panel === 'leaderboard' ? 'Back to the map' : 'Leaderboard'}
+          </button>
+        </div>
       )}
       {!game && (
         <StartScreen
@@ -408,7 +434,8 @@ function Game({ data }: { data: GameData }) {
           onMode={changeMode}
           onSelect={setStartId}
           onStart={startGame}
-          onRules={() => setRulesOpen(true)}
+          onRules={() => setPanel('rules')}
+          onLeaderboard={() => setPanel('leaderboard')}
         />
       )}
 
@@ -500,8 +527,8 @@ function Game({ data }: { data: GameData }) {
             </div>
           )}
 
-          {ended && (
-            <EndScreen state={game} stats={gameStats(world, game)} start={byId[game.startId]} onPlayAgain={quit} />
+          {ended && run && (
+            <EndScreen state={game} stats={gameStats(world, game)} start={byId[game.startId]} run={run} byId={byId} onPlayAgain={quit} />
           )}
         </>
       )}

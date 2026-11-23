@@ -22,6 +22,8 @@ export interface Country {
   name: string;
   officialName: string;
   capital: string;
+  /** The year the country gained independence, with other significant years to steer clear of. Null if it has no clear date. */
+  independence: { year: number; also: number[] } | null;
   /** Well-known cities other than the capital: the tempting wrong answers to "what is the capital?". */
   cities: string[];
   /** Ids of the countries whose flags look most like this one's, most alike first. */
@@ -89,6 +91,8 @@ export interface Fact {
   sharedWith?: string[];
   /** Answers in the same group are too close to offer against each other. */
   group?: string;
+  /** Answers never offered as wrong options for this fact, because they are also arguably true. */
+  avoid?: string[];
   /** Worth double-checking. */
   unsure?: boolean;
 }
@@ -107,6 +111,10 @@ export type QuestionType =
   | 'feature'
   | 'lines'
   | 'fact'
+  | 'sport'
+  | 'export'
+  | 'person'
+  | 'independence'
   | 'population'
   | 'area'
   | 'notBorder';

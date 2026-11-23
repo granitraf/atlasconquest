@@ -1,13 +1,21 @@
-// Production build smoke test: the dev hook is not shipped, so this plays by the DOM alone,
-// with every request to another origin blocked to prove the game needs no live API.
-import { launch, check, BASE, SHOTS } from './lib.mjs';
+// Production build smoke test: the dev hook is not shipped, so this plays by the DOM alone.
+// The game may talk to one other place, the leaderboard's Supabase project, and nowhere else: every
+// other request to another origin is blocked and counted, to prove the game needs no live API.
+import { launch, check, BASE, SHOTS, SUPABASE_URL } from './lib.mjs';
 const results = [];
-const { browser, page, problems } = await launch();
+const { browser, page, problems, board } = await launch();
 const external = [];
-// Block every request that is not to this origin: the game must not need the network.
+const toLeaderboard = [];
+board.add('World', 'Alpha', 40);
+board.add('World', 'Bravo', 36);
 await page.route('**/*', (route) => {
   const url = route.request().url();
   if (url.startsWith(BASE) || url.startsWith('data:')) return route.continue();
+  if (url.startsWith(`${SUPABASE_URL}/`)) {
+    // Allowed out. (Here the stand-in leaderboard answers, so nothing really leaves the machine.)
+    toLeaderboard.push(url);
+    return route.fallback();
+  }
   external.push(url);
   return route.abort();
 });
@@ -29,6 +37,14 @@ const flags = await page.evaluate(async () => {
 });
 check(results, 'all 460 flag images (230 countries, 2 sizes) load, none broken', flags.total === 460 && flags.broken.length === 0, JSON.stringify(flags.broken.slice(0, 5)));
 check(results, 'the empire designer is present', (await page.locator('.flag-presets .preset').count()) === 16);
+check(results, 'loading the game sends nothing to the leaderboard', toLeaderboard.length === 0 && board.requests.length === 0);
+// The leaderboard works in the production build, against the project the build was configured with.
+await page.getByTestId('leaderboard-toggle').click();
+await page.locator('[data-testid="leaderboard"][data-status="ready"]').waitFor();
+const leaders = await page.getByTestId('board-World').locator('.board-name').allInnerTexts();
+check(results, 'the Leaderboard opens and lists the top runs', leaders.join() === 'Alpha,Bravo' && (await page.getByTestId('leaderboard').locator('.board-card').count()) === 7, leaders.join());
+check(results, 'only the public key is sent: no service key is in the build', board.requests.every((r) => r.headers.apikey === 'test-public-key' && r.headers.authorization === 'Bearer test-public-key') && !/service_role/.test(await page.evaluate(async () => (await Promise.all([...document.scripts].filter((s) => s.src).map(async (s) => (await fetch(s.src)).text()))).join(''))));
+await page.getByTestId('leaderboard-close').click();
 await page.getByTestId('search').fill('germany');
 await page.getByTestId('start-DEU').click();
 await page.getByTestId('begin').click();
@@ -60,7 +76,7 @@ await page.getByTestId('question-card').waitFor();
 check(results, 'refresh resumes from localStorage', (await page.evaluate(() => localStorage.getItem('atlas-conquest:save:v1'))) === saved && (await page.getByTestId('battle-defenders').count()) === 1);
 const broken = await page.evaluate(() => [...document.images].filter((i) => i.complete && i.naturalWidth === 0).length);
 check(results, 'no broken images in game', broken === 0);
-check(results, 'no request left this origin', external.length === 0, external.join(', '));
+check(results, 'the only requests to leave this origin went to the leaderboard project', external.length === 0 && toLeaderboard.length > 0 && toLeaderboard.every((url) => url.startsWith(`${SUPABASE_URL}/rest/v1/rpc/`)), `elsewhere: ${external.join(', ') || 'none'}; leaderboard: ${[...new Set(toLeaderboard)].join(', ')}`);
 check(results, 'no console errors or failed requests', problems.length === 0, problems.slice(0, 4).join(' ; '));
 await page.screenshot({ path: SHOTS + '80-production.png' });
 await browser.close();

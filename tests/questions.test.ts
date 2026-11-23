@@ -4,6 +4,14 @@ import {
   DIRECTION_CLEAR,
   DIRECTION_ELSEWHERE,
   FACT_MIN_RECOGNITION,
+  INDEPENDENCE_CLEARANCE,
+  LATEST_YEAR,
+  PERSON_MIN_RECOGNITION,
+  WINTER_SPORTS,
+  WINTER_SPORT_MIN_LATITUDE,
+  factAskable,
+  factTheme,
+  independenceGap,
   FLAG_NEAREST,
   FLAG_CLOSE_CHANCE,
   GLOBE_LINES,
@@ -88,7 +96,12 @@ function isTrue(q: Question, optionIndex: number): boolean {
       return c.features.some((f) => f.name === option.label) || c.featuresAvoid.includes(option.label);
     case 'lines':
       return c.lines.includes(option.label) || c.linesAvoid.includes(option.label);
+    case 'independence':
+      return Number(option.label) === c.independence!.year;
     case 'fact':
+    case 'sport':
+    case 'export':
+    case 'person':
       // True for this country if it is one of its own answers, or another country's answer shared with it.
       return (
         (world.factsByCountry[c.id] ?? []).some((f) => f.answer === option.label) ||
@@ -153,6 +166,10 @@ describe('difficulty score', () => {
       feature: 2,
       lines: 2,
       fact: 2,
+      sport: 2,
+      export: 2,
+      person: 2,
+      independence: 3,
       population: 3,
       area: 3,
       notBorder: 3,
@@ -1034,7 +1051,7 @@ describe('curated facts and hooks', () => {
         expect(new Set([f.answer, ...f.wrong!]).size, f.id).toBe(4);
       }
       for (const key of Object.keys(f)) {
-        expect(['id', 'country', 'category', 'kind', 'prompt', 'answer', 'recognition', 'hook', 'wrong', 'sharedWith', 'group', 'unsure'], `${f.id}: ${key}`).toContain(key);
+        expect(['id', 'country', 'category', 'kind', 'prompt', 'answer', 'recognition', 'hook', 'wrong', 'sharedWith', 'group', 'avoid', 'unsure'], `${f.id}: ${key}`).toContain(key);
       }
     }
     expect(FACTS.length).toBeGreaterThan(600);
@@ -1042,7 +1059,7 @@ describe('curated facts and hooks', () => {
 
   it('every country has at least one hook it can actually be asked', () => {
     const missing = ALL.filter(
-      (c) => !(world.factsByCountry[c.id] ?? []).some((f) => f.hook && f.recognition >= FACT_MIN_RECOGNITION && !givesAway(f.answer, c)),
+      (c) => !(world.factsByCountry[c.id] ?? []).some((f) => f.hook && factAskable(f, c)),
     );
     expect(missing.map((c) => c.name)).toEqual([]);
   });
@@ -1069,37 +1086,43 @@ describe('curated facts and hooks', () => {
 
   it('never asks a fact below the recognition threshold', () => {
     expect(FACT_MIN_RECOGNITION).toBe(2);
-    const byId = new Map(FACTS.map((f) => [`fact:${f.id}`, f]));
+    const byId = new Map(FACTS.map((f) => [`${factTheme(f)}:${f.id}`, f]));
     let asked = 0;
     for (const c of ALL) {
       const own = world.factsByCountry[c.id] ?? [];
-      const askable = own.filter((f) => f.recognition >= 2 && !givesAway(f.answer, c));
-      for (let i = 0; i < 12; i++) {
-        const q = generateQuestion(world, c.id, 'fact', rng);
-        if (askable.length === 0) expect(q, c.name).toBeNull();
-        if (!q) continue;
-        asked++;
-        expect(byId.get(q.sig)!.recognition, q.sig).toBeGreaterThanOrEqual(2);
-        expect(byId.get(q.sig)!.country).toBe(c.id);
+      for (const theme of ['fact', 'sport', 'export', 'person'] as const) {
+        const askable = own.filter((f) => factTheme(f) === theme && factAskable(f, c));
+        for (let i = 0; i < 6; i++) {
+          const q = generateQuestion(world, c.id, theme, rng);
+          if (askable.length === 0) expect(q, `${c.name} ${theme}`).toBeNull();
+          if (!q) continue;
+          asked++;
+          expect(byId.get(q.sig)!.recognition, q.sig).toBeGreaterThanOrEqual(theme === 'person' ? 3 : 2);
+          expect(byId.get(q.sig)!.country).toBe(c.id);
+          expect(q.type).toBe(theme);
+        }
       }
     }
     expect(asked).toBeGreaterThan(2000);
     // A recognition-1 fact exists in the data but is never the question…
     const obscureFact = FACTS.find((f) => f.recognition === 1)!;
-    const excludeOthers = new Set((world.factsByCountry[obscureFact.country] ?? []).filter((f) => f.recognition >= 2).map((f) => `fact:${f.id}`));
-    expect(generateQuestion(world, obscureFact.country, 'fact', rng, excludeOthers)).toBeNull();
+    const theme = factTheme(obscureFact);
+    const excludeOthers = new Set((world.factsByCountry[obscureFact.country] ?? []).filter((f) => f.recognition >= 2).map((f) => `${factTheme(f)}:${f.id}`));
+    expect(generateQuestion(world, obscureFact.country, theme, rng, excludeOthers)).toBeNull();
   });
 
   it('no wrong option is also true for the country, including shared rivers, peaks and dishes', () => {
     for (const c of ALL) {
       const own = new Set((world.factsByCountry[c.id] ?? []).map((f) => f.answer));
-      for (let i = 0; i < 15; i++) {
-        const q = generateQuestion(world, c.id, 'fact', rng);
-        if (!q) break;
-        for (const [index, option] of q.options.entries()) {
-          if (index === q.correctIndex) continue;
-          expect(own.has(option.label), `${q.sig}: ${option.label}`).toBe(false);
-          expect(FACTS.some((f) => f.answer === option.label && f.sharedWith?.includes(c.id)), `${q.sig}: ${option.label} is shared`).toBe(false);
+      for (const theme of ['fact', 'sport', 'export', 'person'] as const) {
+        for (let i = 0; i < 8; i++) {
+          const q = generateQuestion(world, c.id, theme, rng);
+          if (!q) break;
+          for (const [index, option] of q.options.entries()) {
+            if (index === q.correctIndex) continue;
+            expect(own.has(option.label), `${q.sig}: ${option.label}`).toBe(false);
+            expect(FACTS.some((f) => f.answer === option.label && f.kind !== 'custom' && f.sharedWith?.includes(c.id)), `${q.sig}: ${option.label} is shared`).toBe(false);
+          }
         }
       }
     }
@@ -1108,7 +1131,7 @@ describe('curated facts and hooks', () => {
     expect(FACTS.find((f) => f.answer === 'Mont Blanc')!.sharedWith).toContain('ITA');
     // Oil and gas are never set against each other as a biggest export.
     for (let i = 0; i < 60; i++) {
-      const q = generateQuestion(world, 'SAU', 'fact', rng, new Set((world.factsByCountry.SAU ?? []).filter((f) => f.kind !== 'export').map((f) => `fact:${f.id}`)))!;
+      const q = generateQuestion(world, 'SAU', 'export', rng)!;
       expect(q.prompt).toBe("What is Saudi Arabia's biggest export?");
       expect(q.options.map((o) => o.label)).not.toContain('Natural gas');
       expect(q.options.map((o) => o.label)).not.toContain('Oil and gas');
@@ -1118,6 +1141,7 @@ describe('curated facts and hooks', () => {
   it('skips a category the country has nothing well known in', () => {
     // No footballer on file for Palau: it never gets a famous-person question.
     const palau = id('Palau');
+    expect(generateQuestion(world, palau, 'person', rng)).toBeNull();
     for (let i = 0; i < 100; i++) {
       const q = generateQuestion(world, palau, 'fact', rng);
       if (q) expect(q.prompt).not.toMatch(/footballers|sports stars|musicians/);
@@ -1125,7 +1149,206 @@ describe('curated facts and hooks', () => {
     const kinds = new Set((world.factsByCountry.HRV ?? []).map((f) => f.kind));
     expect(kinds.has('footballer')).toBe(true);
     const croatia = new Set<string>();
-    for (let i = 0; i < 200; i++) croatia.add(generateQuestion(world, 'HRV', 'fact', rng)!.prompt);
+    for (let i = 0; i < 50; i++) croatia.add(generateQuestion(world, 'HRV', 'person', rng)!.prompt);
     expect(croatia).toContain("Which of these footballers has played for Croatia's national team?");
+  });
+});
+
+describe('the four themes: national sport, main export, year of independence, famous person', () => {
+  const rng = createRng(202);
+  const labelsOf = (q: Question) => q.options.map((o) => o.label);
+  const wrongOf = (q: Question) => q.options.filter((_, index) => index !== q.correctIndex).map((o) => o.label);
+  const factsOf = (code: string) => world.factsByCountry[code] ?? [];
+
+  it('each theme is its own question type, drawn from the curated facts', () => {
+    expect(QUESTION_TYPES).toEqual(expect.arrayContaining(['sport', 'export', 'person', 'independence']));
+    expect(QUESTION_TYPES).toHaveLength(18);
+    // A curated fact is asked under exactly one type.
+    expect(factTheme({ category: 'person', kind: 'footballer' })).toBe('person');
+    expect(factTheme({ category: 'sport', kind: 'national-sport' })).toBe('sport');
+    expect(factTheme({ category: 'economy', kind: 'export' })).toBe('export');
+    expect(factTheme({ category: 'landmark', kind: 'landmark' })).toBe('fact');
+    for (const type of ['sport', 'export', 'person', 'independence'] as const) expect(USES_CLOSENESS[type]).toBe(false);
+    expect(questionScore('sport', 0, 0)).toBe(2);
+    expect(questionScore('independence', 2, 0)).toBe(5);
+  });
+
+  it('national sport: only where a country has one of its own, never just "football"', () => {
+    const national = FACTS.filter((f) => f.kind === 'national-sport');
+    expect(national.length).toBeGreaterThanOrEqual(40);
+    for (const f of national) {
+      expect(f.category).toBe('sport');
+      expect(f.answer.toLowerCase(), f.id).not.toBe('football');
+      // Hand-picked wrong options, at least four to draw three from, and never football: it is popular everywhere.
+      expect(f.wrong!.length, f.id).toBeGreaterThanOrEqual(4);
+      expect(f.wrong, f.id).not.toContain('Football');
+      expect(f.wrong, f.id).not.toContain(f.answer);
+      for (const also of f.avoid ?? []) expect(f.wrong, `${f.id}: ${also}`).not.toContain(also);
+    }
+    const japan = generateQuestion(world, 'JPN', 'sport', rng)!;
+    expect(japan.prompt).toBe('What is the national sport of Japan?');
+    expect(japan.options[japan.correctIndex].label).toBe('Sumo');
+    // Two sports with a claim: the second is recorded and never offered as wrong.
+    expect(FACTS.find((f) => f.id === 'CAN-national-sport')).toMatchObject({ answer: 'Ice hockey', avoid: ['Lacrosse'] });
+    expect(FACTS.find((f) => f.id === 'IRL-national-sport')).toMatchObject({ answer: 'Hurling', avoid: ['Gaelic football'] });
+    for (let i = 0; i < 40; i++) {
+      expect(labelsOf(generateQuestion(world, 'CAN', 'sport', rng)!)).not.toContain('Lacrosse');
+      expect(labelsOf(generateQuestion(world, 'PAK', 'sport', rng)!)).not.toContain('Cricket');
+    }
+  });
+
+  it('national sport: wrong options are plausible for the region, with no sport of ice and snow for a warm country', () => {
+    expect(WINTER_SPORT_MIN_LATITUDE).toBe(35);
+    expect(WINTER_SPORTS.has('Ice hockey')).toBe(true);
+    let asked = 0;
+    for (const c of ALL) {
+      for (let i = 0; i < 10; i++) {
+        const q = generateQuestion(world, c.id, 'sport', rng);
+        if (!q) break;
+        asked++;
+        checkWellFormed(q);
+        for (const sport of wrongOf(q)) {
+          if (Math.abs(c.lat) < WINTER_SPORT_MIN_LATITUDE) expect(WINTER_SPORTS.has(sport), `${c.name}: ${sport}`).toBe(false);
+          expect(sport, c.name).not.toBe('Football');
+        }
+      }
+    }
+    expect(asked).toBeGreaterThan(300);
+    // The rule holds even for a fact that lists one: it is filtered out, not offered.
+    const tropical = ALL.filter((c) => Math.abs(c.lat) < 35 && factsOf(c.id).some((f) => f.kind === 'national-sport'));
+    expect(tropical.length).toBeGreaterThan(15);
+    for (const c of tropical) for (const f of factsOf(c.id).filter((x) => x.kind === 'national-sport')) for (const w of f.wrong!) expect(WINTER_SPORTS.has(w), `${f.id}: ${w}`).toBe(false);
+  });
+
+  it('main export: related answers are never set against each other, nor is anything else the country sells a lot of', () => {
+    const exportsOf = FACTS.filter((f) => f.kind === 'export');
+    expect(exportsOf.length).toBeGreaterThanOrEqual(100);
+    expect(new Set(exportsOf.map((f) => f.country)).size).toBe(exportsOf.length);
+    const group = new Map(exportsOf.map((f) => [f.answer, f.group]));
+    for (const answer of ['Crude oil', 'Natural gas', 'Oil and gas', 'Refined petroleum']) expect(group.get(answer), answer).toBe('petroleum');
+    expect(group.get('Clothing')).toBe('clothing');
+    expect(group.get('Textiles')).toBe('clothing');
+    let asked = 0;
+    for (const f of exportsOf) {
+      const c = world.byId[f.country];
+      expect(f.recognition, f.id).toBeGreaterThanOrEqual(2);
+      for (let i = 0; i < 8; i++) {
+        const q = generateQuestion(world, c.id, 'export', rng)!;
+        expect(q, f.id).not.toBeNull();
+        asked++;
+        checkWellFormed(q);
+        expect(q.options[q.correctIndex].label).toBe(f.answer);
+        for (const option of wrongOf(q)) {
+          expect(f.avoid ?? [], `${f.id}: ${option}`).not.toContain(option);
+          if (f.group) expect(group.get(option), `${f.id}: ${option}`).not.toBe(f.group);
+          // Every wrong option is some other country's biggest export.
+          expect(group.has(option), `${f.id}: ${option}`).toBe(true);
+        }
+      }
+    }
+    expect(asked).toBeGreaterThan(800);
+  });
+
+  it('year of independence: four years in order, a decade apart (two before 1900), never in the future', () => {
+    expect(independenceGap(1960)).toBe(10);
+    expect(independenceGap(1900)).toBe(10);
+    expect(independenceGap(1821)).toBe(20);
+    expect(LATEST_YEAR).toBe(2025);
+    const positions = new Map<number, number>();
+    let asked = 0;
+    for (const c of ALL) {
+      for (let i = 0; i < 12; i++) {
+        const q = generateQuestion(world, c.id, 'independence', rng);
+        if (!c.independence) {
+          expect(q, c.name).toBeNull();
+          break;
+        }
+        if (!q) continue;
+        asked++;
+        checkWellFormed(q);
+        expect(q.prompt).toBe(`In which year did ${countryPhrase(c)} gain independence?`);
+        const years = labelsOf(q).map(Number);
+        const gap = independenceGap(c.independence.year);
+        expect(years[q.correctIndex]).toBe(c.independence.year);
+        for (let k = 1; k < 4; k++) expect(years[k] - years[k - 1], `${c.name}: ${years.join(', ')}`).toBe(gap);
+        expect(years[3], c.name).toBeLessThanOrEqual(LATEST_YEAR);
+        // Wrong years stay well away from the country's other significant dates.
+        for (const [index, year] of years.entries()) {
+          if (index === q.correctIndex) continue;
+          for (const other of c.independence.also) expect(Math.abs(other - year), `${c.name}: ${year} vs ${other}`).toBeGreaterThanOrEqual(INDEPENDENCE_CLEARANCE);
+        }
+        positions.set(q.correctIndex, (positions.get(q.correctIndex) ?? 0) + 1);
+      }
+    }
+    expect(asked).toBeGreaterThan(1500);
+    // The right year turns up in every position.
+    expect([...positions.keys()].sort()).toEqual([0, 1, 2, 3]);
+    // Every country with a year can be asked it, with the right year in at least two different places.
+    for (const c of ALL.filter((x) => x.independence)) {
+      const places = new Set(Array.from({ length: 40 }, (_, seed) => generateQuestion(world, c.id, 'independence', createRng(seed))?.correctIndex));
+      expect(places.has(undefined), c.name).toBe(false);
+      expect(places.size, c.name).toBeGreaterThanOrEqual(2);
+    }
+    expect(ALL.filter((c) => c.independence).length).toBe(150);
+    // Never colonised, no single clear date, or a territory: no question.
+    for (const code of ['GBR', 'JPN', 'THA', 'ETH', 'FRA', 'CHN', 'IRL', 'CAN', 'ZAF', 'GRL', 'PRI', 'DOM', 'MNG', 'VNM']) expect(world.byId[code].independence, code).toBeNull();
+    expect(world.byId.USA.independence).toEqual({ year: 1776, also: [1783] });
+    expect(world.byId.IND.independence!.year).toBe(1947);
+    expect(world.byId.UNK.independence!.year).toBe(2008);
+  });
+
+  it('famous person: only people recognisable worldwide, with wrong options from the same field', () => {
+    expect(PERSON_MIN_RECOGNITION).toBe(3);
+    const people = FACTS.filter((f) => f.category === 'person');
+    const famous = people.filter((f) => f.recognition === 3);
+    expect(famous.length).toBeGreaterThan(70);
+    expect(people.length - famous.length).toBeGreaterThan(60);
+    let asked = 0;
+    for (const c of ALL) {
+      const own = factsOf(c.id).filter((f) => f.category === 'person');
+      for (let i = 0; i < 6; i++) {
+        const q = generateQuestion(world, c.id, 'person', rng);
+        if (!own.some((f) => f.recognition === 3)) {
+          expect(q, c.name).toBeNull();
+          break;
+        }
+        asked++;
+        checkWellFormed(q!);
+        const fact = FACTS.find((f) => `person:${f.id}` === q!.sig)!;
+        expect(fact.recognition).toBe(3);
+        if (fact.kind === 'custom') continue;
+        // The wrong options are people of the same field, each tied to another country and not shared with this one.
+        for (const name of wrongOf(q!)) {
+          const other = FACTS.find((f) => f.answer === name && f.kind === fact.kind)!;
+          expect(other, `${q!.sig}: ${name}`).toBeDefined();
+          expect(other.country).not.toBe(c.id);
+          expect(other.sharedWith ?? [], `${q!.sig}: ${name}`).not.toContain(c.id);
+        }
+      }
+    }
+    expect(asked).toBeGreaterThan(250);
+    // Not recognisable enough: on file, but never asked.
+    expect(FACTS.find((f) => f.answer === 'Riyad Mahrez')!.recognition).toBe(2);
+    expect(generateQuestion(world, 'DZA', 'person', rng)).toBeNull();
+    // Claimed by two countries: never a wrong option for the other.
+    expect(FACTS.find((f) => f.answer === 'Albert Einstein')!.sharedWith).toEqual(expect.arrayContaining(['CHE', 'USA']));
+    expect(FACTS.find((f) => f.answer === 'Marie Curie')!.sharedWith).toContain('FRA');
+    for (let i = 0; i < 60; i++) expect(labelsOf(generateQuestion(world, 'FRA', 'person', rng)!)).not.toContain('Marie Curie');
+  });
+
+  it('the themes come up in battles and never crowd each other out', () => {
+    const seen = new Map<string, number>();
+    const r = createRng(77);
+    for (const code of ['JPN', 'USA', 'BRA', 'IND', 'CUB', 'NGA']) {
+      for (let run = 0; run < 12; run++) {
+        const asked: string[] = [];
+        for (let i = 0; i < 18; i++) {
+          const q = nextBattleQuestion(world, code, asked, r);
+          asked.push(q.sig);
+          seen.set(q.type, (seen.get(q.type) ?? 0) + 1);
+        }
+      }
+    }
+    for (const type of ['sport', 'export', 'person', 'independence']) expect(seen.get(type) ?? 0, type).toBeGreaterThan(10);
   });
 });

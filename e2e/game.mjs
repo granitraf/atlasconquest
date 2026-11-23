@@ -1157,13 +1157,172 @@ section('sound-effects', async (page) => {
   check(results, 'during battle questions, moving over or clicking countries makes no sound', battleQuiet.length === 0, battleQuiet.join() || 'silence');
 });
 
+// ------------------------------------------------------------ leaderboard
+// The global leaderboard. A stand-in answers for the Supabase project (see fakeLeaderboard in lib.mjs),
+// so these checks cover everything the game does with it without touching a real database.
+section('leaderboard', async (page, board) => {
+  // Runs other players have already finished.
+  for (const [name, score] of [['Alpha', 40], ['Bravo', 36], ['Charlie', 30], ['Delta', 24], ['Echo', 12], ['Foxtrot', 6]]) board.add('World', name, score);
+  board.add('Europe', 'More battles', 20, { battles: 40 });
+  board.add('Europe', 'Fewer battles', 20, { battles: 25 });
+  for (const [name, score] of [['Third', 10], ['Fourth', 8], ['Fifth', 6]]) board.add('Europe', name, score);
+
+  await open(page);
+  await settle(page);
+  const rect = (testid) => page.getByTestId(testid).evaluate((el) => { const r = el.getBoundingClientRect(); return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, centre: (r.left + r.right) / 2 }; });
+  const look = (testid) => page.getByTestId(testid).evaluate((el) => { const cs = getComputedStyle(el); return [cs.backgroundColor, cs.borderTopColor, cs.color, cs.fontFamily, cs.fontSize, cs.fontWeight, cs.boxShadow].join(' | '); });
+  const view = await page.evaluate(() => ({ w: innerWidth, h: innerHeight }));
+  const rulesBox = await rect('rules-toggle');
+  const boardBox = await rect('leaderboard-toggle');
+  check(results, 'a Leaderboard button sits to the right of the Rules button, on the same line', (await page.getByTestId('leaderboard-toggle').innerText()).trim() === 'Leaderboard' && boardBox.left >= rulesBox.right && boardBox.left - rulesBox.right <= 16 && boardBox.top === rulesBox.top && boardBox.bottom === rulesBox.bottom && boardBox.right <= view.w, JSON.stringify({ rulesBox, boardBox }));
+  check(results, 'the Rules button is still centred above the map', Math.abs(rulesBox.centre - (440 + view.w) / 2) <= 2, `centre ${Math.round(rulesBox.centre)}`);
+  await page.mouse.move(5, 5);
+  check(results, 'it has the same gold, border, font and size as the Rules button', (await look('leaderboard-toggle')) === (await look('rules-toggle')), await look('leaderboard-toggle'));
+  check(results, 'the start screen asks the leaderboard nothing until it is opened', board.requests.length === 0, `${board.requests.length} requests`);
+
+  const names = async () => (await sounds(page)).map((x) => x.name);
+  await hush(page);
+  await page.getByTestId('leaderboard-toggle').hover();
+  await page.waitForTimeout(90);
+  const hoverSound = await names();
+  await hush(page);
+  await page.getByTestId('leaderboard-toggle').click();
+  await page.waitForTimeout(90);
+  const clickSound = await names();
+  check(results, 'the Leaderboard button pulses under the pointer and snaps on a click, like Rules', hoverSound.join() === 'pulse' && clickSound.join() === 'snap', `hover: ${hoverSound}; click: ${clickSound}`);
+
+  const hall = page.getByTestId('leaderboard');
+  await page.locator('[data-testid="leaderboard"][data-status="ready"]').waitFor();
+  const cover = await rect('leaderboard');
+  const under = await page.evaluate(() => { const el = document.elementFromPoint((440 + innerWidth) / 2, innerHeight / 2); return { inBoard: Boolean(el?.closest('.leaderboard')), onMap: Boolean(el?.closest('.map')) }; });
+  check(results, 'pressing it replaces the map with the leaderboard, beside a start menu that still works', cover.left === 440 && cover.right === view.w && cover.top === 0 && cover.bottom === view.h && under.inBoard && !under.onMap && (await page.getByTestId('begin').isVisible()), JSON.stringify({ cover, under }));
+  const cards = await hall.locator('.board-card').evaluateAll((els) => els.map((el) => el.getAttribute('data-campaign')));
+  check(results, 'it has a card for each of the seven campaigns', cards.join() === 'World,Africa,Asia,Europe,North America,South America,Oceania', cards.join());
+  const rowsOf = (campaign) => page.getByTestId(`board-${campaign}`).locator('.board-row').evaluateAll((els) => els.map((el) => ({ rank: el.querySelector('.board-rank').innerText.trim(), name: el.querySelector('.board-name').innerText.trim(), score: el.querySelector('.board-score').innerText.trim(), flag: (() => { const c = el.querySelector('canvas.empire-flag'); return c ? `${c.width}x${c.height}` : null; })(), detail: el.querySelector('.board-detail')?.innerText.replace(/\s+/g, ' ').trim() })));
+  const world = await rowsOf('World');
+  check(results, 'World shows its top five in order, with rank, pixel flag, empire name and score', world.map((r) => `${r.rank} ${r.name} ${r.score}`).join(', ') === '1 Alpha 40, 2 Bravo 36, 3 Charlie 30, 4 Delta 24, 5 Echo 12' && world.every((r) => r.flag === '12x8'), JSON.stringify(world));
+  check(results, 'a sixth run is not shown', !(await hall.innerText()).includes('Foxtrot'));
+  check(results, 'each row says where the empire started and how far it got', world.every((r) => /France · \d+ countries/.test(r.detail)), world[0].detail);
+  const europe = await rowsOf('Europe');
+  check(results, 'a tie on score goes to the empire that fought fewer battles', europe.map((r) => r.name).join(' > ') === 'Fewer battles > More battles > Third > Fourth > Fifth', europe.map((r) => r.name).join(' > '));
+  check(results, 'a campaign nobody has finished says so', /No empire has finished this campaign yet/.test(await page.getByTestId('board-Africa').innerText()) && (await page.getByTestId('board-Africa').locator('.board-row').count()) === 0);
+  const asked = board.requests.filter((r) => r.name === 'top_runs');
+  check(results, 'it reads every campaign in one call, with the public key, from the configured project', asked.length >= 1 && asked.every((r) => r.args.p_campaign === null && r.args.p_limit === 5 && r.headers.apikey === 'test-public-key' && r.url === 'https://leaderboard.invalid/rest/v1/rpc/top_runs'), JSON.stringify(asked.map((r) => [r.url, r.args])));
+  const fit = await hall.evaluate((el) => ({ sideways: el.scrollWidth > el.clientWidth + 1, wide: [...el.querySelectorAll('.board-row, .board-card, .board-card h2')].filter((x) => x.scrollWidth > x.clientWidth + 1).map((x) => x.className) }));
+  check(results, 'leaderboard: every row fits its card', !fit.sideways && fit.wide.length === 0 && (await misfits(page)).length === 0, JSON.stringify(fit) + (await misfits(page)).join(' ; '));
+  await page.screenshot({ path: SHOTS + '85-leaderboard.png' });
+
+  // The two pages share the space above the map: each button leads to its own page and back.
+  check(results, 'while it is open its button reads Back to the map, and Rules still reads Rules', (await page.getByTestId('leaderboard-toggle').innerText()).trim() === 'Back to the map' && (await page.getByTestId('rules-toggle').innerText()).trim() === 'Rules');
+  await page.getByTestId('rules-toggle').click();
+  await page.getByTestId('rules').waitFor();
+  check(results, 'Rules opens the rule book in its place', (await hall.count()) === 0 && (await page.getByTestId('leaderboard-toggle').innerText()).trim() === 'Leaderboard');
+  await page.getByTestId('leaderboard-toggle').click();
+  await hall.waitFor();
+  check(results, 'and Leaderboard brings the leaderboard back', (await page.getByTestId('rules').count()) === 0);
+  await page.keyboard.press('Escape');
+  check(results, 'Escape returns to the map', (await hall.count()) === 0 && (await page.getByTestId('leaderboard-toggle').innerText()).trim() === 'Leaderboard');
+
+  // Names: the length limit is unchanged, and a rude name is not carried into a run.
+  const field = page.getByTestId('empire-name');
+  await field.fill('x'.repeat(40));
+  check(results, 'the empire name keeps its 22 character limit', (await field.inputValue()).length === 22);
+  await field.fill('Essex Rising');
+  const innocent = await page.getByTestId('name-warning').count();
+  await field.fill('Sh1t Kingdom');
+  check(results, 'a rude name is flagged as soon as it is typed; an innocent one that contains a rude word is not', innocent === 0 && /not allowed/i.test(await page.getByTestId('name-warning').innerText()));
+
+  /** Starts a game and loses it at once: every recruit question wrong, then every answer of the first battle. */
+  const lose = async (mode, id) => {
+    await startGame(page, mode, id);
+    await recruit(page, [false, false, false, false, false]);
+    await page.locator('.target-chip').first().click();
+    await page.getByTestId('attack-button').click();
+    await page.getByTestId('question-card').waitFor();
+    for (let i = 0; i < 4; i++) await answer(page, false);
+    await answer(page, false, { wait: false });
+    await page.getByTestId('gameover-screen').waitFor();
+    return state(page);
+  };
+  const endBoard = page.getByTestId('end-board');
+  const ready = () => page.locator('[data-testid="end-board"][data-status="ready"]').waitFor();
+  const endRows = () => endBoard.locator('.board-row').evaluateAll((els) => els.map((el) => ({ rank: el.querySelector('.board-rank').innerText.trim(), name: el.querySelector('.board-name').innerText.trim(), score: el.querySelector('.board-score').innerText.trim(), mine: el.classList.contains('mine'), flag: Boolean(el.querySelector('canvas.empire-flag')) })));
+
+  // A run that ends outside the top five.
+  let s = await lose('Europe', 'DEU');
+  check(results, 'a run started under a rude name is named after its home country instead', s.empire.name === 'Empire of Germany', s.empire.name);
+  await ready();
+  const sent = board.requests.filter((r) => r.name === 'submit_run');
+  const run = sent[0]?.args ?? {};
+  const fields = ['p_battles', 'p_best_streak', 'p_campaign', 'p_conquered', 'p_continents', 'p_empire_name', 'p_flag_colours', 'p_flag_pattern', 'p_outcome', 'p_run_id', 'p_score', 'p_start_country'];
+  check(results, 'the finished run is sent once, with exactly the agreed fields and nothing personal', sent.length === 1 && Object.keys(run).sort().join() === fields.join() && sent[0].url === 'https://leaderboard.invalid/rest/v1/rpc/submit_run', `${sent.length} sent: ${Object.keys(run).sort().join()}`);
+  check(results, 'it carries the campaign, empire name, flag, start, score, conquests, continents, battles, streak and outcome', run.p_campaign === 'Europe' && run.p_empire_name === 'Empire of Germany' && run.p_flag_pattern === s.empire.flag.pattern && run.p_flag_colours.join() === s.empire.flag.colours.join() && run.p_start_country === 'DEU' && run.p_score === 0 && run.p_conquered === 0 && run.p_continents === 0 && run.p_battles === 1 && run.p_best_streak === s.bestStreak && run.p_outcome === 'defeat' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(run.p_run_id), JSON.stringify(run));
+  let rows = await endRows();
+  check(results, 'the end screen shows the global top five for that campaign', /Global top 5\s+Europe/i.test((await endBoard.innerText()).replace(/\s+/g, ' ')) && rows.slice(0, 5).map((r) => r.name).join(' > ') === 'Fewer battles > More battles > Third > Fourth > Fifth' && rows.every((r) => r.flag), JSON.stringify(rows));
+  check(results, 'a run outside the top five is added below it, highlighted, with its rank', rows.length === 6 && rows[5].mine && rows[5].rank === '6' && rows[5].name === 'Empire of Germany' && rows.filter((r) => r.mine).length === 1 && /ranks #6/.test(await page.getByTestId('board-standing').innerText()), JSON.stringify(rows[5]) + ' ' + (await page.getByTestId('board-standing').innerText()));
+  const endFit = await page.evaluate(() => { const end = document.querySelector('.end').getBoundingClientRect(); return [...document.querySelectorAll('.end-board, .end-board .board-row')].filter((el) => { const r = el.getBoundingClientRect(); return r.left < end.left || r.right > end.right || el.scrollWidth > el.clientWidth + 1; }).length; });
+  check(results, 'end screen: the leaderboard fits inside the panel, and Play again is still there', endFit === 0 && (await misfits(page)).length === 0 && (await page.getByTestId('play-again').isVisible()), `${endFit} outside; ${(await misfits(page)).join(' ; ')}`);
+  await page.screenshot({ path: SHOTS + '86-end-leaderboard.png' });
+
+  // Looking at the same finished run again does not count it twice.
+  await page.reload();
+  await page.getByTestId('gameover-screen').waitFor();
+  await ready();
+  const again = board.requests.filter((r) => r.name === 'submit_run');
+  check(results, 'after a refresh the same run id is sent again, and the board still holds it once', again.length === 2 && again[1].args.p_run_id === run.p_run_id && board.rows.filter((r) => r.run_id === run.p_run_id).length === 1 && (await endRows())[5]?.rank === '6', `${again.length} sent, ${board.rows.filter((r) => r.run_id === run.p_run_id).length} stored`);
+  await page.getByTestId('play-again').click();
+  await page.getByTestId('start-screen').waitFor();
+
+  // A run that makes the top five: nobody has finished Oceania yet.
+  await page.getByTestId('empire-name').fill('Southern Cross');
+  s = await lose('Oceania', 'AUS');
+  await ready();
+  rows = await endRows();
+  const second = board.requests.filter((r) => r.name === 'submit_run').at(-1).args;
+  check(results, 'a new game is a new run, under the name it was given', second.p_run_id !== run.p_run_id && second.p_empire_name === 'Southern Cross' && second.p_campaign === 'Oceania');
+  check(results, 'a run inside the top five is highlighted where it stands', rows.length === 1 && rows[0].mine && rows[0].rank === '1' && rows[0].name === 'Southern Cross' && /greatest/i.test(await page.getByTestId('board-standing').innerText()), JSON.stringify(rows));
+
+  // The leaderboard refuses the run: the board is still shown, and the game says the run was not recorded.
+  board.mode = 'reject';
+  await page.reload();
+  await page.getByTestId('gameover-screen').waitFor();
+  await ready();
+  check(results, 'a run the leaderboard refuses is reported as not recorded, beside the top five', /could not be recorded/i.test(await page.getByTestId('board-standing').innerText()) && (await endRows()).length === 1);
+
+  // The leaderboard is unreachable: the end screen says so, and everything else carries on.
+  board.mode = 'down';
+  await page.reload();
+  await page.getByTestId('gameover-screen').waitFor();
+  await page.locator('[data-testid="end-board"][data-status="unavailable"]').waitFor();
+  check(results, 'with the leaderboard unreachable the end screen says it is unavailable and keeps its score', /Leaderboard unavailable/i.test(await endBoard.innerText()) && (await page.getByTestId('stat-score').innerText()) === '0' && /Game over/i.test(await page.getByTestId('gameover-screen').innerText()));
+  await page.getByTestId('play-again').click();
+  await page.getByTestId('start-screen').waitFor();
+  await page.getByTestId('leaderboard-toggle').click();
+  await page.getByTestId('leaderboard-unavailable').waitFor();
+  check(results, 'the Leaderboard page says it is unavailable, and the start menu still works beside it', /unavailable/i.test(await hall.innerText()) && (await hall.locator('.board-card').count()) === 0 && (await page.getByTestId('begin').isVisible()));
+  board.mode = 'ok';
+  await page.getByTestId('leaderboard-retry').click();
+  await page.locator('[data-testid="leaderboard"][data-status="ready"]').waitFor();
+  check(results, 'Try again loads it once the leaderboard is back', (await rowsOf('Oceania')).map((r) => r.name).join() === 'Southern Cross' && (await rowsOf('Europe')).length === 5);
+  await page.getByTestId('leaderboard-close').click();
+
+  // And a whole game still plays with the leaderboard gone.
+  board.mode = 'down';
+  await startGame(page, 'Europe', 'DEU');
+  await recruit(page);
+  await attack(page, 'LUX');
+  const after = await fight(page, true);
+  check(results, 'with the leaderboard unreachable a game still starts, recruits, attacks and conquers', after.phase === 'attack' && after.owned.includes('LUX'), after.phase);
+  board.mode = 'ok';
+});
+
 // ----------------------------------------------------------------- runner
 for (const [name, fn] of Object.entries(sections)) {
   if (only && only !== name) continue;
   console.log(`\n=== ${name} ===`);
-  const { browser, page, problems } = await launch();
+  const { browser, page, problems, board } = await launch();
   try {
-    await fn(page);
+    await fn(page, board);
   } catch (err) {
     check(results, `${name}: ran to completion`, false, err.message.split('\n')[0]);
     await page.screenshot({ path: SHOTS + `error-${name}.png` }).catch(() => {});

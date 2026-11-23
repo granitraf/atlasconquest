@@ -119,8 +119,13 @@ Score 1–2 is **Easy**, 3–4 is **Medium**, 5–6 is **Hard**.
 | Weight | Types |
 |---|---|
 | 1 | flag, capital, water |
-| 2 | border, currency, language, domain, brand, major feature, globe line, curated fact |
-| 3 | population, area, not-border |
+| 2 | border, currency, language, domain, brand, major feature, globe line, curated fact, national sport, main export, famous person |
+| 3 | population, area, not-border, year of independence |
+
+National sport, main export and famous person carry the weight of the curated facts they are
+(2): something a player knows about a country or does not, harder than its flag or capital,
+no harder than its currency. The year of independence carries 3, with population and area:
+it is a number to recall, the options are neighbouring decades, and nothing on the map helps.
 
 **Country fame:** 0, 1 or 2 (section 2), for the country the question is about.
 
@@ -136,8 +141,8 @@ another city of the country itself.
   of the country's own cities for capital questions.
 - If a continent has too few candidates (few countries in South America or Oceania share a
   given kind of answer), the pool widens to the rest of the world rather than repeating one.
-- For population, area, globe-line and curated-fact questions closeness does not apply and
-  counts as 0.
+- For population, area, globe-line, curated-fact, national-sport, main-export, famous-person
+  and year-of-independence questions closeness does not apply and counts as 0.
 
 **Reason-out weighting.** Water, major feature, globe line, border and language questions can
 be worked out from the map and the region. For less familiar countries a set share of
@@ -149,7 +154,8 @@ The other slots prefer the remaining types.
 
 1. **Type rotation.** A type is not asked a second time while another type is still unused
    (in the battle, or in the recruit phase). Twelve questions against a country with twelve
-   types to ask are twelve different types.
+   types to ask are twelve different types, so the four themes of section 12 each come up
+   once before anything repeats and never crowd the others out.
 2. **Nothing asked before.** The game remembers its last 150 questions, from the recruit phase
    and battles alike. A remembered question is passed over while the types whose turn it is
    have something new to ask.
@@ -287,7 +293,7 @@ The attack panel shows each target's defenders before the player commits, includ
 
 ## 12. Question types
 
-Fourteen types, four options each, all generated from bundled data. In every question the
+Eighteen types, four options each, all generated from bundled data. In every question the
 country is named in the prompt and the answer is something about it, never its own name:
 an answer that would name the country ("Niger River" for Niger, "Indian Ocean" for India,
 the capital "Djibouti" for Djibouti) is never used. The one exception is the line-up
@@ -306,7 +312,11 @@ country is one of the four options, and is sometimes the answer.
 | 2 | Brand | Which company was founded in X? | From a hand-picked list in `src/game/brands.ts`. 52 qualify. |
 | 2 | Major feature | Which river flows through X? / Which desert lies in X? / Which mountain range runs through X? / Which rainforest is found in X? | Only where the country has a well-known one; options are always the same kind of feature, and the nearest ones of that kind (the Alps and the Apennines for the Pyrenees). 105 qualify. |
 | 2 | Globe line | Which of these lines on the globe passes through X? | Equator, the two tropics, the Arctic Circle and the Prime Meridian, worked out from the country's shape, with "None of these" as an option. 47 qualify. |
-| 2 | Curated fact | (written per fact) | Famous people, top exports, highest mountains, landmarks, dishes, former names and one-off hooks. See below. All 230 qualify. |
+| 2 | Curated fact | (written per fact) | Highest mountains, landmarks, dishes, former names, sporting moments and one-off hooks. See below. 218 qualify. |
+| 2 | National sport | What is the national sport of X? | Only where a sport is officially declared or is a tradition strongly identified with the country: never "football, like everywhere". See the four themes below. 57 qualify, counting sporting facts worded their own way. |
+| 2 | Main export | What is X's biggest export? | The largest export by value in recent years. 114 qualify. |
+| 2 | Famous person | Which of these footballers is from X? (and one wording per field) | Only people recognisable worldwide. 50 qualify. |
+| 3 | Year of independence | In which year did X gain independence? | Four years in ascending order, a fixed distance apart. 150 qualify. |
 | 3 | Population | What is the population of X? / Which of these has the most people? / Which of these has the fewest people? | Three forms, taken in turn. The range form shows four adjacent ranges out of ten (under 10k … over 250M). The line-ups rank X against three countries from its region; the winner leads by at least 1.3×. No closeness. |
 | 3 | Area | Which of these is larger than X? / smaller than X? / Which of these is the biggest by area? / the smallest? / Which is closest in size to X? | Five forms, taken in turn. "Biggest" and "smallest" are line-ups of X and three countries from its region. Compared areas always differ by at least 1.3×. Effectively unlimited variants. No closeness. |
 | 3 | Not-border | Which of these does NOT border X? | Needs 3+ neighbours, at least two of which the player does not hold; at most one held neighbour is shown. 113 qualify. |
@@ -331,22 +341,56 @@ applied by `npm run derive`. Each sea and feature lists the countries that clear
 and an "avoid" list of arguable cases (a river that only touches a border, a sea a country
 barely reaches). An avoided item is never the right answer and never a wrong option.
 
-**Curated facts** live in `public/data/facts.json` (706 facts; reviewed in
-`reports/facts-review.md`).
+**Curated facts** live in `public/data/facts.json` (816 facts; reviewed in
+`reports/facts-review.md`, and the four themes in `reports/new-questions-review.md`).
 
 - Each fact has a country, a category (landmark, person, food, history, nature, culture,
   film, sport, economy), a prompt, an answer and a recognition rating: 3 known worldwide,
   2 known to a well-read player, 1 known mostly inside the country.
-- **A fact is asked only if its recognition is 2 or higher** (`FACT_MIN_RECOGNITION`). If a
-  country has nothing that qualifies in a category, that category is simply not asked about
-  it; there is no filler.
-- **Hooks:** every one of the 230 countries has at least one memorable, specific fact (178
-  have one, 46 have two, 6 have three), phrased as a question about that country.
+- **A fact is asked only if its recognition is 2 or higher** (`FACT_MIN_RECOGNITION`), and a
+  person only at 3 (`PERSON_MIN_RECOGNITION`). If a country has nothing that qualifies in a
+  category, that category is simply not asked about it; there is no filler.
+- **Hooks:** every one of the 230 countries has at least one memorable, specific fact (177
+  have one, 47 have two, 6 have three), phrased as a question about that country.
 - **Wrong options** are either hand-picked for that fact, or answers to the same kind of fact
   about other countries, nearest regions first. An option is never something that is also
   true for the country: answers shared between countries (a peak on a border, a dish claimed
   by neighbours) list those countries, and closely related answers (oil and gas as exports)
-  are never set against each other.
+  are never set against each other. A fact can also list things that are arguably true of
+  its country (`avoid`): they are never offered as wrong options for it.
+
+**The four themes.** National sport, main export and famous person are curated facts asked
+as question types of their own, so each takes its turn in the rotation; the year of
+independence comes from `config/independence.json`, applied by `npm run derive`. Every
+entry, every doubtful one and every country left out is listed in
+`reports/new-questions-review.md`.
+
+- **National sport** (45 countries). Only a sport that is officially declared (kabaddi in
+  Bangladesh, arnis in the Philippines, pato in Argentina) or a tradition strongly
+  identified with the country (sumo, hurling, buzkashi). Where two sports have a claim both
+  are recorded and the second is never offered as wrong: Canada's answer is ice hockey and
+  lacrosse is never an option. Wrong options are hand-picked from sports played in the
+  region. A sport of ice or snow (`WINTER_SPORTS`) is never offered for a country closer to
+  the equator than 35° (`WINTER_SPORT_MIN_LATITUDE`), and football is never an option.
+  Related answers (the kinds of wrestling, the codes of rugby) are never set against each
+  other.
+- **Main export** (114 countries). The largest export by value in recent years. Related
+  answers share a group and are never set against each other: crude oil, refined petroleum
+  and natural gas; clothing and textiles. Wrong options are the main exports of other
+  countries, nearest regions first, and never one of the country's own other big exports,
+  which each fact lists.
+- **Year of independence** (150 countries). The date most widely taught. The four options
+  are in ascending order with the right year in a random position, 10 years apart for a year
+  from 1900 on and 20 years apart before it (`independenceGap`), so they are never one or
+  two years apart. No option is later than 2025 (`LATEST_YEAR`). Where a country has a
+  second significant year (declared and recognised, first and restored) it is recorded, and
+  no wrong option comes within 5 years of it (`INDEPENDENCE_CLEARANCE`). Countries that
+  were never colonised, became independent by steps, have competing dates too close
+  together, or are territories are left out: 80 in all.
+- **Famous person** (81 people, 50 countries). Only people recognisable worldwide:
+  recognition 3. The other 81 on file are not asked. Wrong options are people of the same
+  field, nearest regions first. A person claimed by two countries (Einstein, Chopin, Marie
+  Curie) lists the other, and is never a wrong option for it.
 
 ## 13. Information deliberately hidden
 
@@ -364,7 +408,40 @@ barely reaches). An avoided item is never the right answer and never a wrong opt
   The home country does not count as conquered. In World mode up to six continent bonuses are
   possible; in a continent campaign the bonus is earned exactly once, on victory.
 - The end screen shows the empire, countries conquered, continents conquered, best streak,
-  battles fought and the score breakdown.
+  battles fought and the score breakdown, and the global top five for the campaign (below).
+
+### The global leaderboard
+
+The one part of the game that uses the network. It changes no rule and no number: with no
+leaderboard configured, or none reachable, it shows as unavailable and everything else plays
+the same.
+
+- **What is recorded:** one row per finished run (victory or game over; a game that is
+  abandoned is not finished): campaign, empire name, flag pattern and its three colours,
+  starting country, final score, countries conquered, continents held, battles fought, best
+  streak, outcome, and the time the database received it. Nothing identifies the player.
+- **Ranking,** per campaign: final score; ties go to fewer battles fought, then to the
+  earlier run.
+- **End screen:** the global top five for the campaign just played, with the player's run
+  picked out in gold. A run outside the top five is shown below it with its rank.
+- **Start screen:** a Leaderboard button to the right of Rules opens a page, in place of the
+  map, with the top five of each of the seven campaigns. Nothing is asked of the leaderboard
+  until that page is opened or a run ends.
+- **One row per run.** Each game gets a random id, kept beside the save. Looking at the end
+  screen again after a refresh sends the same id, and the database keeps one row for it.
+- **Names** keep their 22-character limit and pass a basic profanity filter
+  (`src/game/names.ts`). A name that fails is flagged as it is typed, and a run started under
+  it is named after its home country instead ("Empire of Germany").
+- **The database** is a Supabase project set up by `supabase/schema.sql`. Anyone may read
+  the table; nobody may insert, update or delete rows directly. A run gets in only through
+  the function `submit_run`, which refuses anything the game could not have produced: an
+  unknown campaign, a name that is too long or blocked, a flag outside the sixteen patterns
+  and twelve colours, more conquests than the campaign has countries, a victory that is not
+  every country, a score that is not conquests × one of the five multipliers + 10 per
+  continent, fewer battles than conquests. The project's address and public key come from
+  `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (see `.env.example`).
+- **What it does not prevent** is listed in the readme: the checks stop impossible runs,
+  not invented ones.
 
 ## 15. Consequences that follow from these rules
 
@@ -393,8 +470,8 @@ These are derived facts, not design intentions.
   produce a Hard question; mid-known countries that do qualify are asked it once per battle,
   in the first Hard slot, and the other late slots are Medium.
 - Because an unused type beats the slot's tier, a long battle against a famous country ends
-  on its leftover Easy types (capital, sea, globe line, curated fact) once the Medium ones
-  have each been asked.
+  on its leftover Easy types (capital, sea, globe line, curated fact, national sport, main
+  export, famous person) once the Medium ones have each been asked.
 - The only way to lose is to reach 0 troops inside a battle. With 2 troops a retreat (−1)
   avoids this; with 1 troop there is no retreat and the next wrong answer ends the game.
 - A wrong answer costs a flat 2 troops regardless of army size, while a retreat costs a

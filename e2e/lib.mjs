@@ -8,6 +8,56 @@ export const BASE = process.env.ATLAS_URL ?? 'http://localhost:5173/';
 export const SHOTS = decodeURIComponent(new URL('./screenshots/', import.meta.url).pathname);
 mkdirSync(SHOTS, { recursive: true });
 
+/**
+ * The leaderboard's address in these checks. The .invalid domain can never resolve, and every call to
+ * a leaderboard is answered by the stand-in below, so no check ever reaches a real database.
+ */
+export const SUPABASE_URL = 'https://leaderboard.invalid';
+export const SUPABASE_KEY = 'test-public-key';
+const LEADERBOARD_CALL = /\/rest\/v1\/rpc\//;
+
+/**
+ * A stand-in for the Supabase project: it keeps runs in memory and answers the two calls the game makes
+ * (submit_run and top_runs) with the ranking rules of supabase/schema.sql.
+ *   board.mode = 'ok' | 'down' (unreachable) | 'reject' (refuses every run)
+ */
+export function fakeLeaderboard() {
+  const board = { rows: [], requests: [], mode: 'ok', clock: 0 };
+  const order = (a, b) => b.score - a.score || a.battles - b.battles || a.created_at.localeCompare(b.created_at) || a.run_id.localeCompare(b.run_id);
+  board.ranked = (campaign) => board.rows.filter((r) => r.campaign === campaign).sort(order).map((r, i) => ({ ...r, rank: i + 1 }));
+  const stamp = () => new Date(Date.UTC(2026, 0, 1, 0, 0, board.clock++)).toISOString();
+  /** Puts a run on the board directly, as if someone else had played it. */
+  board.add = (campaign, empire_name, score, extra = {}) => {
+    const row = { run_id: `00000000-0000-4000-8000-${String(board.rows.length + 1).padStart(12, '0')}`, campaign, empire_name, flag_pattern: board.rows.length % 16, flag_colours: ['#d8343c', '#f4f4ec', '#2b4fc4'], start_country: 'FRA', score, conquered: Math.round(score), continents: 0, battles: Math.round(score) + 1, best_streak: 3, outcome: 'defeat', created_at: stamp(), ...extra };
+    board.rows.push(row);
+    return row;
+  };
+  const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'POST, OPTIONS' };
+  const json = (route, status, body) => route.fulfill({ status, headers: { ...cors, 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  board.handle = async (route) => {
+    const request = route.request();
+    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
+    const name = new URL(request.url()).pathname.split('/').pop();
+    const args = request.postDataJSON() ?? {};
+    board.requests.push({ name, args, url: request.url(), headers: request.headers() });
+    if (board.mode === 'down') return route.abort('connectionrefused');
+    if (name === 'submit_run') {
+      if (board.mode === 'reject') return json(route, 400, { code: 'P0001', message: 'The score does not add up.' });
+      if (!board.rows.some((r) => r.run_id === args.p_run_id)) {
+        board.rows.push({ run_id: args.p_run_id, campaign: args.p_campaign, empire_name: args.p_empire_name, flag_pattern: args.p_flag_pattern, flag_colours: args.p_flag_colours, start_country: args.p_start_country, score: args.p_score, conquered: args.p_conquered, continents: args.p_continents, battles: args.p_battles, best_streak: args.p_best_streak, outcome: args.p_outcome, created_at: stamp() });
+      }
+      const run = board.rows.find((r) => r.run_id === args.p_run_id);
+      return json(route, 200, board.ranked(run.campaign).find((r) => r.run_id === run.run_id).rank);
+    }
+    if (name === 'top_runs') {
+      const campaigns = args.p_campaign ? [args.p_campaign] : [...new Set(board.rows.map((r) => r.campaign))];
+      return json(route, 200, campaigns.flatMap((c) => board.ranked(c).slice(0, args.p_limit ?? 5)));
+    }
+    return json(route, 404, { message: 'no such function' });
+  };
+  return board;
+}
+
 export async function launch(opts = {}) {
   const browser = await chromium.launch({ channel: 'chrome', headless: true });
   const context = await browser.newContext({
@@ -16,22 +66,27 @@ export async function launch(opts = {}) {
     hasTouch: opts.touch ?? false,
     isMobile: opts.mobile ?? false,
   });
+  const board = fakeLeaderboard();
+  await context.route(LEADERBOARD_CALL, board.handle);
   const page = await context.newPage();
   const problems = [];
+  // When a check takes the leaderboard down on purpose, the browser's complaints about it are expected.
+  const expected = (url) => board.mode !== 'ok' && LEADERBOARD_CALL.test(url ?? '');
   page.on('console', (m) => {
+    if (expected(m.location()?.url)) return;
     if (m.type() === 'error' || m.type() === 'warning') problems.push(`console.${m.type()}: ${m.text()}`);
   });
   page.on('pageerror', (e) => problems.push(`pageerror: ${e.message}`));
   page.on('requestfailed', (r) => {
     // A request the browser itself cancelled (an image still loading when the test reloads the page) is not a
     // failure of the game. A file that is really missing arrives as a 404 below, and other network errors still count.
-    if (r.failure()?.errorText === 'net::ERR_ABORTED') return;
+    if (r.failure()?.errorText === 'net::ERR_ABORTED' || expected(r.url())) return;
     problems.push(`requestfailed: ${r.url()} ${r.failure()?.errorText}`);
   });
   page.on('response', (r) => {
-    if (r.status() >= 400) problems.push(`http ${r.status()}: ${r.url()}`);
+    if (r.status() >= 400 && !expected(r.url())) problems.push(`http ${r.status()}: ${r.url()}`);
   });
-  return { browser, context, page, problems };
+  return { browser, context, page, problems, board };
 }
 
 export const state = (page) => page.evaluate(() => window.__atlas?.state ?? null);

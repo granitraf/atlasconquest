@@ -3,3 +3,8 @@ dist
 *.log
 .DS_Store
 e2e/screenshots
+
+# Keys for the leaderboard: never committed. .env.example shows what goes in them.
+.env
+.env.*
+!.env.example

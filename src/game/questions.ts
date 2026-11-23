@@ -24,6 +24,12 @@ export const TYPE_WEIGHT: Record<QuestionType, 1 | 2 | 3> = {
   feature: 2,
   lines: 2,
   fact: 2,
+  // Curated like any other fact, and no harder: a national sport, a top export, a world-famous person.
+  sport: 2,
+  export: 2,
+  person: 2,
+  // A year has to be known: there is nothing on the map to work it out from.
+  independence: 3,
   population: 3,
   area: 3,
   notBorder: 3,
@@ -42,6 +48,10 @@ export const USES_CLOSENESS: Record<QuestionType, boolean> = {
   feature: true,
   lines: false,
   fact: false,
+  sport: false,
+  export: false,
+  person: false,
+  independence: false,
   population: false,
   area: false,
   notBorder: true,
@@ -77,6 +87,32 @@ export const FLAG_CLOSE_CHANCE = 0.5;
 
 /** A curated fact is only asked if it is at least this well known (3 worldwide, 2 well-read player, 1 local). */
 export const FACT_MIN_RECOGNITION = 2;
+/** A person is only asked about if they are recognisable worldwide. */
+export const PERSON_MIN_RECOGNITION = 3;
+
+/** Sports of ice and snow: never offered as a wrong option for a country closer to the equator than this. */
+export const WINTER_SPORTS = new Set(['Ice hockey', 'Bandy', 'Curling', 'Cross-country skiing', 'Alpine skiing', 'Biathlon', 'Ski jumping', 'Skiing', 'Floorball']);
+export const WINTER_SPORT_MIN_LATITUDE = 35;
+
+/** Independence questions: no option is later than this, the vintage of the data. */
+export const LATEST_YEAR = 2025;
+/** Years between the options of an independence question: a decade for the twentieth century on, two before it. */
+export const independenceGap = (year: number) => (year >= 1900 ? 10 : 20);
+/** A wrong year is never closer than this to another significant year of the same country (declared, recognised, restored). */
+export const INDEPENDENCE_CLEARANCE = 5;
+
+/** Which question type a curated fact is asked under: its theme if it has one, otherwise the general "fact". */
+export function factTheme(fact: Pick<Fact, 'category' | 'kind'>): 'sport' | 'export' | 'person' | 'fact' {
+  if (fact.category === 'person') return 'person';
+  if (fact.category === 'sport') return 'sport';
+  if (fact.kind === 'export') return 'export';
+  return 'fact';
+}
+
+/** Can this fact be asked about this country at all? */
+export function factAskable(fact: Fact, country: Pick<Country, 'name'>): boolean {
+  return fact.recognition >= (fact.category === 'person' ? PERSON_MIN_RECOGNITION : FACT_MIN_RECOGNITION) && !givesAway(fact.answer, country);
+}
 
 /** Types a player can work out from the map and the region, rather than having to know cold. */
 export const REASON_OUT_TYPES: QuestionType[] = ['water', 'feature', 'lines', 'border', 'language'];
@@ -457,6 +493,35 @@ function ranking(
   return null;
 }
 
+/**
+ * A question from the curated facts (public/data/facts.json), for one theme: the general "fact", or
+ * sport, export or person. Wrong options are the fact's own hand-picked ones, or answers to the same
+ * kind of fact about other countries, nearest regions first. An option is never something that is
+ * also true, or arguably true, for the country.
+ */
+function factDraft(world: World, c: Country, exclude: Exclude, rng: Rng, theme: ReturnType<typeof factTheme>): Draft | null {
+  const own = world.factsByCountry[c.id] ?? [];
+  const candidates = own.filter((f) => factTheme(f) === theme && factAskable(f, c) && !exclude.has(`${theme}:${f.id}`));
+  if (candidates.length === 0) return null;
+  const fact = pick(rng, candidates);
+  // Anything that is also true for this country can never be a wrong option.
+  const alsoTrue = new Set([...own.map((f) => f.answer), ...(fact.avoid ?? [])]);
+  // Nor can a sport of ice and snow, for a country nowhere near either.
+  const fits = (answer: string) => !alsoTrue.has(answer) && !(WINTER_SPORTS.has(answer) && Math.abs(c.lat) < WINTER_SPORT_MIN_LATITUDE);
+  let wrong: string[];
+  if (fact.wrong && fact.wrong.length >= 3) {
+    wrong = shuffle(rng, fact.wrong.filter(fits)).slice(0, 3);
+  } else {
+    // Answers to the same kind of fact about other countries, nearest regions first.
+    const usable = (o: Country): Fact | null =>
+      shuffle(rng, world.factsByCountry[o.id] ?? []).find(
+        (f) => f.kind === fact.kind && fits(f.answer) && !f.sharedWith?.includes(c.id) && !(fact.group && f.group === fact.group),
+      ) ?? null;
+    wrong = collect(regionTiers(world, c), 3, rng, usable, (f) => f.answer, alsoTrue).map((f) => f.answer);
+  }
+  return { sig: `${theme}:${fact.id}`, prompt: fact.prompt, correct: { label: fact.answer }, wrong: labels(wrong) };
+}
+
 /** What a generator produces; scoring and shuffling are added afterwards. */
 interface Draft {
   sig: string;
@@ -786,34 +851,33 @@ const GENERATORS: Record<QuestionType, Generator> = {
     };
   },
 
-  fact(world, c, _closeness, exclude, rng) {
-    const own = world.factsByCountry[c.id] ?? [];
-    const candidates = own.filter(
-      (f) => f.recognition >= FACT_MIN_RECOGNITION && !exclude.has(`fact:${f.id}`) && !givesAway(f.answer, c),
-    );
-    if (candidates.length === 0) return null;
-    const fact = pick(rng, candidates);
-    // Anything that is also true for this country can never be a wrong option.
-    const alsoTrue = new Set(own.map((f) => f.answer));
-    let wrong: string[];
-    if (fact.wrong && fact.wrong.length >= 3) {
-      wrong = shuffle(
-        rng,
-        fact.wrong.filter((w) => !alsoTrue.has(w)),
-      ).slice(0, 3);
-    } else {
-      // Answers to the same kind of fact about other countries, nearest regions first.
-      const usable = (o: Country): Fact | null =>
-        shuffle(rng, world.factsByCountry[o.id] ?? []).find(
-          (f) =>
-            f.kind === fact.kind &&
-            !alsoTrue.has(f.answer) &&
-            !f.sharedWith?.includes(c.id) &&
-            !(fact.group && f.group === fact.group),
-        ) ?? null;
-      wrong = collect(regionTiers(world, c), 3, rng, usable, (f) => f.answer, alsoTrue).map((f) => f.answer);
+  fact: (world, c, _closeness, exclude, rng) => factDraft(world, c, exclude, rng, 'fact'),
+  sport: (world, c, _closeness, exclude, rng) => factDraft(world, c, exclude, rng, 'sport'),
+  export: (world, c, _closeness, exclude, rng) => factDraft(world, c, exclude, rng, 'export'),
+  person: (world, c, _closeness, exclude, rng) => factDraft(world, c, exclude, rng, 'person'),
+
+  independence(_world, c, _closeness, exclude, rng) {
+    const sig = `independence:${c.id}`;
+    const known = c.independence;
+    if (exclude.has(sig) || !known) return null;
+    const gap = independenceGap(known.year);
+    // Four years in order, a fixed gap apart, with the right one in a random place. A line-up is rejected
+    // if it reaches into the future or strays near another significant year of the same country.
+    for (const position of shuffle(rng, [0, 1, 2, 3])) {
+      const years = [0, 1, 2, 3].map((i) => known.year + (i - position) * gap);
+      if (years[3] > LATEST_YEAR) continue;
+      if (years.some((year) => year !== known.year && known.also.some((other) => Math.abs(other - year) < INDEPENDENCE_CLEARANCE))) continue;
+      const ordered = years.map((year) => ({ label: String(year) }));
+      const correct = ordered[position];
+      return {
+        sig,
+        prompt: `In which year did ${countryPhrase(c)} gain independence?`,
+        correct,
+        wrong: ordered.filter((o) => o !== correct),
+        ordered,
+      };
     }
-    return { sig: `fact:${fact.id}`, prompt: fact.prompt, correct: { label: fact.answer }, wrong: labels(wrong) };
+    return null;
   },
 
   population(world, c, _closeness, exclude, rng) {

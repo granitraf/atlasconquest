@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { GameData } from '../data';
-import { EMPIRE_NAME_MAX, FLAG_COLOURS, FLAG_PATTERNS, type Empire } from '../game/flag';
+import { EMPIRE_NAME_MAX, FLAG_COLOURS, FLAG_PATTERNS, cleanEmpireName, type Empire } from '../game/flag';
+import { nameAllowed } from '../game/names';
 import { START_LABELS, START_TROOPS, soldiers, startDifficulty } from '../game/rules';
 import { sound } from '../sound';
 import { FlagIcon } from './FlagIcon';
@@ -18,6 +19,8 @@ interface Props {
   onStart: (id: string) => void;
   /** Opens the rule book. (On narrow screens this panel covers the map, and the button above the map with it.) */
   onRules: () => void;
+  /** Opens the leaderboard, the same way. */
+  onLeaderboard: () => void;
 }
 
 const FILTERS: ('All' | StartLabel)[] = ['All', ...START_LABELS];
@@ -30,7 +33,7 @@ const fold = (text: string) =>
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase();
 
-export function StartScreen({ data, mode, selectedId, empire, onEmpire, onMode, onSelect, onStart, onRules }: Props) {
+export function StartScreen({ data, mode, selectedId, empire, onEmpire, onMode, onSelect, onStart, onRules, onLeaderboard }: Props) {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'All' | StartLabel>('All');
   /** Which of the flag's three colours the palette is currently changing. */
@@ -76,18 +79,32 @@ export function StartScreen({ data, mode, selectedId, empire, onEmpire, onMode, 
           <Logo />
         </h1>
         <p className="tagline">Conquer the map. Geography knowledge is your army.</p>
-        <button
-          type="button"
-          className="btn primary rules-open"
-          onMouseEnter={() => sound.pulse()}
-          onClick={() => {
-            sound.snap();
-            onRules();
-          }}
-          data-testid="rules-open"
-        >
-          Rules
-        </button>
+        <div className="start-doors">
+          <button
+            type="button"
+            className="btn primary rules-open"
+            onMouseEnter={() => sound.pulse()}
+            onClick={() => {
+              sound.snap();
+              onRules();
+            }}
+            data-testid="rules-open"
+          >
+            Rules
+          </button>
+          <button
+            type="button"
+            className="btn primary rules-open"
+            onMouseEnter={() => sound.pulse()}
+            onClick={() => {
+              sound.snap();
+              onLeaderboard();
+            }}
+            data-testid="leaderboard-open"
+          >
+            Leaderboard
+          </button>
+        </div>
       </div>
 
       <div className="start-section empire" data-testid="empire">
@@ -107,6 +124,11 @@ export function StartScreen({ data, mode, selectedId, empire, onEmpire, onMode, 
               autoComplete="off"
               spellCheck={false}
             />
+            {!nameAllowed(cleanEmpireName(empire.name)) && (
+              <p className="name-warning" role="alert" data-testid="name-warning">
+                That name is not allowed. Your empire will be named after its home country.
+              </p>
+            )}
             <div className="flag-colours">
               <div className="slots" role="radiogroup" aria-label="Which flag colour to change">
                 {empire.flag.colours.map((colour, i) => (

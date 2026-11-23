@@ -4,9 +4,9 @@ A single-player, Risk-style world conquest game for the browser where geography 
 Answer questions about your starting country to recruit an army, once, then answer questions about
 your neighbours to conquer them. After that, new troops come only from conquests.
 
-Vite + React + TypeScript, with D3 (`d3-geo`, `d3-zoom`) and `topojson-client` for the map. There is no
-backend: the game saves to `localStorage`, and all data, fonts and flags are bundled, so it never calls a
-live API while you play. Sound effects are synthesised in the browser; there are no audio files. The campaign
+Vite + React + TypeScript, with D3 (`d3-geo`, `d3-zoom`) and `topojson-client` for the map. The game
+itself has no backend: it saves to `localStorage`, and all data, fonts and flags are bundled, so no question
+ever comes from a live API. The one optional network feature is the [global leaderboard](#the-global-leaderboard). Sound effects are synthesised in the browser; there are no audio files. The campaign
 names are spoken by the browser's own speech synthesis, using a British English voice when the device has one.
 
 The whole game is pixel art. The map is drawn on a single pixel grid (terrain, territory tints, borders,
@@ -40,6 +40,44 @@ Other scripts:
 `npm run verify -- game` (`map`, `game`, `mobile`, `production`), or one section of the game suite with
 `npm run verify -- game iceland`. Screenshots land in `e2e/screenshots/`.
 
+## The global leaderboard
+
+Finished runs can be recorded on a global leaderboard: the top five of each campaign, shown on the end
+screen and behind the Leaderboard button on the start screen. It lives in a [Supabase](https://supabase.com)
+project and is optional: without it the game plays exactly the same and the leaderboard shows as unavailable.
+
+To set it up:
+
+1. Create a Supabase project.
+2. In its SQL editor, run the whole of `supabase/schema.sql` once.
+3. Copy `.env.example` to `.env.local` and fill in the project URL and its **public** key (called "anon" or
+   "publishable", under Project Settings > API). Restart `npm run dev`.
+4. Wherever the game is hosted, set the same two variables for the build (`npm run build` bakes them in).
+
+`.env.local` is ignored by git. Never use the `service_role` / secret key: anything starting with `VITE_`
+is shipped to every player. The public key is meant to be public; the database is what guards the table.
+
+**What the database allows.** Anyone may read the leaderboard. Nobody may insert, update or delete rows
+directly. A run is recorded only through the function `submit_run`, which checks the campaign, the name
+(length and a basic profanity filter), the flag (one of the game's patterns and palette colours), that the
+score is one the game can produce for that campaign, that a victory really is every country, and that
+there are at least as many battles as conquests. It keeps one row per run id and stamps the time itself.
+
+**What cheating it does not prevent.** The game runs entirely in the player's browser, so the database
+only ever hears what a browser tells it.
+
+- Anyone can call `submit_run` by hand with a made-up run. As long as the numbers are ones the game could
+  produce, it is accepted: a perfect World victory at the highest multiplier can be claimed without playing.
+- The multiplier is not checked against the starting country, so an easy start can be reported as an
+  Extreme one.
+- Looking up answers, or reading the game's state in the browser's developer tools, cannot be detected.
+- One person can submit any number of runs under any number of names; nothing ties a run to a player, by
+  design, so there is no per-player limit and no rate limit.
+- The profanity filter is basic and only knows English. A determined player will get a rude name past it.
+
+Closing these would need the game to be replayed and judged on a server, or player accounts. Until then,
+remove a bad row by hand in the SQL editor: `delete from public.runs where run_id = '...';`
+
 ## How to play
 
 The game explains itself: the **Rules** button above the map on the start screen opens an illustrated rule book
@@ -65,8 +103,8 @@ in [MECHANICS.md](MECHANICS.md). In short:
 6. **Defenders** scale with population (3,000 to 13,000), and every country gains 1,000 more for each 15
    countries you hold. Sea crossings face a third more, with half the time per question.
 7. **Question difficulty** is a score: the kind of question, plus how obscure the country is, plus how
-   close the wrong options are. Fourteen question types, from flags and seas to famous people and a
-   memorable hook for every country. No option is far-fetched: wrong answers come from the same
+   close the wrong options are. Eighteen question types, from flags and seas to national sports, main exports,
+   years of independence, famous people and a memorable hook for every country. No option is far-fetched: wrong answers come from the same
    continent, flag options all resemble the right flag, and a capital question always includes another
    city of the same country.
 8. **Score** is countries conquered × your start's multiplier, plus 10 for every continent held in full.
@@ -81,15 +119,20 @@ scripts/setup-data.mjs   one-time data download and processing
 scripts/derive.mjs       applies the config files to the data: fame, seas, features, globe lines
 config/fame.json         the editable fame lists: famous, familiar, obscure
 config/geography.json    which seas, rivers, deserts, ranges and rainforests each country has
+config/independence.json the year each country gained independence, with any second significant year
 public/data/facts.json   the curated facts and hooks (hand-edited; reviewed in reports/facts-review.md)
 MECHANICS.md             the rules in full
-reports/                 review files: difficulty (fame, start ratings) and every curated fact
+supabase/schema.sql      the leaderboard's database: one table, read-only to the public, and the function that records a run
+.env.example             the two settings the leaderboard needs (copy to .env.local)
+reports/                 review files: difficulty (fame, start ratings), every curated fact, and the four newer themes
+                         (national sport, main export, year of independence, famous person) with every doubtful entry
 public/data, public/flags   the bundled data
 src/game/                pure game logic, no React or DOM
   rules.ts               defenders and escalation, wounds, streaks, battle resolution, retreat, targets, start ratings, scoring
   questions.ts           question generation and difficulty scoring (type weight + fame + closeness)
   brands.ts              hand-picked brands by founding country, for the brand question
   flag.ts                the empire flag: preset patterns, colours, validation
+  names.ts               the basic profanity filter for empire names
   state.ts               the reducer: (state, action) -> state, plus save validation
   world.ts, rng.ts, types.ts
 src/map/
@@ -98,6 +141,7 @@ src/map/
   terrain.ts             procedural terrain fallback
 src/components/          rendering only: map, HUD, question card, attack panel, start and end screens
 src/logo.json            the emblem's pixels: two crossed gold swords (drawn, with the favicon, by `npm run logo`)
+src/leaderboard.ts       the leaderboard client: sends a finished run, reads the top five (plain fetch, no library)
 src/sound.ts             synthesised sound effects (hover pulse, snap, whoosh, trumpet call, countdown tick) and the campaign voice
 src/App.tsx              wires state to components
 tests/                   unit tests for src/game, the rasteriser and the sound pitch

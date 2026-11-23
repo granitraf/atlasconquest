@@ -8,6 +8,7 @@
 //   languages, languagesAvoid corrections to the official languages, from config/languages.json
 //   lanes                     the sea lanes it has a coast on (where its ships can go), from config/geography.json
 //   cities                    well-known cities other than the capital, from config/cities.json
+//   independence              the year it gained independence, from config/independence.json
 //   flagKin                   the flags most like its own in colour and layout, worked out from the flag images
 // The setup script calls the same functions, so a full rebuild gives the same result.
 import { readFile, writeFile } from 'node:fs/promises';
@@ -222,6 +223,22 @@ export function applyCities(countries, config) {
   return countries;
 }
 
+/**
+ * Sets `independence` ({ year, also }) from config/independence.json, or null for a country with no
+ * clear date. `also` holds other significant years, which wrong options are kept away from.
+ */
+export function applyIndependence(countries, config) {
+  const byId = new Map(countries.map((c) => [c.id, c]));
+  for (const c of countries) c.independence = null;
+  for (const [id, entry] of Object.entries(config.countries)) {
+    const c = byId.get(id);
+    if (!c) throw new Error(`config/independence.json: unknown country "${id}"`);
+    if (!Number.isInteger(entry.year) || entry.year < 1500 || entry.year > 2100) throw new Error(`config/independence.json: bad year for "${id}"`);
+    c.independence = { year: entry.year, also: [...(entry.also ?? [])] };
+  }
+  return countries;
+}
+
 // ------------------------------------------------------------------ flag likeness
 //
 // Each flag is boiled down to which colours it uses and where: every pixel of a small copy is put in
@@ -316,6 +333,7 @@ export async function deriveAll(countries, topology) {
   applyGlobeLines(countries, boxes, geography.linesAvoid);
   applyLanes(countries, geography);
   applyCities(countries, await loadConfig('cities'));
+  applyIndependence(countries, await loadConfig('independence'));
   await applyFlagKin(countries);
   applyLanguages(countries, await loadConfig('languages'));
   return countries;
@@ -328,6 +346,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   console.log(`Fame: ${[0, 1, 2].map((f) => count((c) => c.fame === f)).join(' / ')} (famous / mid-known / obscure).`);
   console.log(`Waters: ${count((c) => c.waters.length > 0)} countries. Features: ${count((c) => c.features.length > 0)}. Globe lines: ${count((c) => c.lines.length > 0)}.`);
   console.log(`Cities: ${count((c) => c.cities.length > 0)} countries have at least one besides the capital.`);
+  console.log(`Independence: ${count((c) => c.independence)} countries have a year.`);
   const names = new Map(countries.map((c) => [c.id, c.name]));
   for (const id of ['AND', 'IRL', 'DEU', 'JPN', 'USA']) console.log(`Flags most like ${names.get(id)}: ${countries.find((c) => c.id === id).flagKin.map((k) => names.get(k)).join(', ')}.`);
   const lanes = [...new Set(countries.flatMap((c) => c.lanes))];

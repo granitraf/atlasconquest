@@ -9,6 +9,7 @@ import { generateTerrain, probeImage } from './map/terrain';
 const BASE = import.meta.env.BASE_URL;
 const SAVE_KEY = 'atlas-conquest:save:v1';
 const EMPIRE_KEY = 'atlas-conquest:empire:v1';
+const RUN_KEY = 'atlas-conquest:run:v1';
 
 export interface Manifest {
   countryCount: number;
@@ -115,4 +116,34 @@ export function saveEmpire(empire: Empire): void {
   } catch {
     // Not being able to remember it is fine.
   }
+}
+
+function randomId(): string {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  // Pages served over plain http have no randomUUID; build a version 4 id from random bytes instead.
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = (b[6] & 0x0f) | 0x40;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  const hex = [...b].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
+/**
+ * The id a run goes by on the leaderboard: random, made once per game and remembered beside the save,
+ * so a finished run that is looked at again after a refresh is the same run and is counted once.
+ */
+export function runIdFor(seed: number): string {
+  try {
+    const saved = JSON.parse(localStorage.getItem(RUN_KEY) ?? 'null') as { seed?: unknown; id?: unknown } | null;
+    if (saved && saved.seed === seed && typeof saved.id === 'string' && /^[0-9a-f-]{36}$/.test(saved.id)) return saved.id;
+  } catch {
+    // Fall through to a new id.
+  }
+  const id = randomId();
+  try {
+    localStorage.setItem(RUN_KEY, JSON.stringify({ seed, id }));
+  } catch {
+    // Without storage the run still gets an id; it just cannot be recognised after a refresh.
+  }
+  return id;
 }

@@ -6,6 +6,12 @@ import { spawn } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer, preview } from 'vite';
+import { SUPABASE_KEY, SUPABASE_URL } from './lib.mjs';
+
+// The suites run against a leaderboard that does not exist: the browser checks answer for it themselves.
+// Set here, these win over any real keys in a local .env file, so the checks never touch a real project.
+process.env.VITE_SUPABASE_URL = SUPABASE_URL;
+process.env.VITE_SUPABASE_ANON_KEY = SUPABASE_KEY;
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '..');
@@ -44,13 +50,15 @@ if (DEV_SUITES.some(wants)) {
 }
 
 if (wants('production')) {
-  // Exactly what `npm run build` does after type-checking.
-  const built = await node([join(root, 'node_modules', 'vite', 'bin', 'vite.js'), 'build', '--logLevel', 'error']);
+  // Exactly what `npm run build` does after type-checking, but into its own folder: this build points at
+  // the stand-in leaderboard, and must never be mistaken for the real one in dist/.
+  const outDir = join(root, 'node_modules', '.cache', 'atlas-verify');
+  const built = await node([join(root, 'node_modules', 'vite', 'bin', 'vite.js'), 'build', '--outDir', outDir, '--emptyOutDir', '--logLevel', 'error']);
   if (!built) {
     console.log('Production build failed.');
     process.exit(1);
   }
-  const server = await preview({ root, preview: { port: 4199 }, logLevel: 'error' });
+  const server = await preview({ root, build: { outDir }, preview: { port: 4199 }, logLevel: 'error' });
   const url = server.resolvedUrls.local[0];
   console.log(`\nProduction preview at ${url}`);
   if (!(await run('production', url))) failed++;

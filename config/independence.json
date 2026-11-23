@@ -1,0 +1,52 @@
+{
+  "about": "The year each country gained independence, by country id: the date most widely taught. `also` lists other significant years for the same country (declared vs recognised, an earlier or restored independence); wrong options are kept well away from them. `unsure` marks a year that a reasonable person might dispute; each is explained in reports/new-questions-review.md. Countries that were never colonised, have no single clear date, or are territories are left out, and listed in reports/new-questions-review.md. Edit, then run `npm run derive`.",
+  "countries": {
+    "DZA": { "year": 1962 }, "AGO": { "year": 1975 }, "BEN": { "year": 1960 }, "BWA": { "year": 1966 },
+    "BFA": { "year": 1960 }, "BDI": { "year": 1962 }, "CMR": { "year": 1960 }, "CPV": { "year": 1975 },
+    "CAF": { "year": 1960 }, "TCD": { "year": 1960 }, "COM": { "year": 1975 }, "COD": { "year": 1960 },
+    "COG": { "year": 1960 }, "CIV": { "year": 1960 }, "DJI": { "year": 1977 }, "EGY": { "year": 1922, "also": [1952], "unsure": true },
+    "GNQ": { "year": 1968 }, "ERI": { "year": 1993, "also": [1991] }, "SWZ": { "year": 1968 }, "GAB": { "year": 1960 },
+    "GMB": { "year": 1965 }, "GHA": { "year": 1957 }, "GIN": { "year": 1958 }, "GNB": { "year": 1973, "also": [1974] },
+    "KEN": { "year": 1963 }, "LSO": { "year": 1966 }, "LBR": { "year": 1847 }, "LBY": { "year": 1951 },
+    "MDG": { "year": 1960 }, "MWI": { "year": 1964 }, "MLI": { "year": 1960 }, "MRT": { "year": 1960 },
+    "MUS": { "year": 1968 }, "MAR": { "year": 1956 }, "MOZ": { "year": 1975 }, "NAM": { "year": 1990 },
+    "NER": { "year": 1960 }, "NGA": { "year": 1960 }, "RWA": { "year": 1962 }, "STP": { "year": 1975 },
+    "SEN": { "year": 1960 }, "SYC": { "year": 1976 }, "SLE": { "year": 1961 }, "SOM": { "year": 1960 },
+    "SSD": { "year": 2011 }, "SDN": { "year": 1956 }, "TZA": { "year": 1961, "also": [1964], "unsure": true }, "TGO": { "year": 1960 },
+    "TUN": { "year": 1956 }, "UGA": { "year": 1962 }, "ZMB": { "year": 1964 }, "ZWE": { "year": 1980, "also": [1965] },
+
+    "AFG": { "year": 1919, "unsure": true }, "ARM": { "year": 1991, "also": [1918], "unsure": true }, "AZE": { "year": 1991, "also": [1918], "unsure": true },
+    "BHR": { "year": 1971 }, "BGD": { "year": 1971 }, "BRN": { "year": 1984 }, "KHM": { "year": 1953 },
+    "GEO": { "year": 1991, "also": [1918], "unsure": true }, "IND": { "year": 1947 }, "IDN": { "year": 1945, "also": [1949] },
+    "IRQ": { "year": 1932, "unsure": true }, "ISR": { "year": 1948 }, "JOR": { "year": 1946 }, "KAZ": { "year": 1991 },
+    "KWT": { "year": 1961 }, "KGZ": { "year": 1991 }, "LAO": { "year": 1953, "also": [1949] }, "LBN": { "year": 1943 },
+    "MDV": { "year": 1965 },
+    "MMR": { "year": 1948 }, "PAK": { "year": 1947 }, "PHL": { "year": 1946, "also": [1898], "unsure": true }, "QAT": { "year": 1971 },
+    "SGP": { "year": 1965, "also": [1963] }, "LKA": { "year": 1948 }, "SYR": { "year": 1946 }, "TJK": { "year": 1991 },
+    "TLS": { "year": 2002, "also": [1975] }, "TKM": { "year": 1991 }, "ARE": { "year": 1971 }, "UZB": { "year": 1991 },
+
+    "ALB": { "year": 1912 }, "BLR": { "year": 1991 }, "BEL": { "year": 1830 }, "BIH": { "year": 1992 },
+    "BGR": { "year": 1908, "also": [1878], "unsure": true }, "HRV": { "year": 1991 }, "CYP": { "year": 1960 },
+    "CZE": { "year": 1993, "also": [1918], "unsure": true }, "EST": { "year": 1918, "also": [1991], "unsure": true }, "FIN": { "year": 1917 },
+    "GRC": { "year": 1821, "also": [1830, 1832], "unsure": true }, "ISL": { "year": 1944, "also": [1918], "unsure": true },
+    "UNK": { "year": 2008, "unsure": true },
+    "LVA": { "year": 1918, "also": [1991], "unsure": true }, "LTU": { "year": 1918, "also": [1990], "unsure": true }, "MLT": { "year": 1964 },
+    "MDA": { "year": 1991 }, "MNE": { "year": 2006 }, "MKD": { "year": 1991 }, "NOR": { "year": 1905, "also": [1814], "unsure": true },
+    "POL": { "year": 1918, "unsure": true }, "ROU": { "year": 1877, "also": [1878], "unsure": true }, "SVK": { "year": 1993 }, "SVN": { "year": 1991 },
+    "UKR": { "year": 1991 },
+
+    "ATG": { "year": 1981 }, "ARG": { "year": 1816, "also": [1810] }, "BHS": { "year": 1973 }, "BRB": { "year": 1966 },
+    "BLZ": { "year": 1981 }, "BOL": { "year": 1825 }, "BRA": { "year": 1822 }, "CHL": { "year": 1818, "also": [1810], "unsure": true },
+    "COL": { "year": 1810, "also": [1819], "unsure": true }, "CRI": { "year": 1821 }, "CUB": { "year": 1902, "also": [1898], "unsure": true },
+    "DMA": { "year": 1978 }, "SLV": { "year": 1821 }, "GRD": { "year": 1974 },
+    "GTM": { "year": 1821 }, "GUY": { "year": 1966 }, "HTI": { "year": 1804 }, "HND": { "year": 1821 },
+    "JAM": { "year": 1962 }, "MEX": { "year": 1821, "also": [1810], "unsure": true }, "NIC": { "year": 1821 },
+    "PAN": { "year": 1903, "also": [1821], "unsure": true }, "PRY": { "year": 1811 }, "PER": { "year": 1821, "also": [1824] },
+    "KNA": { "year": 1983 }, "LCA": { "year": 1979 }, "VCT": { "year": 1979 }, "SUR": { "year": 1975 },
+    "TTO": { "year": 1962 }, "USA": { "year": 1776, "also": [1783] }, "URY": { "year": 1825, "also": [1828] },
+
+    "FJI": { "year": 1970 }, "KIR": { "year": 1979 }, "MHL": { "year": 1986, "unsure": true }, "FSM": { "year": 1986, "unsure": true },
+    "NRU": { "year": 1968 }, "PLW": { "year": 1994, "unsure": true }, "PNG": { "year": 1975 }, "WSM": { "year": 1962 },
+    "SLB": { "year": 1978 }, "TON": { "year": 1970, "unsure": true }, "VUT": { "year": 1980 }
+  }
+}
