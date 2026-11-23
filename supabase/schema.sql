@@ -11,7 +11,7 @@
 --   * top_runs, which returns the best runs of a campaign in ranking order.
 --
 -- The numbers in here (countries per campaign, start multipliers, the flag palette, the name
--- length, the blocked words) mirror the game's own. tests/leaderboard.test.ts fails if they drift.
+-- length, the name filter) mirror the game's own. tests/leaderboard.test.ts and tests/names.test.ts fail if they drift.
 
 -- ------------------------------------------------------------------ the table
 
@@ -50,20 +50,64 @@ grant select on table public.runs to anon, authenticated;
 
 -- ------------------------------------------------------------------ names
 
--- The basic profanity filter, the same one the game applies before a run starts.
+-- The name filter, the same one the game applies (src/game/names.ts): slurs, racist, extremist and
+-- sexual terms and swearing, seen through numbers for letters (n1gga), spaced letters (N I G G A),
+-- stretched letters (niiigga), look-alike letters from other alphabets (fцck) and starred-out letters (f*ck).
+-- tests/names.test.ts runs this function and checks it agrees with the game's on every test name.
 create or replace function public.atlas_name_allowed(p_name text)
 returns boolean
-language sql
+language plpgsql
 immutable
 set search_path = ''
-as $$
-  with plain as (
-    select btrim(regexp_replace(regexp_replace(translate(lower(p_name), '013457@$!', 'oieastasi'), '[^a-z[:space:]]', '', 'g'), '[[:space:]]+', ' ', 'g')) as n
-  )
-  select n !~ '(fuck|nigger|nigga|faggot|bitch|asshole|whore|pussy|retard|hitler)'
-     and n !~ '(^| )(ass|arse|shit|shitty|bullshit|cock|dick|cunt|twat|slut|rape|rapist|nazi|kkk|penis|vagina|porn|sex|fag|kike|spic|chink|coon|tranny|wank|wanker|prick|piss|tits|cum|dildo|anus|pedo|paedo|jizz|bastard)(s|es)?( |$)'
-  from plain;
-$$;
+as $fn$
+declare
+  v_plain  text;
+  v_text   text;
+  v_word   text;
+  v_run    text;
+  v_pass   integer;
+begin
+  if p_name is null then
+    return false;
+  end if;
+  -- Numbers that are hate symbols in their own right: 1488, 14/88.
+  if p_name ~* '1[^0-9a-z]*4[^0-9a-z]*8[^0-9a-z]*8' then
+    return false;
+  end if;
+  -- The name as the filter reads it: accents and look-alike letters from other alphabets undone,
+  -- lower case, digits and symbols turned back into the letters they stand for, ph read as f.
+  v_plain := regexp_replace(normalize(p_name, NFKD), '[\u0300-\u036f]', '', 'g');
+  v_plain := translate(v_plain, 'АВЕКМНОРСТУХІЈЅЦПаеорсухіјѕцпԁɡΑΒΕΖΗΙΚΜΝΟΡΤΥΧαβεικνορτυχ', 'abekmhopctyxijsunaeopcyxijsundgabezhikmnoptyxabeikvoptux');
+  v_plain := translate(lower(v_plain), '0123456789@$!|+€£(¢¡', 'oizeasgtbgasiitelcci');
+  v_plain := replace(v_plain, 'ph', 'f');
+
+  -- Everything run together: f.u.c.k, N I G G A, xXfuckXx.
+  if regexp_replace(v_plain, '[^a-z]', '', 'g') ~ '(n+i+g+g+e+r+|n+i+g+g+a+|f+a+g+g+o+t+|w+e+t+b+a+c+k+|r+a+g+h+e+a+d+|t+o+w+e+l+h+e+a+d+|g+o+l+l+i+w+o+g+|r+e+d+s+k+i+n+|h+a+l+f+b+r+e+e+d+|z+i+p+p+e+r+h+e+a+d+|s+l+a+n+t+e+y+e+|c+h+i+n+a+m+a+n+|r+e+g+g+i+n+|h+i+t+l+e+r+|h+i+m+m+l+e+r+|g+o+e+b+b+e+l+s+|m+e+n+g+e+l+e+|m+[uv]+s+s+o+l+i+n+i+|n+e+o+n+a+z+i+|s+i+e+g+h+e+i+l+|s+w+a+s+t+i+k+a+|f+[uv]+h+r+e+r+|f+[uv]+e+h+r+e+r+|w+h+i+t+e+p+o+w+e+r+|w+h+i+t+e+p+r+i+d+e+|k+[uv]+k+l+[uv]+x+k+l+a+n+|k+k+k+|h+o+l+o+c+a+[uv]+s+t+|g+e+n+o+c+i+d+e+|e+t+h+n+i+c+c+l+e+a+n+s+i+n+g+|t+e+r+r+o+r+i+s+t+|t+e+r+r+o+r+i+s+m+|a+l+q+a+e+d+a+|a+l+q+a+i+d+a+|t+a+l+i+b+a+n+|b+i+n+l+a+d+e+n+|p+o+l+p+o+t+|p+o+r+n+|[uv]+a+g+i+n+a+|o+r+g+a+s+m+|n+i+p+p+l+e+|t+i+t+t+i+e+s+|b+l+o+w+j+o+b+|h+a+n+d+j+o+b+|r+i+m+j+o+b+|c+[uv]+m+s+h+o+t+|j+i+z+z+|h+e+n+t+a+i+|p+e+d+o+f+i+l+e+|p+a+e+d+o+f+i+l+e+|m+o+l+e+s+t+|b+e+s+t+i+a+l+i+t+y+|n+e+c+r+o+f+i+l+|w+h+o+r+e+|p+[uv]+s+s+y+|s+k+a+n+k+|f+[uv]+c+k+|a+s+s+h+o+l+e+|a+r+s+e+h+o+l+e+|b+i+t+c+h+|b+o+l+l+o+c+k+s+|d+i+c+k+h+e+a+d+|c+o+c+k+s+[uv]+c+k+e+r+|d+o+[uv]+c+h+e+b+a+g+|d+[uv]+m+b+a+s+s+|j+a+c+k+a+s+s+|b+e+l+l+e+n+d+|s+h+i+t+h+o+l+e+|s+h+i+t+h+e+a+d+|b+[uv]+l+l+s+h+i+t+|h+o+r+s+e+s+h+i+t+|d+i+p+s+h+i+t+|w+a+n+k+e+r+|k+i+l+l+y+o+[uv]+r+s+e+l+f+)' then
+    return false;
+  end if;
+
+  -- Word by word, reading punctuation first as a gap (d.i.c.k), then as nothing at all (sh.it).
+  -- Runs of single letters are joined back into one word: "n i g g a".
+  for v_pass in 1..2 loop
+    v_text := case when v_pass = 1 then regexp_replace(v_plain, '[^a-z]+', ' ', 'g') else regexp_replace(v_plain, '[^a-z ]', '', 'g') end;
+    v_run := '';
+    foreach v_word in array string_to_array(v_text, ' ') || array['']::text[] loop
+      if char_length(v_word) = 1 then
+        v_run := v_run || v_word;
+        continue;
+      end if;
+      if v_run <> '' and v_run ~ '^(n+e+g+r+o+|c+o+o+n+|s+p+i+c+|c+h+i+n+k+|g+o+o+k+|k+i+k+e+|b+e+a+n+e+r+|p+a+k+i+|j+a+p+|w+o+g+|i+n+j+[uv]+n+|g+y+p+p+o+|g+y+p+o+|p+i+k+e+y+|h+o+n+k+y+|k+r+a+[uv]+t+|y+i+d+|h+e+e+b+|d+a+g+o+|w+o+p+|s+q+[uv]+a+w+|d+a+r+k+i+e+|d+a+r+k+y+|f+a+g+|d+y+k+e+|t+r+a+n+n+y+|h+o+m+o+|s+p+a+z+|s+p+a+s+t+i+c+|r+e+t+a+r+d+|r+e+t+a+r+d+e+d+|n+g+g+e+r+|n+g+g+r+|n+g+g+a+|n+i+g+g+|n+a+z+i+|h+e+i+l+|r+e+i+c+h+|a+r+y+a+n+|s+t+a+l+i+n+|i+s+i+s+|j+i+h+a+d+|k+l+a+n+|s+e+x+|s+e+x+y+|p+e+n+i+s+|c+[uv]+m+|s+e+m+e+n+|d+i+l+d+o+|a+n+a+l+|a+n+[uv]+s+|o+r+g+y+|h+o+r+n+y+|b+o+o+b+|t+i+t+s+|t+i+t+t+y+|c+l+i+t+|m+i+l+f+|x+x+x+|s+l+[uv]+t+|t+h+o+t+|r+a+p+e+|r+a+p+i+s+t+|p+e+d+o+|p+a+e+d+o+|i+n+c+e+s+t+|f+[uv]+k+|f+[uv]+q+|f+c+k+|f+k+|f+c+[uv]+k+|f+[uv]+k+k+|s+h+i+t+|s+h+i+t+t+y+|s+h+t+|a+s+s+|a+r+s+e+|c+[uv]+n+t+|c+n+t+|t+w+a+t+|d+i+c+k+|d+c+k+|c+o+c+k+|p+r+i+c+k+|p+i+s+s+|p+i+s+s+e+d+|c+r+a+p+|b+a+s+t+a+r+d+|b+[uv]+g+g+e+r+|t+o+s+s+e+r+|m+i+n+g+e+|w+a+n+k+|d+o+[uv]+c+h+e+|b+t+c+h+|k+y+s+|s+[uv]+i+c+i+d+e+)(s|es|z)?$' then
+        return false;
+      end if;
+      v_run := '';
+      if v_word <> '' and v_word ~ '^(n+e+g+r+o+|c+o+o+n+|s+p+i+c+|c+h+i+n+k+|g+o+o+k+|k+i+k+e+|b+e+a+n+e+r+|p+a+k+i+|j+a+p+|w+o+g+|i+n+j+[uv]+n+|g+y+p+p+o+|g+y+p+o+|p+i+k+e+y+|h+o+n+k+y+|k+r+a+[uv]+t+|y+i+d+|h+e+e+b+|d+a+g+o+|w+o+p+|s+q+[uv]+a+w+|d+a+r+k+i+e+|d+a+r+k+y+|f+a+g+|d+y+k+e+|t+r+a+n+n+y+|h+o+m+o+|s+p+a+z+|s+p+a+s+t+i+c+|r+e+t+a+r+d+|r+e+t+a+r+d+e+d+|n+g+g+e+r+|n+g+g+r+|n+g+g+a+|n+i+g+g+|n+a+z+i+|h+e+i+l+|r+e+i+c+h+|a+r+y+a+n+|s+t+a+l+i+n+|i+s+i+s+|j+i+h+a+d+|k+l+a+n+|s+e+x+|s+e+x+y+|p+e+n+i+s+|c+[uv]+m+|s+e+m+e+n+|d+i+l+d+o+|a+n+a+l+|a+n+[uv]+s+|o+r+g+y+|h+o+r+n+y+|b+o+o+b+|t+i+t+s+|t+i+t+t+y+|c+l+i+t+|m+i+l+f+|x+x+x+|s+l+[uv]+t+|t+h+o+t+|r+a+p+e+|r+a+p+i+s+t+|p+e+d+o+|p+a+e+d+o+|i+n+c+e+s+t+|f+[uv]+k+|f+[uv]+q+|f+c+k+|f+k+|f+c+[uv]+k+|f+[uv]+k+k+|s+h+i+t+|s+h+i+t+t+y+|s+h+t+|a+s+s+|a+r+s+e+|c+[uv]+n+t+|c+n+t+|t+w+a+t+|d+i+c+k+|d+c+k+|c+o+c+k+|p+r+i+c+k+|p+i+s+s+|p+i+s+s+e+d+|c+r+a+p+|b+a+s+t+a+r+d+|b+[uv]+g+g+e+r+|t+o+s+s+e+r+|m+i+n+g+e+|w+a+n+k+|d+o+[uv]+c+h+e+|b+t+c+h+|k+y+s+|s+[uv]+i+c+i+d+e+)(s|es|z)?$' then
+        return false;
+      end if;
+    end loop;
+  end loop;
+  return true;
+end;
+$fn$;
 
 -- ------------------------------------------------------------------ recording a run
 

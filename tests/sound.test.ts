@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sound, soundLog, streakFrequency } from '../src/sound';
+import { pickBritishVoice, sound, soundLog, streakFrequency } from '../src/sound';
 
 describe('streak pitch', () => {
   it('starts at A4', () => {
@@ -92,5 +92,28 @@ describe('streak pitch', () => {
     for (const name of ['World', 'Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania']) sound.say(name);
     expect(soundLog.map((s) => s.name)).toEqual(Array(7).fill('voice'));
     expect(soundLog.map((s) => s.text)).toEqual(['World', 'Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania']);
+  });
+});
+
+describe('the campaign voice', () => {
+  const voice = (name: string, lang = 'en-GB', localService = true) => ({ name, lang, localService });
+  // The British voices Chrome lists on a Mac, in the order it lists them.
+  const mac = ['Arthur', 'Daniel (English (United Kingdom))', 'Eddy (English (United Kingdom))', 'Flo (English (United Kingdom))', 'Grandma (English (United Kingdom))', 'Grandpa (English (United Kingdom))', 'Martha', 'Reed (English (United Kingdom))', 'Rocko (English (United Kingdom))', 'Sandy (English (United Kingdom))', 'Shelley (English (United Kingdom))'].map((name) => voice(name));
+
+  it('picks the clean British voice on a Mac, never the robotic Grandpa', () => {
+    expect(pickBritishVoice(mac)?.name).toBe('Daniel (English (United Kingdom))');
+    expect(pickBritishVoice(mac.filter((v) => !v.name.startsWith('Daniel')))?.name).toBe('Arthur');
+  });
+
+  it('prefers a higher-quality download, and the good voices of other browsers', () => {
+    expect(pickBritishVoice([...mac, voice('Daniel (Enhanced)')])?.name).toBe('Daniel (Enhanced)');
+    expect(pickBritishVoice([voice('Google UK English Female', 'en-GB', false), voice('Google UK English Male', 'en-GB', false), voice('Google US English', 'en-US', false)])?.name).toBe('Google UK English Male');
+    expect(pickBritishVoice([voice('Microsoft Hazel - English (United Kingdom)'), voice('Microsoft Ryan Online (Natural) - English (United Kingdom)', 'en-GB', false)])?.name).toBe('Microsoft Ryan Online (Natural) - English (United Kingdom)');
+  });
+
+  it('uses a robotic voice only when there is nothing else, and lets the browser choose when there is no English at all', () => {
+    expect(pickBritishVoice([voice('Grandpa (English (United Kingdom))'), voice('Samantha', 'en-US')])?.name).toBe('Samantha');
+    expect(pickBritishVoice([voice('Grandpa (English (United Kingdom))')])?.name).toBe('Grandpa (English (United Kingdom))');
+    expect(pickBritishVoice([voice('Amélie', 'fr-CA')])).toBeNull();
   });
 });

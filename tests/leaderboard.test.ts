@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { DEFAULT_FLAG, EMPIRE_NAME_MAX, FLAG_COLOURS, FLAG_PATTERNS, cleanEmpireName, defaultEmpireName } from '../src/game/flag';
-import { BLOCKED_ANYWHERE, BLOCKED_WORDS, LEET_FROM, LEET_TO, nameAllowed, plainName } from '../src/game/names';
+import { DEFAULT_FLAG, EMPIRE_NAME_MAX, FLAG_COLOURS, FLAG_PATTERNS } from '../src/game/flag';
+import { ANYWHERE_PATTERN, BLOCKED_NUMBERS, LEET_FROM, LEET_TO, LOOKALIKE_FROM, LOOKALIKE_TO, WORD_PATTERN } from '../src/game/names';
 import { CONTINENT_BONUS, START_MULTIPLIER, finalScore } from '../src/game/rules';
 import { createGame, gameStats } from '../src/game/state';
 import { CONTINENTS, MODES, type Country } from '../src/game/types';
@@ -10,34 +10,6 @@ import { LEADERBOARD_SIZE, LeaderboardUnavailable, RunRejected, UNNAMED_EMPIRE, 
 
 const ALL: Country[] = JSON.parse(readFileSync(new URL('../public/data/countries.json', import.meta.url), 'utf8'));
 const SQL = readFileSync(new URL('../supabase/schema.sql', import.meta.url), 'utf8');
-
-describe('empire names: a basic profanity filter on top of the length limit', () => {
-  it('blocks rude names, however they are dressed up', () => {
-    for (const name of ['Fuck Empire', 'FUCKINGHAM', 'the sh1t kingdom', 'A$$ Land', 'b.i.t.c.h', 'Empire of Dicks', 'Hitlerreich', 'N1gger', 'Fück', 'KKK']) {
-      expect(nameAllowed(name), name).toBe(false);
-    }
-  });
-
-  it('lets through innocent names that merely contain a rude word', () => {
-    for (const name of ['Essex Rising', 'Cockburn Town', 'Grape Kingdom', 'Matsushita', 'Ashkenazi League', 'Raccoon City', 'Scunthorpe United', 'Empire of Niger', 'Montenegro', 'Assyria', 'Empire 1', 'Dickens', '']) {
-      expect(nameAllowed(name), name).toBe(true);
-    }
-  });
-
-  it('never refuses the name an unnamed empire is given, for any country', () => {
-    for (const c of ALL) expect(nameAllowed(defaultEmpireName(c.name)), c.name).toBe(true);
-  });
-
-  it('keeps the length limit it had', () => {
-    expect(EMPIRE_NAME_MAX).toBe(22);
-    expect(cleanEmpireName('x'.repeat(40))).toHaveLength(22);
-  });
-
-  it('reads a name the way the filter does', () => {
-    expect(plainName('  Sh1t-K1NGDÖM!! ')).toBe('shitkingdomii');
-    expect(LEET_FROM).toHaveLength(LEET_TO.length);
-  });
-});
 
 describe('supabase/schema.sql mirrors the game', () => {
   it('knows the seven campaigns, how many countries each has and how many continents can be held', () => {
@@ -68,12 +40,11 @@ describe('supabase/schema.sql mirrors the game', () => {
     expect(SQL).toContain(`flag_pattern between 0 and ${FLAG_PATTERNS.length - 1}`);
   });
 
-  it('applies the same name rules: the length limit and the two lists of blocked words', () => {
+  it('applies the same name rules: the length limit and the same filter, word for word', () => {
     expect(SQL).toContain(`char_length(v_name) not between 1 and ${EMPIRE_NAME_MAX}`);
     expect(SQL).toContain(`char_length(empire_name) between 1 and ${EMPIRE_NAME_MAX}`);
-    expect(SQL).toContain(`n !~ '(${BLOCKED_ANYWHERE.join('|')})'`);
-    expect(SQL).toContain(`n !~ '(^| )(${BLOCKED_WORDS.join('|')})(s|es)?( |$)'`);
-    expect(SQL).toContain(`translate(lower(p_name), '${LEET_FROM}', '${LEET_TO}')`);
+    const quoted = (text: string) => `'${text.replace(/'/g, "''")}'`;
+    for (const part of [ANYWHERE_PATTERN, WORD_PATTERN, BLOCKED_NUMBERS.source, LOOKALIKE_FROM, LOOKALIKE_TO, LEET_FROM, LEET_TO]) expect(SQL).toContain(quoted(part));
   });
 
   it('lets anyone read, and nobody write except through the one checking function', () => {
@@ -183,7 +154,7 @@ describe('the leaderboard client', () => {
     expect(parseRow({ ...stored, flag_pattern: 99 })!.flag).toEqual(DEFAULT_FLAG);
     expect(parseRow({ ...stored, flag_colours: ['#d8343c', 'url(evil)', '#2b4fc4'] })!.flag).toEqual(DEFAULT_FLAG);
     expect(parseRow({ ...stored, empire_name: 'Fuck Empire' })!.empireName).toBe(UNNAMED_EMPIRE);
-    expect(parseRow({ ...stored, empire_name: 'x'.repeat(200) })!.empireName).toHaveLength(EMPIRE_NAME_MAX);
+    expect(parseRow({ ...stored, empire_name: 'Empire '.repeat(40) })!.empireName).toHaveLength(EMPIRE_NAME_MAX);
     expect(parseRow({ ...stored, empire_name: 42 })!.empireName).toBe(UNNAMED_EMPIRE);
     expect(parseRow({ ...stored, battles: -4, best_streak: 'many' })).toMatchObject({ battles: 0, bestStreak: 0 });
     for (const bad of [null, 'row', {}, { ...stored, campaign: 'Atlantis' }, { ...stored, score: 'lots' }, { ...stored, rank: 0 }, { ...stored, run_id: 7 }]) expect(parseRow(bad)).toBeNull();

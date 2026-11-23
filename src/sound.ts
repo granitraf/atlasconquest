@@ -156,19 +156,35 @@ const WHOOSH: Burst = { at: 0.03, seconds: 0.42, volume: 0.085, filter: 'bandpas
 const PULSE_GAP_MS = 55;
 let lastPulse = -Infinity;
 
-/** British English voices that are a man's, by the names they go by on macOS and iOS, Windows, Chrome and Android. */
-const BRITISH_MEN = /daniel|arthur|george|oliver|malcolm|ryan|thomas|alfie|elliot|noah|\bmale\b|gbd|rjs/i;
+/**
+ * The clean, natural-sounding British men's voices, best first, by the names they go by on macOS and iOS,
+ * Chrome, Edge and Windows, and Android. A higher-quality download of any of them ("Premium", "Enhanced",
+ * "Natural", "Neural") beats the standard one.
+ */
+const CLEAN_BRITISH_MEN = [/daniel/i, /arthur/i, /google uk english male/i, /\b(ryan|thomas|alfie|elliot|oliver|noah)\b/i, /\b(george|malcolm)\b/i, /gbd|rjs|\bmale\b/i];
+const HIGH_QUALITY = /premium|enhanced|natural|neural/i;
 
-/** Some devices have a British voice that is an old man already (macOS and iOS call theirs "Grandpa"). */
-const OLD_MAN = /grandpa/i;
+/**
+ * Apple's novelty voices: deliberately old-fashioned and robotic (Grandpa, Grandma, Eddy, Reed, Rocko, Sandy,
+ * Shelley, Flo), plus the joke ones. Used only if a device has nothing else.
+ */
+const ROBOTIC = /grandpa|grandma|\beddy\b|\breed\b|rocko|sandy|shelley|\bflo\b|albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|ralph|kathy/i;
 
-/** The most fitting voice this device has for an old British gentleman, or null to let the browser choose. */
-function britishVoice(): SpeechSynthesisVoice | null {
-  const voices = window.speechSynthesis.getVoices();
+/** Picks the clearest British man's voice from a device's list, or null to let the browser choose. */
+export function pickBritishVoice<V extends Pick<SpeechSynthesisVoice, 'name' | 'lang' | 'localService'>>(voices: readonly V[]): V | null {
   const british = voices.filter((voice) => /^en[-_]GB/i.test(voice.lang));
-  // An old man's voice first, then any British man's, and a voice on the device before one fetched from a server.
-  const rank = (voice: SpeechSynthesisVoice) => (OLD_MAN.test(voice.name) ? 4 : 0) + (BRITISH_MEN.test(voice.name) ? 2 : 0) + (voice.localService ? 1 : 0);
-  return [...british].sort((a, b) => rank(b) - rank(a))[0] ?? voices.find((voice) => /^en/i.test(voice.lang)) ?? null;
+  const rank = (voice: V) => {
+    if (ROBOTIC.test(voice.name)) return -100;
+    const known = CLEAN_BRITISH_MEN.findIndex((name) => name.test(voice.name));
+    return (known === -1 ? 0 : 20 - 2 * known) + (HIGH_QUALITY.test(voice.name) ? 30 : 0) + (voice.localService ? 1 : 0);
+  };
+  const best = [...british].sort((a, b) => rank(b) - rank(a))[0];
+  if (best && rank(best) > -100) return best;
+  return voices.find((voice) => /^en/i.test(voice.lang) && !ROBOTIC.test(voice.name)) ?? best ?? null;
+}
+
+function britishVoice(): SpeechSynthesisVoice | null {
+  return pickBritishVoice(window.speechSynthesis.getVoices());
 }
 
 // Voices load a moment after the page does; asking early means they are there by the first click.
@@ -282,8 +298,8 @@ export const sound = {
     );
   },
   /**
-   * Says a word aloud in the voice of an old British gentleman: the device's own
-   * British English voice, pitched down and slowed. Where the device cannot speak,
+   * Says a word aloud in a British gentleman's voice: the clearest British man's voice
+   * the device has, a touch lower and slower than usual. Where the device cannot speak,
    * the selection blip plays instead.
    */
   say(text: string) {
@@ -295,10 +311,9 @@ export const sound = {
       const voice = britishVoice();
       if (voice) words.voice = voice;
       words.lang = voice?.lang ?? 'en-GB';
-      // A voice that is already an old man's is left nearly as it is; any other is pitched down and slowed to age it.
-      const aged = voice !== null && OLD_MAN.test(voice.name);
-      words.pitch = aged ? 0.9 : 0.6;
-      words.rate = aged ? 0.9 : 0.82;
+      // Only a little lower and slower: pushed any further, speech synthesis turns metallic.
+      words.pitch = 0.85;
+      words.rate = 0.9;
       words.volume = 0.9;
       // A new word cuts off the last one rather than queueing behind it.
       window.speechSynthesis.cancel();

@@ -429,9 +429,14 @@ the same.
   until that page is opened or a run ends.
 - **One row per run.** Each game gets a random id, kept beside the save. Looking at the end
   screen again after a refresh sends the same id, and the database keeps one row for it.
-- **Names** keep their 22-character limit and pass a basic profanity filter
-  (`src/game/names.ts`). A name that fails is flagged as it is typed, and a run started under
-  it is named after its home country instead ("Empire of Germany").
+- **Names** keep their 22-character limit and must pass a filter (`src/game/names.ts`) that
+  refuses slurs, racist and extremist terms (and the numbers 1488), sexual terms, swearing and
+  self-harm taunts. It reads a name the way a player meant it: numbers and symbols as letters
+  (n1gga, sh!t), letters spaced, dotted, stretched or starred out (N I G G A, niiigga, f*ck),
+  and look-alike letters from other alphabets (fцck). Terms that hide inside innocent words
+  are refused only as whole words, so Scunthorpe, Essex, Ashkenazi and Niger pass. A name that
+  fails is flagged as it is typed, and a run started under it is named after its home country
+  instead ("Empire of Germany"). The database applies the same filter again.
 - **The database** is a Supabase project set up by `supabase/schema.sql`. Anyone may read
   the table; nobody may insert, update or delete rows directly. A run gets in only through
   the function `submit_run`, which refuses anything the game could not have produced: an
