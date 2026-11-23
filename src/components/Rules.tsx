@@ -158,11 +158,8 @@ export function Rules({ data, onClose }: Props) {
     const defenders = defendersFor(data.byId[id].population);
     return { id, name: data.byId[id].name, defenders, worth: conquestTroops(defenders), shape: data.geometry.byId[id] };
   });
-  const spoils = [3, 5, 8, 11].map((from) => {
-    let to = from;
-    while (conquestTroops(to + 1) === conquestTroops(from)) to++;
-    return { from, to, worth: conquestTroops(from) };
-  });
+  // The spoils table: a spread of country sizes, from the smallest to the largest, and what each pays.
+  const spoils = [...new Set([MIN_DEFENDERS, 4, 6, 8, 10, defendersFor(1.4e9)])].map((enemies) => ({ enemies, worth: conquestTroops(enemies) }));
 
   return (
     <section className="rules" aria-label="Rules of Atlas Conquest" data-testid="rules">
@@ -396,7 +393,7 @@ export function Rules({ data, onClose }: Props) {
             <b>
               {soldiers(1)} for every {soldiers(DEFENDERS_PER_TROOP)} enemies it had
             </b>
-            . The bigger the fight, the bigger the reward.
+            , to the last soldier: a quarter of what you beat. The bigger the fight, the bigger the reward.
           </p>
           <table className="rule-table" data-testid="rules-spoils">
             <thead>
@@ -407,10 +404,8 @@ export function Rules({ data, onClose }: Props) {
             </thead>
             <tbody>
               {spoils.map((row) => (
-                <tr key={row.from}>
-                  <td>
-                    {soldiers(row.from)} – {soldiers(row.to)}
-                  </td>
+                <tr key={row.enemies}>
+                  <td>{soldiers(row.enemies)}</td>
                   <td>+{soldiers(row.worth)}</td>
                 </tr>
               ))}

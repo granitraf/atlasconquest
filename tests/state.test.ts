@@ -165,7 +165,7 @@ describe('troops', () => {
     expect(reduce(world, s, { type: 'retreat' })).toBe(s);
   });
 
-  it('conquering a country is worth 1 troop for every 3 defenders it had, at least 1', () => {
+  it('conquering a country is worth a quarter of the defenders it had', () => {
     const seen = new Set<number>();
     for (const start of ['DEU', 'BRA', 'KEN', 'THA', 'AUS', 'NPL']) {
       const base = newGame(start);
@@ -174,44 +174,45 @@ describe('troops', () => {
         const defenders = targetStrength(world, base, target, sea).full;
         const worth = conquestTroops(defenders);
         seen.add(worth);
-        expect(worth).toBe(Math.max(1, Math.round(defenders / 3)));
+        expect(worth).toBe(defenders / 4);
         const won = conquer(world, base, target);
         expect(won.owned).toEqual([start, target]);
         expect(won.troops, `${world.byId[target].name} (${defenders} defenders)`).toBe(START_TROOPS + worth);
         expect(won.lastEvent).toMatchObject({ kind: 'conquered', countryId: target, troopsGained: worth });
       }
     }
-    // Up to 6: a sea crossing to India or China meets 13 + 4 defenders.
-    expect([...seen].sort()).toEqual([1, 2, 3, 4, 5, 6]);
-    // From Germany: France (9 defenders) is worth 3, Luxembourg (3) is worth 1, and Malta by sea (3 + 1) is worth 1.
-    expect(conquer(world, newGame('DEU'), 'FRA').troops).toBe(START_TROOPS + 3);
-    expect(conquer(world, newGame('DEU'), 'LUX').troops).toBe(START_TROOPS + 1);
+    // From 0.75 for the smallest up to 4.25: a sea crossing to India or China meets 13 + 4 defenders.
+    expect(Math.min(...seen)).toBe(0.75);
+    expect(Math.max(...seen)).toBe(4.25);
+    // From Germany: France (9 defenders) is worth 2.25, Luxembourg (3) is worth 0.75, and Malta by sea (3 + 1) is worth 1.
+    expect(conquer(world, newGame('DEU'), 'FRA').troops).toBe(START_TROOPS + 2.25);
+    expect(conquer(world, newGame('DEU'), 'LUX').troops).toBe(START_TROOPS + 0.75);
     expect(conquer(world, newGame('ITA'), 'MLT').troops).toBe(START_TROOPS + 1);
-    // Nepal's neighbours are the two biggest countries there are: 13 defenders, 4 troops each.
-    expect(conquer(world, newGame('NPL'), 'IND').troops).toBe(START_TROOPS + 4);
+    // Nepal's neighbours are the two biggest countries there are: 13 defenders, 3.25 troops each.
+    expect(conquer(world, newGame('NPL'), 'IND').troops).toBe(START_TROOPS + 3.25);
   });
 
   it('a sea crossing and a large empire add defenders, so they pay more; a wounded country pays for its full strength', () => {
-    // Ireland: 6 defenders by land (2 troops), 8 by sea from Iceland (3 troops).
-    expect(conquer(world, newGame('GBR'), 'IRL').lastEvent).toMatchObject({ troopsGained: 2 });
-    expect(conquer(world, newGame('ISL'), 'IRL').lastEvent).toMatchObject({ troopsGained: 3 });
-    // With 45 countries held France has 12 defenders instead of 9: 4 troops instead of 3.
+    // Ireland: 6 defenders by land (1.5 troops), 8 by sea from Iceland (2 troops).
+    expect(conquer(world, newGame('GBR'), 'IRL').lastEvent).toMatchObject({ troopsGained: 1.5 });
+    expect(conquer(world, newGame('ISL'), 'IRL').lastEvent).toMatchObject({ troopsGained: 2 });
+    // With 45 countries held France has 12 defenders instead of 9: 3 troops instead of 2.25.
     const big: GameState = { ...newGame('DEU'), troops: 100, owned: ['DEU', ...world.ids.filter((id) => !['DEU', 'FRA'].includes(id)).slice(0, 44)] };
     expect(targetStrength(world, big, 'FRA', false).full).toBe(12);
-    expect(conquer(world, big, 'FRA').lastEvent).toMatchObject({ troopsGained: 4 });
-    // Retreat from France after beating 5 of its 9 defenders, then finish it: still worth 3.
+    expect(conquer(world, big, 'FRA').lastEvent).toMatchObject({ troopsGained: 3 });
+    // Retreat from France after beating 5 of its 9 defenders, then finish it: still worth 2.25.
     let s: GameState = { ...newGame('DEU'), troops: 100 };
     s = reduce(world, s, { type: 'attack', targetId: 'FRA' });
     for (let i = 0; i < 5; i++) s = answerOnce(world, s, true);
     s = reduce(world, s, { type: 'retreat' });
     expect(targetStrength(world, s, 'FRA', false)).toEqual({ full: 9, standing: 4 });
-    expect(conquer(world, s, 'FRA').lastEvent).toMatchObject({ troopsGained: 3 });
+    expect(conquer(world, s, 'FRA').lastEvent).toMatchObject({ troopsGained: 2.25 });
   });
 
   it('the troops arrive when the country changes hands, and the winning answer says how many', () => {
     let s = reduce(world, newGame('FRA'), { type: 'attack', targetId: 'AND' });
     const reward = conquestTroops(s.battle!.maxDefenders);
-    expect(reward).toBe(1);
+    expect(reward).toBe(0.75);
     while (s.battle!.defenders > 1 || s.battle!.question.difficulty === 'hard') {
       if (s.battle!.defenders <= 2 && s.battle!.question.difficulty === 'hard') break;
       s = answerOnce(world, s, true);
@@ -345,10 +346,10 @@ describe('battles', () => {
     s = conquer(world, s, 'FRA');
     expect(s.phase).toBe('attack');
     expect(s.owned).toEqual(['DEU', 'FRA']);
-    // France had 9 defenders: taking it is worth 3 troops.
-    expect(s.troops).toBe(START_TROOPS + 3);
+    // France had 9 defenders: taking it is worth 2.25 troops.
+    expect(s.troops).toBe(START_TROOPS + 2.25);
     expect(s.lives).toBe(START_LIVES);
-    expect(s.lastEvent).toEqual({ kind: 'conquered', countryId: 'FRA', continent: null, troopsGained: 3 });
+    expect(s.lastEvent).toEqual({ kind: 'conquered', countryId: 'FRA', continent: null, troopsGained: 2.25 });
     const targets = getTargets(world, s.owned);
     expect(targets.land).not.toContain('FRA');
     expect(targets.land).toContain('ESP');

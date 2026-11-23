@@ -124,18 +124,18 @@ section('germany', async (page) => {
   const tones = () => page.evaluate(() => Object.fromEntries([...document.querySelectorAll('.map-tooltip [class^="tone-"]')].map((el) => [el.className, `${getComputedStyle(el).color} ${el.textContent}`])));
   const PINK = 'rgb(255, 156, 159)', GREEN = 'rgb(61, 220, 132)', BLUE = 'rgb(212, 236, 255)', BROWN = 'rgb(194, 166, 122)';
   const landTones = await tones();
-  check(results, 'in the tooltip the enemies are pink and the troops to gain are green', landTones['tone-enemy'] === `${PINK} 9,000 enemies` && landTones['tone-gain'] === `${GREEN} worth +3,000 troops`, JSON.stringify(landTones));
+  check(results, 'in the tooltip the enemies are pink and the troops to gain are green', landTones['tone-enemy'] === `${PINK} 9,000 enemies` && landTones['tone-gain'] === `${GREEN} worth +2,250 troops`, JSON.stringify(landTones));
   await page.screenshot({ path: SHOTS + '20-germany-attack-phase.png' });
 
   // Clicking a non-attackable country does nothing harmful.
   await clickCountry(page, 'DEU');
   check(results, 'clicking own territory selects nothing', (await page.getByTestId('target-card').count()) === 0);
 
-  // What each target is worth is shown before attacking: 1 troop for every 3 defenders.
+  // What each target is worth is shown before attacking: a quarter of its enemies.
   const chips = await page.evaluate(() => [...document.querySelectorAll('.target-chip')].map((c) => ({ id: c.getAttribute('data-testid').slice(7), defenders: Number(c.getAttribute('data-full')), reward: Number(c.getAttribute('data-reward')), text: c.innerText })));
   const worth = Object.fromEntries(chips.map((c) => [c.id, c.reward]));
-  check(results, 'every target shows what its conquest is worth: France (9,000 defenders) +3,000, Luxembourg (3,000) +1,000', worth.FRA === 3 && worth.LUX === 1 && /9,000\s*\+3,000/.test(await page.getByTestId('target-FRA').innerText()) && /3,000\s*\+1,000/.test(await page.getByTestId('target-LUX').innerText()), `${await page.getByTestId('target-FRA').innerText()} ; ${await page.getByTestId('target-LUX').innerText()}`.replace(/\n/g, ' '));
-  check(results, 'a conquest is worth 1 troop for every 3 defenders, rounded, never less than 1', chips.length > 20 && chips.every((c) => c.reward === Math.max(1, Math.round(c.defenders / 3)) && c.text.includes(`+${k(c.reward)}`) && c.text.includes(k(c.defenders))), [...new Set(chips.map((c) => `${c.defenders}→${c.reward}`))].sort((a, b) => parseInt(a) - parseInt(b)).join(', '));
+  check(results, 'every target shows what its conquest is worth: France (9,000 enemies) +2,250, Luxembourg (3,000) +750', worth.FRA === 2.25 && worth.LUX === 0.75 && /9,000\s*\+2,250/.test(await page.getByTestId('target-FRA').innerText()) && /3,000\s*\+750/.test(await page.getByTestId('target-LUX').innerText()), `${await page.getByTestId('target-FRA').innerText()} ; ${await page.getByTestId('target-LUX').innerText()}`.replace(/\n/g, ' '));
+  check(results, 'a conquest is worth exactly a quarter of the enemies, always a clean number', chips.length > 20 && chips.every((c) => c.reward === c.defenders / 4 && (c.reward * 1000) % 250 === 0 && c.text.includes(`+${k(c.reward)}`) && c.text.includes(k(c.defenders))), [...new Set(chips.map((c) => `${c.defenders}→${c.reward}`))].sort((a, b) => parseInt(a) - parseInt(b)).join(', '));
   // The longest tooltip there is: a sea crossing, with defenders, reward and timer.
   await page.getByLabel('Show whole world').click();
   await settle(page);
@@ -179,14 +179,14 @@ section('germany', async (page) => {
   check(results, 'dragging still pans (zoomed in), and the top edge stops at the top bar as before', pinned.slice(1).every((p) => p.moved && p.topAfterDraggingDown <= 70), JSON.stringify(pinned));
   check(results, 'zoom is untouched: still 1x to 40x in a game', pinned[0].zoom === 1 && (await (async () => { for (let i = 0; i < 14; i++) { await page.getByLabel('Zoom in').click(); await page.waitForTimeout(120); } const z = (await mapEdges(page)).zoom; await page.getByLabel('Show whole world').click(); await settle(page); return z; })()) === 40);
   await page.mouse.move(fr.x, fr.y);
-  check(results, 'the map tooltip gives the reward too', /worth \+3,000 troops/.test(tip), tip);
+  check(results, 'the map tooltip gives the reward too', /worth \+2,250 troops/.test(tip), tip);
 
   // 4. Winning a battle turns the country green and updates the attackable set.
   await clickCountry(page, 'FRA');
   await page.getByTestId('target-card').waitFor();
   check(results, 'clicking France on the map selects it as the target', /France/.test(await page.getByTestId('target-card').innerText()));
   const franceReward = page.getByTestId('target-reward');
-  check(results, 'the target card gives the reward: "+3,000 troops upon victory", in green, and nothing about ratios', (await franceReward.getAttribute('data-troops')) === '3' && (await franceReward.innerText()).trim() === '+3,000 troops upon victory' && (await franceReward.locator('.gain').evaluate((el) => getComputedStyle(el).color)) === GREEN, await franceReward.innerText());
+  check(results, 'the target card gives the reward: "+2,250 troops upon victory", in green, and nothing about ratios', (await franceReward.getAttribute('data-troops')) === '2.25' && (await franceReward.innerText()).trim() === '+2,250 troops upon victory' && (await franceReward.locator('.gain').evaluate((el) => getComputedStyle(el).color)) === GREEN, await franceReward.innerText());
   const franceCard = (await page.getByTestId('target-card').innerText()).replace(/\n/g, ' ');
   check(results, 'the target card counts "9,000 enemies" in pink, and never says "defenders"', /9,000 enemies · land attack/.test(franceCard) && !/defenders|for every/i.test(franceCard) && (await page.locator('.target-info b.enemy').evaluate((el) => `${getComputedStyle(el).color} ${el.textContent.trim()}`)) === `${PINK} 9,000 enemies`, franceCard);
   const troopsBefore = (await hud(page)).troops;
@@ -298,19 +298,19 @@ section('germany', async (page) => {
   check(results, 'attackable set updates: Spain, Italy, Andorra, Monaco now glow', (await Promise.all(['ESP', 'ITA', 'AND', 'MCO'].map((id) => classOf(page, id)))).every((c) => c.includes('s-land')));
   check(results, 'France is no longer a target', (await page.getByTestId('target-FRA').count()) === 0);
   check(results, 'battle HUD is hidden outside battle', (await page.getByTestId('battle-progress').count()) === 0 && (await page.locator('.tug').count()) === 0);
-  check(results, 'winning cost the 2 troops from the wrong answer and brought the 3 that France was worth', h.lives === 1 && h.troops === troopsBefore - 2 + 3 && s.lastEvent.troopsGained === 3, JSON.stringify(h));
+  check(results, 'winning cost the 2,000 troops from the wrong answer and brought the 2,250 that France was worth', h.lives === 1 && h.troops === troopsBefore - 2 + 2.25 && s.lastEvent.troopsGained === 2.25 && (await page.getByTestId('troops').innerText()).replace(/\s+/g, ' ').startsWith(k(troopsBefore + 0.25)), JSON.stringify(h));
   const franceToast = (await page.locator('.toast').innerText()).replace(/\n/g, ' ');
-  check(results, 'toast announces the conquest and the troops it brought', /France conquered/.test(franceToast) && /\+3,000 troops join/.test(franceToast), franceToast);
+  check(results, 'toast announces the conquest and the troops it brought', /France conquered/.test(franceToast) && /\+2,250 troops join/.test(franceToast), franceToast);
   const heard = (await sounds(page)).filter((x) => x.name === 'correct' || x.name === 'wrong');
   const run = heard.slice(heard.map((x) => x.name).lastIndexOf('wrong') + 1).map((x) => x.hz);
   check(results, 'the correct-answer sound rises in pitch with the streak', run.length >= 5 && run.slice(0, 6).every((hz, i) => i === 0 || hz > run[i - 1]), run.join(' < ') + ' Hz');
   await settle(page);
   await page.screenshot({ path: SHOTS + '23-france-conquered.png' });
 
-  // A small country is worth less: Luxembourg has 3 defenders, +1.
+  // A small country is worth less: Luxembourg has 3,000 enemies, +750.
   const beforeLux = (await hud(page)).troops;
   await page.getByTestId('target-LUX').click();
-  check(results, 'Luxembourg\'s card promises +1 troop', (await page.getByTestId('target-reward').getAttribute('data-troops')) === '1' && /\+1,000 troops upon victory/.test(await page.getByTestId('target-reward').innerText()), await page.getByTestId('target-reward').innerText());
+  check(results, 'Luxembourg\'s card promises +750 troops', (await page.getByTestId('target-reward').getAttribute('data-troops')) === '0.75' && /\+750 troops upon victory/.test(await page.getByTestId('target-reward').innerText()), await page.getByTestId('target-reward').innerText());
   await page.getByTestId('attack-button').click();
   await page.getByTestId('question-card').waitFor();
   s = await state(page);
@@ -320,15 +320,15 @@ section('germany', async (page) => {
     if (!winning) { await answer(page, true); continue; }
     await answer(page, true, { wait: false });
     const won = (await page.getByTestId('verdict').innerText()).replace(/\n/g, ' ');
-    check(results, 'the winning answer says what the conquest brought', /Luxembourg has fallen: \+1,000 troops/.test(won), won);
+    check(results, 'the winning answer says what the conquest brought', /Luxembourg has fallen: \+750 troops/.test(won), won);
     check(results, 'the troops arrive when the country changes hands, not before', (await hud(page)).troops === beforeLux);
     await movedOn(page, s.battle.question.sig);
   }
   await page.getByTestId('attack-panel').waitFor();
   h = await hud(page);
   const luxToast = (await page.locator('.toast').innerText()).replace(/\n/g, ' ');
-  check(results, 'conquering Luxembourg (3 defenders) adds exactly 1 troop', h.troops === beforeLux + 1 && h.countries === 3 && luxLast === 3, `${beforeLux} -> ${h.troops}`);
-  check(results, 'the toast announces the new troop', /Luxembourg conquered/.test(luxToast) && /\+1,000 troops join/.test(luxToast), luxToast);
+  check(results, 'conquering Luxembourg (3,000 enemies) adds exactly 750 troops', h.troops === beforeLux + 0.75 && h.countries === 3 && luxLast === 3, `${beforeLux} -> ${h.troops}`);
+  check(results, 'the toast announces the new troop', /Luxembourg conquered/.test(luxToast) && /\+750 troops join/.test(luxToast), luxToast);
 
   // Straight on to the next attack; retreat costs no life but resets the streak.
   await attack(page, 'ESP');
@@ -494,7 +494,7 @@ section('iceland', async (page) => {
   const card = await page.getByTestId('target-card').innerText();
   check(results, 'sea target card explains the crossing', /sea crossing/i.test(card) && /10s per question/.test(card) && /^Ireland\s+8,000 enemies/.test(card), card.replace(/\n/g, ' '));
   check(results, 'on the target card the sea crossing text is the light blue of the dashed outline', (await page.locator('.target-info .sea').evaluate((el) => `${getComputedStyle(el).color} ${el.textContent}`)) === 'rgb(212, 236, 255) sea crossing (more enemies, 10s per question)');
-  check(results, 'a sea crossing meets more defenders, so it is worth more: Ireland +3 by sea (it is +2 by land)', /\+3,000 troops upon victory/.test(card) && (await page.getByTestId('target-IRL').getAttribute('data-reward')) === '3', card.replace(/\n/g, ' '));
+  check(results, 'a sea crossing meets more enemies, so it is worth more: Ireland +2,000 by sea (it is +1,500 by land)', /\+2,000 troops upon victory/.test(card) && (await page.getByTestId('target-IRL').getAttribute('data-reward')) === '2', card.replace(/\n/g, ' '));
   await page.getByTestId('attack-button').click();
   await page.getByTestId('question-card').waitFor();
   s = await state(page);
@@ -944,9 +944,9 @@ section('rules', async (page) => {
     return { id: el.dataset.id, defenders: Number(el.dataset.defenders), helmets: el.querySelectorAll('.helmet').length, drawn, pixelated: getComputedStyle(canvas).imageRendering, text: el.innerText.replace(/\s+/g, ' ') };
   }));
   check(results, 'it shows what a number of defenders looks like: Luxembourg 3,000, Ireland 6,000, France 9,000, India 13,000', countries.map((c) => `${c.id}:${c.defenders}`).join() === 'LUX:3,IRL:6,FRA:9,IND:13', countries.map((c) => c.text).join(' | '));
-  check(results, 'each is drawn in pixels with one helmet per 1,000 defenders and "about N questions"', countries.every((c) => c.helmets === c.defenders && c.drawn > 150 && c.pixelated === 'pixelated' && c.text.includes(`about ${c.defenders} questions`) && c.text.includes(`${k(c.defenders)} enemies`)) && /every 1,000 enemies is about one question/.test(text), countries.map((c) => `${c.id} ${c.helmets} helmets, ${c.drawn}px`).join(' ; '));
+  check(results, 'each is drawn in pixels with one helmet per 1,000 defenders and "about N questions"', countries.every((c) => c.helmets === c.defenders && c.drawn > 150 && c.pixelated === 'pixelated' && c.text.includes(`about ${c.defenders} questions`) && c.text.includes(`${k(c.defenders)} enemies`) && c.text.includes(`worth +${k(c.defenders / 4)} troops`)) && /every 1,000 enemies is about one question/.test(text) && /worth \+750 troops/.test(countries[0].text) && /worth \+1,500 troops/.test(countries[1].text) && /worth \+2,250 troops/.test(countries[2].text) && /worth \+3,250 troops/.test(countries[3].text), countries.map((c) => `${c.id} ${c.helmets} helmets, ${c.drawn}px`).join(' ; '));
   const spoils = await page.getByTestId('rules-spoils').locator('tbody tr').allInnerTexts();
-  check(results, 'it gives the spoils: 1,000 troops for every 3,000 defenders', spoils.length === 4 && /3,000 – 4,000\s+\+1,000/.test(spoils[0]) && /11,000 – 13,000\s+\+4,000/.test(spoils[3]) && /1,000 for every 3,000 enemies/.test(text), spoils.map((r) => r.replace(/\s+/g, ' ')).join(' ; '));
+  check(results, 'it gives the spoils: a quarter of the enemies, from 3,000 for +750 up to 13,000 for +3,250', spoils.length === 6 && /^3,000\s+\+750$/.test(spoils[0].trim()) && /^6,000\s+\+1,500$/.test(spoils[2].trim()) && /^13,000\s+\+3,250$/.test(spoils[5].trim()) && /1,000 for every 4,000 enemies/.test(text), spoils.map((r) => r.replace(/\s+/g, ' ')).join(' ; '));
   check(results, 'it covers the goal, the single heart, the score, battles, the sea and retreat', /Fly your flag over every country/.test(text) && /single heart/.test(text) && /Score = countries conquered/.test(text) && /−2,000 of your own troops/.test(text) && /20 seconds/.test(text) && /third more enemies/.test(text) && /quarter of your army/.test(text) && /every country gains 1,000 enemies/.test(text) && !/defenders/i.test(text) && /on a sea you already have a coast on/.test(text));
 
   // Nothing spills, and the page scrolls under its plank rather than under the button.

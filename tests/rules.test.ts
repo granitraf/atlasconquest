@@ -512,35 +512,37 @@ describe('retreat', () => {
 describe('conquest rewards', () => {
   const world = buildWorld(ALL, 'World', FACTS);
 
-  it('are 1 troop for every 3 defenders, rounded, never less than 1', () => {
-    expect(DEFENDERS_PER_TROOP).toBe(3);
-    expect([3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18].map(conquestTroops)).toEqual([1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6]);
-    expect(conquestTroops(1)).toBe(1);
-    expect(conquestTroops(0)).toBe(1);
+  it('are exactly a quarter of the defenders beaten, with nothing rounded', () => {
+    expect(DEFENDERS_PER_TROOP).toBe(4);
+    expect([3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map(conquestTroops)).toEqual([0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25]);
+    expect(conquestTroops(17)).toBe(4.25);
+    expect(conquestTroops(0)).toBe(0);
+    // On screen that is always a clean number of soldiers: a multiple of 250.
+    for (let d = 1; d <= 40; d++) expect((conquestTroops(d) * 1000) % 250).toBe(0);
   });
 
   it('follow the size of the fight, not how obscure the country is', () => {
     const worth = (id: string, sea = false, held = 1) => conquestTroops(battleDefenders(world.byId[id].population, sea, held));
-    // The biggest countries pay the most, however famous.
-    expect(worth('IND')).toBe(4);
-    expect(worth('CHN')).toBe(4);
-    expect(worth('USA')).toBe(4);
-    expect(worth('DEU')).toBe(3);
-    expect(worth('FRA')).toBe(3);
-    expect(worth('IRL')).toBe(2);
-    // Small countries pay 1, however obscure.
-    for (const id of ['LUX', 'ISL', 'MLT', 'AND', 'PLW', 'NRU']) expect(worth(id), id).toBe(1);
+    // The biggest countries pay the most, however famous: 13,000 enemies are worth 3,250.
+    expect(worth('IND')).toBe(3.25);
+    expect(worth('CHN')).toBe(3.25);
+    expect(worth('USA')).toBe(2.75);
+    expect(worth('DEU')).toBe(2.5);
+    expect(worth('FRA')).toBe(2.25);
+    expect(worth('IRL')).toBe(1.5);
+    // Small countries pay 750, however obscure.
+    for (const id of ['LUX', 'ISL', 'MLT', 'AND', 'PLW', 'NRU']) expect(worth(id), id).toBe(0.75);
     // A sea crossing and a large empire both add defenders, and the reward follows.
-    expect(worth('IRL', true)).toBe(3);
-    expect(worth('FRA', false, 45)).toBe(4);
-    // Never less for a bigger fight.
-    for (let d = 1; d < 40; d++) expect(conquestTroops(d + 1)).toBeGreaterThanOrEqual(conquestTroops(d));
+    expect(worth('DEU', true)).toBe(3.25);
+    expect(worth('FRA', false, 60)).toBe(3.25);
+    // Always more for a bigger fight.
+    for (let d = 1; d < 40; d++) expect(conquestTroops(d + 1)).toBeGreaterThan(conquestTroops(d));
   });
 
-  it('every country pays something: a whole World campaign is worth well over 400 troops', () => {
+  it('every country pays something: a whole World campaign is worth 349.75 troops at base strength', () => {
     const rewards = world.ids.map((id) => conquestTroops(defendersFor(world.byId[id].population)));
-    expect(Math.min(...rewards)).toBe(1);
-    expect(Math.max(...rewards)).toBe(4);
-    expect(rewards.reduce((a, b) => a + b, 0)).toBe(466);
+    expect(Math.min(...rewards)).toBe(0.75);
+    expect(Math.max(...rewards)).toBe(3.25);
+    expect(rewards.reduce((a, b) => a + b, 0)).toBe(349.75);
   });
 });

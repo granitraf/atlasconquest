@@ -57,9 +57,9 @@ in [MECHANICS.md](MECHANICS.md). In short:
    crossing), then Attack. Every battle opens with the target's flag, then escalates. A correct answer
    defeats 1,000 defenders (2,000 if the question scored Hard); a wrong one costs you 2,000 troops. Run out of
    troops and the game is over. The next question always arrives by itself.
-4. **Conquests are the only other source of troops:** 1 troop for every 3 defenders the country had.
-   Luxembourg (3,000 defenders) is worth 1,000, France (9,000) is worth 3,000, India (13,000) is worth
-   4,000.
+4. **Conquests are the only other source of troops:** exactly a quarter of the enemies the country
+   had. Luxembourg (3,000 enemies) is worth 750, France (9,000) is worth 2,250, India (13,000) is worth
+   3,250.
 5. **Retreat** gets you out alive for a quarter of your army and your streak, but never with your last
    thousand. The country stays wounded and wins back 2,000 defenders each time you attack somewhere else.
 6. **Defenders** scale with population (3,000 to 13,000), and every country gains 1,000 more for each 15

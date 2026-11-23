@@ -87,18 +87,19 @@ for: the only things to do on the map are attack or start a new game.
   upkeep or movement.
 - **Troops are gained in two ways only:**
   - the opening recruit phase (section 7), once;
-  - conquering a country: **1 troop for every 3 defenders it had, rounded, at least 1**
-    (`conquestTroops`, `DEFENDERS_PER_TROOP`). The count is the country's full strength in
-    that battle: its own defenders, plus the extra for the size of the player's empire, plus
-    the sea bonus. A wounded country still pays for its full strength.
+  - conquering a country: **exactly a quarter of the defenders it had**, with nothing
+    rounded (`conquestTroops`, `DEFENDERS_PER_TROOP` = 4). The count is the country's full
+    strength in that battle: its own defenders, plus the extra for the size of the player's
+    empire, plus the sea bonus. A wounded country still pays for its full strength.
 
-    | Defenders | 3–4 | 5–7 | 8–10 | 11–13 | 14–16 | 17–19 |
-    |---|---|---|---|---|---|---|
-    | Troops | +1 | +2 | +3 | +4 | +5 | +6 |
+    | Enemies on screen | 3,000 | 4,000 | 6,000 | 8,000 | 9,000 | 10,000 | 13,000 |
+    |---|---|---|---|---|---|---|---|
+    | Troops gained | +750 | +1,000 | +1,500 | +2,000 | +2,250 | +2,500 | +3,250 |
 
-    Luxembourg, Malta and Palau (3 defenders) are worth 1; Ireland (6) 2; France (9) and
-    Germany (10) 3; the USA (11), India and China (13) 4. How obscure a country is does not
-    change what it pays. Each target's chip, its card and its map tooltip show the reward.
+    In units that is 0.75 for 3 defenders up to 3.25 for 13, so the army is no longer always
+    a whole number of thousands; on screen it is always a multiple of 250. Luxembourg, Malta
+    and Palau are worth 750; Ireland 1,500; France 2,250; Germany 2,500; India and China
+    3,250. How obscure a country is does not change what it pays. Each target's chip, its card and its map tooltip show the reward.
 - Troops are lost in two ways: a wrong answer in battle (−2) and retreating (−25%,
   section 10).
 - The troops for a conquest arrive when the country changes hands.
@@ -371,17 +372,18 @@ These are derived facts, not design intentions.
 
 - Troops cannot be farmed. The army is at most 20 to 24 after recruiting, and after that it
   grows only by conquest.
-- **The army holds steady at about 86% accuracy.** A conquest pays a third of a troop per
+- **The army holds steady at about 89% accuracy.** A conquest pays a quarter of a troop per
   defender, and each defender costs one correct answer, with every wrong answer on the way
   costing 2 troops. Above that accuracy the army grows; below it, it shrinks. Sea crossings and
   the extra defenders of a large empire raise the reward in step with the work, so this does
   not drift as the game goes on.
 - A Hard answer kills 2 defenders, so an obscure country takes fewer answers than it has
   defenders. That is the only advantage obscurity brings; the troops are the same.
-- Rounding makes 5, 8, 11 and 14 defenders the best value per defender, and 4, 7, 10 and 13
-  the worst.
-- All 229 conquests of a World game are worth 466 troops at base strength (more with sea
-  crossings and escalation). Every country pays at least 1.
+- Every defender is worth the same, so no size of country is better value than another.
+- All 229 conquests of a World game are worth 349.75 troops at base strength (349,750 on
+  screen; more with sea crossings and escalation). The smallest countries pay 0.75.
+- Retreat still costs a quarter of the army rounded up to a whole unit, and must leave at
+  least 1 unit, so an army below 2 (2,000 on screen) cannot retreat.
 - The choice of start sets the opening army: a famous start tops out at 20 troops with easier
   questions, an obscure one at up to 24 with harder ones, and scores more per conquest.
 - A famous target can never be asked a Hard question, so every correct answer against it

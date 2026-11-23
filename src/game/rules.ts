@@ -291,17 +291,17 @@ export const START_MULTIPLIER: Record<StartLabel, number> = {
  * How many defenders a conquest has to beat for each troop it is worth. After
  * the opening recruit phase, conquests are the only way to gain troops.
  */
-export const DEFENDERS_PER_TROOP = 3;
+export const DEFENDERS_PER_TROOP = 4;
 
 /**
- * Troops gained by conquering a country: one for every DEFENDERS_PER_TROOP
- * defenders it had at full strength in that battle (its own, plus the extra
- * for the size of the player's empire, plus the sea bonus), rounded, at least
- * 1. The bigger the fight, the more it pays: 3-4 defenders 1 troop, 5-7 two,
- * 8-10 three, 11-13 four. A wounded country still pays for its full strength.
+ * Troops gained by conquering a country: exactly a quarter of the defenders it
+ * had at full strength in that battle (its own, plus the extra for the size of
+ * the player's empire, plus the sea bonus). Nothing is rounded, so on screen a
+ * country of 3,000 is worth 750, one of 6,000 is worth 1,500 and one of 13,000
+ * is worth 3,250. A wounded country still pays for its full strength.
  */
 export function conquestTroops(defenders: number): number {
-  return Math.max(1, Math.round(defenders / DEFENDERS_PER_TROOP));
+  return Math.max(0, defenders) / DEFENDERS_PER_TROOP;
 }
 
 /** Rating by how well known the country is (rows) and where it sits (columns). */
