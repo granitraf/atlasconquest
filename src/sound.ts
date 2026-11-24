@@ -323,9 +323,8 @@ export const sound = {
     );
   },
   /**
-   * A country falls: a wartime bugle call on brass. "Ta-ta-ta TAAA, ta-ta-TAAAA": three quick pick-ups,
-   * up a fourth, then climbing to a held C major chord, over a snare and a bass drum, with a cymbal crash
-   * on the last chord.
+   * A country falls: "da DAAA!" on brass, about half a second. A quick pick-up, then up a fourth to a short
+   * C major chord with a drum hit under it, so it stays a pleasure to hear after the fiftieth conquest.
    */
   conquer() {
     log({ name: 'conquer', hz: 392 });
@@ -335,31 +334,17 @@ export const sound = {
     const C5 = 523.25;
     const E5 = 659.25;
     const G5 = 783.99;
-    const call: [number, number, number][] = [
-      [G4, 0, 0.09],
-      [G4, 0.11, 0.09],
-      [G4, 0.22, 0.09],
-      [C5, 0.33, 0.3],
-      [G4, 0.68, 0.1],
-      [C5, 0.8, 0.1],
-      [E5, 0.92, 0.12],
-    ];
-    for (const [hz, at, seconds] of call) brass(ctx, hz, at, seconds, 0.07);
-    // The held final chord.
-    brass(ctx, G5, 1.06, 0.95, 0.06);
-    brass(ctx, E5, 1.06, 0.95, 0.045);
-    brass(ctx, C5, 1.06, 0.95, 0.045);
-    brass(ctx, C5 / 2, 1.06, 0.95, 0.04);
+    // "da"
+    brass(ctx, G4, 0, 0.09, 0.07);
+    // "DAAA!"
+    brass(ctx, C5, 0.11, 0.42, 0.075);
+    brass(ctx, E5, 0.11, 0.42, 0.045);
+    brass(ctx, G5, 0.11, 0.42, 0.04);
     emit(
+      [{ hz: 120, at: 0.11, seconds: 0.22, wave: 'sine', volume: 0.22, slideTo: 50 }],
       [
-        { hz: 120, at: 0.33, seconds: 0.25, wave: 'sine', volume: 0.22, slideTo: 50 },
-        { hz: 120, at: 1.06, seconds: 0.4, wave: 'sine', volume: 0.26, slideTo: 45 },
-      ],
-      [
-        // Snare under the pick-ups.
-        ...[0, 0.11, 0.22, 0.68, 0.8, 0.92].map((at): Burst => ({ at, seconds: 0.07, volume: 0.045, filter: 'bandpass', from: 2200, q: 0.8 })),
-        // Cymbal crash.
-        { at: 1.06, seconds: 1.3, volume: 0.05, filter: 'highpass', from: 5000, q: 0.5 },
+        { seconds: 0.06, volume: 0.035, filter: 'bandpass', from: 2200, q: 0.8 },
+        { at: 0.11, seconds: 0.35, volume: 0.03, filter: 'highpass', from: 6000, q: 0.5 },
       ],
     );
   },
