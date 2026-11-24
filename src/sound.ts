@@ -349,6 +349,39 @@ export const sound = {
     );
   },
   /**
+   * A DECIMATE is ready: a bright rising shimmer, played just after the conquest fanfare has finished.
+   */
+  charged() {
+    play('charged', [1046.5, 1318.5, 1568, 2093].map((hz, i) => ({ hz, at: 0.6 + i * 0.06, seconds: i === 3 ? 0.35 : 0.1, wave: 'triangle' as const, volume: 0.06 })));
+  },
+  /** Target acquired: three quick, high radar blips and a held tone, while "[ LOCATION LOCKED ]" flickers. */
+  lockOn() {
+    play('lockOn', [
+      { hz: 1760, seconds: 0.06, wave: 'square', volume: 0.04 },
+      { hz: 1760, at: 0.14, seconds: 0.06, wave: 'square', volume: 0.04 },
+      { hz: 1760, at: 0.28, seconds: 0.06, wave: 'square', volume: 0.04 },
+      { hz: 2093, at: 0.42, seconds: 0.4, wave: 'square', volume: 0.035 },
+    ]);
+  },
+  /**
+   * The DECIMATE strike: a deep boom that drops away, a blast of low rumbling noise, and a crackle of
+   * debris over the top.
+   */
+  explosion() {
+    play(
+      'explosion',
+      [
+        { hz: 110, seconds: 0.9, wave: 'sine', volume: 0.35, slideTo: 28 },
+        { hz: 70, seconds: 0.7, wave: 'triangle', volume: 0.2, slideTo: 25 },
+      ],
+      [
+        { seconds: 1.2, volume: 0.22, filter: 'lowpass', from: 1800, to: 120, attack: 0.005 },
+        { seconds: 0.5, volume: 0.08, filter: 'bandpass', from: 2500, to: 600, q: 0.7 },
+        ...[0.08, 0.17, 0.23, 0.34, 0.41, 0.55].map((at): Burst => ({ at, seconds: 0.04, volume: 0.04, filter: 'highpass', from: 3000 })),
+      ],
+    );
+  },
+  /**
    * Recruiting is over: a short burst of applause, under a second. Ten people clapping, each at their own
    * steady pace and with their own hand sound; every clap is a sharp slap with a short ring, and the
    * applause dies away after three or four claps each.

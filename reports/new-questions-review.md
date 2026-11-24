@@ -642,3 +642,18 @@ Riyad Mahrez (Algeria), Henrikh Mkhitaryan (Armenia), Ian Thorpe (Australia), Da
 These countries have nobody on file who is recognisable worldwide. A weak name is worse than no question, so they are simply not asked this theme.
 
 Afghanistan, Åland Islands, Albania, Algeria, American Samoa, Andorra, Angola, Anguilla, Antigua and Barbuda, Armenia, Aruba, Australia, Azerbaijan, Bahamas, Bahrain, Bangladesh, Belarus, Belgium, Belize, Benin, Bermuda, Bhutan, Bolivia, Bosnia and Herzegovina, Botswana, British Virgin Islands, Brunei, Bulgaria, Burkina Faso, Burundi, Cambodia, Cameroon, Cape Verde, Cayman Islands, Central African Republic, Chad, Chile, Comoros, Cook Islands, Costa Rica, Cuba, Curaçao, Cyprus, Czechia, Djibouti, Dominica, Dominican Republic, DR Congo, Ecuador, El Salvador, Equatorial Guinea, Eritrea, Estonia, Eswatini, Ethiopia, Falkland Islands, Faroe Islands, Fiji, Finland, Gabon, Gambia, Greenland, Grenada, Guam, Guatemala, Guinea, Guinea-Bissau, Guyana, Haiti, Honduras, Hungary, Iceland, Indonesia, Iran, Iraq, Isle of Man, Israel, Ivory Coast, Jersey, Jordan, Kazakhstan, Kenya, Kiribati, Kosovo, Kuwait, Kyrgyzstan, Laos, Latvia, Lebanon, Lesotho, Liberia, Libya, Liechtenstein, Lithuania, Luxembourg, Madagascar, Malawi, Malaysia, Maldives, Mali, Malta, Marshall Islands, Mauritania, Mauritius, Micronesia, Moldova, Monaco, Montenegro, Montserrat, Morocco, Mozambique, Myanmar, Namibia, Nauru, New Caledonia, Nicaragua, Niger, Nigeria, Niue, Norfolk Island, North Korea, Northern Mariana Islands, Oman, Palau, Palestine, Panama, Papua New Guinea, Paraguay, Peru, Pitcairn Islands, Qatar, Republic of the Congo, Rwanda, Saint Barthélemy, Saint Helena, Ascension and Tristan da Cunha, Saint Lucia, Saint Martin, Saint Pierre and Miquelon, Saint Vincent and the Grenadines, San Marino, São Tomé and Príncipe, Saudi Arabia, Senegal, Seychelles, Sierra Leone, Singapore, Sint Maarten, Slovakia, Solomon Islands, Somalia, South Sudan, Sri Lanka, Sudan, Suriname, Syria, Taiwan, Tajikistan, Thailand, Timor-Leste, Togo, Tonga, Trinidad and Tobago, Tunisia, Turkey, Turkmenistan, Turks and Caicos Islands, Uganda, Ukraine, United Arab Emirates, United States Virgin Islands, Uruguay, Uzbekistan, Vanuatu, Vatican City, Vietnam, Wallis and Futuna, Western Sahara, Yemen, Zambia, Zimbabwe.
+
+## Famous figures (added later)
+
+History makers and stars replaced the single "famous person" theme. 169 people were added (leaders, thinkers, religious leaders, music stars, actors, and a few surprising birthplaces), 14 existing ones were given a proper field, and two were removed: Joseph Stalin (a dictator) and Melania Trump (a figure of today's politics). Composers (Mozart, Beethoven, Chopin, Tchaikovsky, Liszt, Dvořák) are now their own field among the history makers.
+
+### To double-check
+
+| Country | Person | Why it is flagged |
+|---|---|---|
+| Australia | Joseph Zada | Recent fame: plays young Haymitch in The Hunger Games: Sunrise on the Reaping (2026). Rated "known to a well-read player"; he may not be yet. |
+| Kosovo | Dua Lipa | Born in London to Kosovo-Albanian parents. Asked as Kosovo's, by decision; never a wrong answer for the United Kingdom or Albania. |
+| Kosovo | Rita Ora | Born in Pristina, raised in London. Kept for Kosovo; never a wrong answer for the United Kingdom. |
+| Turkey | Suleiman the Magnificent | Born in Trabzon; ruled the Ottoman Empire from Istanbul. Asked as Turkey's. |
+| Iraq | Saladin | Born in Tikrit, ruled from Egypt and Syria; never a wrong answer for either. |
+| Spain | Trajan | Born in Italica, near Seville; a Roman emperor, so never a wrong answer for Italy. |

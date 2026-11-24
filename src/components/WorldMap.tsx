@@ -6,7 +6,8 @@ import { MAP_H, MAP_W, MAX_ZOOM, WORLD_BOUNDS, type Bounds, type CountryShape, t
 import { flagPixels, hexToRgb, type EmpireFlag } from '../game/flag';
 import { chooseCell, packColour, plotLines, ringSprite, stamp, type Grid } from '../map/raster';
 
-export type CountryStatus = 'neutral' | 'owned' | 'land' | 'sea' | 'battle' | 'selected' | 'out';
+/** `decimate`: a target that a ready DECIMATE can take outright. */
+export type CountryStatus = 'neutral' | 'owned' | 'land' | 'sea' | 'battle' | 'selected' | 'decimate' | 'out';
 
 export interface FocusRequest {
   /** The camera moves whenever this changes. */
@@ -51,6 +52,8 @@ interface Props {
   scene: string;
   /** A country to flash, e.g. one just conquered. Flashes again whenever the key changes. */
   flash: { id: string; key: string } | null;
+  /** A country to blow up: the DECIMATE explosion. Plays again whenever the key changes. */
+  blast?: { id: string; key: string } | null;
   /** The player's flag, planted in the middle of every country with the `flagOn` status. */
   empireFlag: EmpireFlag;
   flagOn: CountryStatus;
@@ -70,6 +73,8 @@ const MARKER_HIT_RADIUS_PX = 13;
 /** A small country keeps its ring marker until it is at least this wide on screen. */
 const MARKER_UNTIL_PX = 30;
 const FLASH_MS = 1500;
+/** How long the DECIMATE explosion lasts. */
+export const BLAST_MS = 1000;
 /** Size of a planted flag, in map pixels. */
 const PLANT_W = 9;
 const PLANT_H = 6;
@@ -82,6 +87,8 @@ const COLOUR = {
   seaLine: packColour(214, 238, 255),
   selectedLine: packColour(255, 209, 102),
   battleLine: packColour(255, 120, 120),
+  decimateLine: packColour(240, 176, 32),
+  decimateSpark: packColour(255, 250, 210),
   markerNeutral: packColour(255, 255, 255, 235),
   flagOutline: packColour(12, 18, 36),
   flagPole: packColour(240, 240, 232),
@@ -179,10 +186,80 @@ const HitShapes = memo(function HitShapes({
   );
 });
 
+/** The explosion's radius on screen. */
+const BLAST_MIN_PX = 45;
+const BLAST_MAX_PX = 100;
+
+/** A cheap, steady noise per cell, so the explosion's pixels flicker the same way every time. */
+const cellNoise = (x: number, y: number) => {
+  let h = (x * 374761393 + y * 668265263) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
+};
+const BLAST_COLOURS = {
+  white: packColour(255, 255, 240),
+  yellow: packColour(255, 226, 92),
+  orange: packColour(255, 140, 36),
+  red: packColour(214, 48, 30),
+  smoke: packColour(64, 54, 50, 215),
+};
+
+/**
+ * The DECIMATE explosion at `age` (0..1): a white flash, then a fireball that swells through yellow, orange
+ * and red into smoke, a shock ring at its edge, and debris thrown outwards. Drawn cell by cell.
+ */
+function drawBlast(set: (x: number, y: number, colour: number) => void, shape: CountryShape, grid: Grid & { px: number }, age: number): void {
+  const cx = Math.floor((shape.cx - grid.ox) / grid.cell);
+  const cy = Math.floor((shape.cy - grid.oy) / grid.cell);
+  // Sized on screen, so it is a proper blast on a micro-state and does not swallow a continent: a radius of
+  // half the country, kept between BLAST_MIN_PX and BLAST_MAX_PX, and never fewer than 8 map pixels.
+  const toCells = (px: number) => px / grid.px;
+  const maxR = Math.max(8, Math.min(toCells(BLAST_MAX_PX), Math.max(toCells(BLAST_MIN_PX), (shape.extent / grid.cell) * 0.5)));
+  const grow = 1 - (1 - Math.min(1, age * 1.6)) ** 3;
+  const radius = Math.max(2, maxR * grow);
+  const r = Math.ceil(radius);
+  for (let dy = -r; dy <= r; dy++) {
+    for (let dx = -r; dx <= r; dx++) {
+      const d = Math.hypot(dx, dy);
+      if (d > radius) continue;
+      const noise = cellNoise(dx, dy);
+      // As it ages, the fireball breaks up into holes of clear air.
+      if (age > 0.6 && noise < (age - 0.6) / 0.4) continue;
+      const rel = d / radius;
+      let colour: number;
+      if (age < 0.08) colour = BLAST_COLOURS.white;
+      else if (rel > 0.84 && age < 0.55) colour = noise > 0.35 ? BLAST_COLOURS.orange : BLAST_COLOURS.yellow;
+      else {
+        const heat = (1 - rel) * (1 - age) * 1.3 + noise * 0.25;
+        if (heat > 0.95) colour = BLAST_COLOURS.white;
+        else if (heat > 0.72) colour = BLAST_COLOURS.yellow;
+        else if (heat > 0.5) colour = BLAST_COLOURS.orange;
+        else if (heat > 0.32) colour = BLAST_COLOURS.red;
+        else colour = BLAST_COLOURS.smoke;
+      }
+      set(cx + dx, cy + dy, colour);
+    }
+  }
+  // Debris: chunks flung out past the fireball, gone before the smoke clears.
+  if (age < 0.85) {
+    for (let i = 0; i < 14; i++) {
+      const angle = (i / 14) * Math.PI * 2 + cellNoise(i, 7) * 0.6;
+      const reach = maxR * (1.1 + cellNoise(i, 3) * 0.6) * (1 - (1 - age) ** 2);
+      const x = Math.round(cx + Math.cos(angle) * reach);
+      const y = Math.round(cy + Math.sin(angle) * reach);
+      const colour = i % 3 === 0 ? BLAST_COLOURS.yellow : BLAST_COLOURS.orange;
+      set(x, y, colour);
+      set(x + 1, y, colour);
+      set(x, y + 1, colour);
+      set(x + 1, y + 1, BLAST_COLOURS.red);
+    }
+  }
+}
+
 const RING_SMALL = ringSprite(2);
 const RING_LARGE = ringSprite(3);
 
-export function WorldMap({ geometry, terrainUrl, status, focus, padding, pinBottom = false, scene, flash, empireFlag, flagOn, describe, onCountryClick, onCountryHover }: Props) {
+export function WorldMap({ geometry, terrainUrl, status, focus, padding, pinBottom = false, scene, flash, blast = null, empireFlag, flagOn, describe, onCountryClick, onCountryHover }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const baseCanvasRef = useRef<HTMLCanvasElement>(null);
   const fxCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -207,6 +284,7 @@ export function WorldMap({ geometry, terrainUrl, status, focus, padding, pinBott
   const frame = useRef(0);
   const dirty = useRef({ base: false, fx: false });
   const flashRef = useRef<{ id: string; start: number } | null>(null);
+  const blastRef = useRef<{ id: string; start: number } | null>(null);
 
   // Latest props for the imperative handlers, without re-binding them.
   const paddingRef = useRef(padding);
@@ -373,6 +451,12 @@ export function WorldMap({ geometry, terrainUrl, status, focus, padding, pinBott
         ctx.lineWidth = 4 * grid.cell;
         ctx.stroke(path);
         plotLines(buf, grid, s.rings, COLOUR.selectedLine, { thick: true });
+      } else if (st === 'decimate') {
+        // Gold, and shimmering: a thick gold outline with bright sparks travelling round it.
+        ctx.fillStyle = `rgba(255, 200, 60, ${0.1 + 0.12 * throb})`;
+        ctx.fill(path);
+        plotLines(buf, grid, s.rings, COLOUR.decimateLine, { thick: true });
+        if (!reducedMotion) plotLines(buf, grid, s.rings, COLOUR.decimateSpark, { dash: [2, 7], dashOffset: Math.floor(now / 70) % 9 });
       } else if (st === 'battle') {
         ctx.fillStyle = `rgba(255, 50, 50, ${0.16 + 0.42 * throb})`;
         ctx.fill(path);
@@ -418,6 +502,10 @@ export function WorldMap({ geometry, terrainUrl, status, focus, padding, pinBott
       } else if (st === 'sea') {
         ring = COLOUR.seaLine;
         every = 3;
+      } else if (st === 'decimate') {
+        // A tiny country a DECIMATE can take: a gold ring, glowing.
+        ring = COLOUR.decimateLine;
+        fill = packColour(255, 226, 92, Math.round(110 + 120 * throb));
       } else if (st === 'selected') {
         ring = COLOUR.selectedLine;
         fill = packColour(255, 209, 102, 200);
@@ -447,6 +535,12 @@ export function WorldMap({ geometry, terrainUrl, status, focus, padding, pinBott
       set(left - 1, top + PLANT_H + 4, COLOUR.flagOutline);
       for (let y = 0; y < PLANT_H; y++) for (let x = 0; x < PLANT_W; x++) set(left + x, top + y, cells[y * PLANT_W + x]);
     }
+
+    // The DECIMATE explosion, in whole map pixels like everything else.
+    const blasting = blastRef.current;
+    const blastShape = blasting ? geometry.byId[blasting.id] : undefined;
+    const blastAge = blasting ? (now - blasting.start) / BLAST_MS : 1;
+    if (blastShape && blastAge < 1) drawBlast(set, blastShape, grid, blastAge);
 
     flushLines(layer);
     place(layer, grid);
@@ -487,6 +581,21 @@ export function WorldMap({ geometry, terrainUrl, status, focus, padding, pinBott
   // Game state or the flag design changed: repaint.
   useEffect(() => schedule(true), [status, plant, schedule]);
 
+  // The explosion runs at full frame rate while it lasts.
+  const blastKey = blast?.key ?? null;
+  useEffect(() => {
+    if (!blast) return;
+    blastRef.current = { id: blast.id, start: performance.now() };
+    let raf = 0;
+    const step = () => {
+      schedule(false);
+      if (blastRef.current && performance.now() - blastRef.current.start < BLAST_MS) raf = requestAnimationFrame(step);
+      else blastRef.current = null;
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [blastKey, schedule]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Pulsing highlights are redrawn a few times a second, and only while something is pulsing.
   const flashKey = flash?.key ?? null;
   useEffect(() => {
@@ -498,7 +607,7 @@ export function WorldMap({ geometry, terrainUrl, status, focus, padding, pinBott
       }
       if (flashRef.current) return true;
       if (reducedMotion) return false;
-      return Object.values(statusRef.current).some((s) => s === 'battle');
+      return Object.values(statusRef.current).some((s) => s === 'battle' || s === 'decimate');
     };
     schedule(false);
     const timer = window.setInterval(() => {

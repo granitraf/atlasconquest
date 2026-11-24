@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { flagUrl } from '../data';
 import { sound } from '../sound';
-import { isLastStand, mistakesLeft, siegeProgress, soldiers, soldiersShort } from '../game/rules';
+import { DECIMATE_STREAK, isLastStand, mistakesLeft, siegeProgress, soldiers, soldiersShort } from '../game/rules';
 import { FlagIcon } from './FlagIcon';
 import type { BattleState, Feedback, GameState } from '../game/types';
 
@@ -64,9 +64,14 @@ interface TopBarProps {
   state: GameState;
   total: number;
   onQuit: () => void;
+  /**
+   * The streak's DECIMATE charge: `charging` once it passes DECIMATE_STREAK in a battle (it counts only if
+   * this country falls without another mistake), `armed` once it has.
+   */
+  charge?: 'none' | 'charging' | 'armed';
 }
 
-export function TopBar({ state, total, onQuit }: TopBarProps) {
+export function TopBar({ state, total, onQuit, charge = 'none' }: TopBarProps) {
   const [confirming, setConfirming] = useState(false);
   const [muted, setMuted] = useState(() => sound.isMuted());
   const toggleSound = () => {
@@ -129,13 +134,23 @@ export function TopBar({ state, total, onQuit }: TopBarProps) {
           <span className="lives-text">1 heart</span>
         </div>
         <div
-          className={`stat streak ${state.streak >= 5 ? 'hot' : ''}`}
-          title={`Streak: ${state.streak} correct in a row.`}
+          className={`stat streak ${state.streak >= 5 ? 'hot' : ''} ${charge !== 'none' ? `charge ${charge}` : ''}`}
+          title={
+            charge === 'armed'
+              ? 'DECIMATE ready: your next target falls without a fight.'
+              : charge === 'charging'
+                ? `Streak: ${state.streak}. Take this country without a mistake to earn a DECIMATE.`
+                : `Streak: ${state.streak} correct in a row. ${DECIMATE_STREAK} in a row, held until a country falls, earns a DECIMATE.`
+          }
           data-testid="streak"
           data-value={state.streak}
+          data-charge={charge}
+          style={{ '--charge': Math.min(1, state.streak / DECIMATE_STREAK) } as CSSProperties}
         >
           <FlameIcon />
-          <span className="stat-value">{state.streak}</span>
+          <span className="stat-value">{charge === 'armed' ? 'READY' : state.streak}</span>
+          {charge === 'none' && <span className="stat-label">/{DECIMATE_STREAK}</span>}
+          <span className="charge-meter" aria-hidden="true" />
         </div>
         <div className="stat troops" title="Your army. After the opening recruit phase, new troops come only from conquering countries." data-testid="troops" data-value={state.troops}>
           <TroopIcon />

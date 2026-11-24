@@ -24,10 +24,11 @@ export const TYPE_WEIGHT: Record<QuestionType, 1 | 2 | 3> = {
   feature: 2,
   lines: 2,
   fact: 2,
-  // Curated like any other fact, and no harder: a national sport, a top export, a world-famous person.
+  // Curated like any other fact, and no harder: a national sport, a top export, a famous figure.
   sport: 2,
   export: 2,
-  person: 2,
+  history: 2,
+  star: 2,
   // A year has to be known: there is nothing on the map to work it out from.
   independence: 3,
   population: 3,
@@ -35,7 +36,11 @@ export const TYPE_WEIGHT: Record<QuestionType, 1 | 2 | 3> = {
   notBorder: 3,
 };
 
-/** Types whose wrong options can be close calls or far-fetched. For the others closeness counts as 0. */
+/**
+ * Types that come in a close-call version and a plainer one. For most it is the wrong options that are
+ * close calls; for population and area it is the hardest way of asking (the population range, and which
+ * country is closest in size). For the others closeness counts as 0.
+ */
 export const USES_CLOSENESS: Record<QuestionType, boolean> = {
   flag: true,
   capital: true,
@@ -50,12 +55,45 @@ export const USES_CLOSENESS: Record<QuestionType, boolean> = {
   fact: false,
   sport: false,
   export: false,
-  person: false,
+  // For people the "close call" is someone known only to a well-read player rather than to everyone.
+  history: true,
+  star: true,
   independence: false,
-  population: false,
-  area: false,
+  population: true,
+  area: true,
   notBorder: true,
 };
+
+/**
+ * What the close-call version adds to the score, by how much harder it really is. Neighbouring countries
+ * and the next range over genuinely confuse people (+2); a lookalike flag or a nearby capital helps a little
+ * (+1); and close options barely matter for a currency or a language: France's euro is just as easy to pick
+ * out from the pound and the krone (0).
+ */
+export const CLOSENESS_BONUS: Record<QuestionType, 0 | 1 | 2> = {
+  flag: 1,
+  capital: 1,
+  water: 1,
+  border: 2,
+  currency: 0,
+  language: 0,
+  domain: 1,
+  brand: 1,
+  feature: 2,
+  lines: 0,
+  fact: 0,
+  sport: 0,
+  export: 0,
+  history: 2,
+  star: 2,
+  independence: 0,
+  population: 2,
+  area: 2,
+  notBorder: 2,
+};
+
+/** Types that are hard about any country, however famous: a year has to be known cold. */
+export const EXPERT_BONUS: Partial<Record<QuestionType, number>> = { independence: 2 };
 
 export const QUESTION_TYPES = Object.keys(TYPE_WEIGHT) as QuestionType[];
 
@@ -72,7 +110,7 @@ export type Closeness = 0 | 1;
 export const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard'];
 
 export function questionScore(type: QuestionType, fame: 0 | 1 | 2, closeness: Closeness): number {
-  return TYPE_WEIGHT[type] + fame + (USES_CLOSENESS[type] ? closeness : 0);
+  return TYPE_WEIGHT[type] + fame + (USES_CLOSENESS[type] ? CLOSENESS_BONUS[type] * closeness : 0) + (EXPERT_BONUS[type] ?? 0);
 }
 
 export function tierOf(score: number): Difficulty {
@@ -84,8 +122,22 @@ export const FLAG_NEAREST = 4;
 
 /** A curated fact is only asked if it is at least this well known (3 worldwide, 2 well-read player, 1 local). */
 export const FACT_MIN_RECOGNITION = 2;
-/** A person is only asked about if they are recognisable worldwide. */
-export const PERSON_MIN_RECOGNITION = 3;
+/**
+ * A person is asked about if a well-read player would know them (2). Someone known worldwide (3) is the
+ * plain version of a people question; someone only a well-read player knows is its harder version.
+ */
+export const PERSON_MIN_RECOGNITION = 2;
+export const WORLD_FAMOUS = 3;
+
+/** The people a "stars" question is about; everyone else (leaders, thinkers, scientists, writers, artists, explorers) makes history. */
+export const STAR_KINDS = new Set(['musician', 'actor', 'footballer', 'athlete']);
+
+/**
+ * Types that share one turn in the rotation: a battle asks about a history maker or a star, not both, until
+ * every other type has had its go. So famous figures are always there, and never take over.
+ */
+export const SHARED_TURN: Partial<Record<QuestionType, string>> = { history: 'people', star: 'people' };
+const turnOf = (type: QuestionType): string => SHARED_TURN[type] ?? type;
 
 /** Sports of ice and snow: never offered as a wrong option for a country closer to the equator than this. */
 export const WINTER_SPORTS = new Set(['Ice hockey', 'Bandy', 'Curling', 'Cross-country skiing', 'Alpine skiing', 'Biathlon', 'Ski jumping', 'Skiing', 'Floorball']);
@@ -99,8 +151,8 @@ export const independenceGap = (year: number) => (year >= 1900 ? 10 : 20);
 export const INDEPENDENCE_CLEARANCE = 5;
 
 /** Which question type a curated fact is asked under: its theme if it has one, otherwise the general "fact". */
-export function factTheme(fact: Pick<Fact, 'category' | 'kind'>): 'sport' | 'export' | 'person' | 'fact' {
-  if (fact.category === 'person') return 'person';
+export function factTheme(fact: Pick<Fact, 'category' | 'kind'>): 'sport' | 'export' | 'history' | 'star' | 'fact' {
+  if (fact.category === 'person') return STAR_KINDS.has(fact.kind) ? 'star' : 'history';
   if (fact.category === 'sport') return 'sport';
   if (fact.kind === 'export') return 'export';
   return 'fact';
@@ -498,13 +550,20 @@ function ranking(
 
 /**
  * A question from the curated facts (public/data/facts.json), for one theme: the general "fact", or
- * sport, export or person. Wrong options are the fact's own hand-picked ones, or answers to the same
- * kind of fact about other countries, nearest regions first. An option is never something that is
+ * sport, export, history or star. Wrong options are the fact's own hand-picked ones, or answers to the
+ * same kind of fact about other countries, nearest regions first. An option is never something that is
  * also true, or arguably true, for the country.
+ *
+ * For people, `closeness` picks how famous: 0 asks about someone known worldwide, 1 about someone only
+ * a well-read player knows. Their wrong options are people of the same field who are just as famous,
+ * so the one name a player recognises is never the giveaway.
  */
-function factDraft(world: World, c: Country, exclude: Exclude, rng: Rng, theme: ReturnType<typeof factTheme>): Draft | null {
+function factDraft(world: World, c: Country, exclude: Exclude, rng: Rng, theme: ReturnType<typeof factTheme>, closeness: Closeness = 0): Draft | null {
   const own = world.factsByCountry[c.id] ?? [];
-  const candidates = own.filter((f) => factTheme(f) === theme && factAskable(f, c) && !exclude.has(`${theme}:${f.id}`));
+  const people = theme === 'history' || theme === 'star';
+  const famousEnough = (f: Fact) =>
+    !people || (closeness === 1 ? f.recognition >= PERSON_MIN_RECOGNITION && f.recognition < WORLD_FAMOUS : f.recognition >= WORLD_FAMOUS);
+  const candidates = own.filter((f) => factTheme(f) === theme && factAskable(f, c) && famousEnough(f) && !exclude.has(`${theme}:${f.id}`));
   if (candidates.length === 0) return null;
   const fact = pick(rng, candidates);
   // Anything that is also true for this country can never be a wrong option.
@@ -516,11 +575,18 @@ function factDraft(world: World, c: Country, exclude: Exclude, rng: Rng, theme: 
     wrong = shuffle(rng, fact.wrong.filter(fits)).slice(0, 3);
   } else {
     // Answers to the same kind of fact about other countries, nearest regions first.
-    const usable = (o: Country): Fact | null =>
-      shuffle(rng, world.factsByCountry[o.id] ?? []).find(
-        (f) => f.kind === fact.kind && fits(f.answer) && !f.sharedWith?.includes(c.id) && !(fact.group && f.group === fact.group),
-      ) ?? null;
-    wrong = collect(regionTiers(world, c), 3, rng, usable, (f) => f.answer, alsoTrue).map((f) => f.answer);
+    const sameKind = (f: Fact) => f.kind === fact.kind && fits(f.answer) && !f.sharedWith?.includes(c.id) && !(fact.group && f.group === fact.group);
+    // People are matched for fame too: just as famous first, then anyone a well-read player would know.
+    const passes: ((f: Fact) => boolean)[] = people
+      ? [(f) => sameKind(f) && famousEnough(f), (f) => sameKind(f) && f.recognition >= PERSON_MIN_RECOGNITION]
+      : [sameKind];
+    const found: Fact[] = [];
+    for (const pass of passes) {
+      if (found.length === 3) break;
+      const usable = (o: Country): Fact | null => shuffle(rng, world.factsByCountry[o.id] ?? []).find(pass) ?? null;
+      found.push(...collect(regionTiers(world, c), 3 - found.length, rng, usable, (f) => f.answer, [...alsoTrue, ...found.map((f) => f.answer)]));
+    }
+    wrong = found.map((f) => f.answer);
   }
   return { sig: `${theme}:${fact.id}`, prompt: fact.prompt, correct: { label: fact.answer }, wrong: labels(wrong) };
 }
@@ -859,7 +925,8 @@ const GENERATORS: Record<QuestionType, Generator> = {
   fact: (world, c, _closeness, exclude, rng) => factDraft(world, c, exclude, rng, 'fact'),
   sport: (world, c, _closeness, exclude, rng) => factDraft(world, c, exclude, rng, 'sport'),
   export: (world, c, _closeness, exclude, rng) => factDraft(world, c, exclude, rng, 'export'),
-  person: (world, c, _closeness, exclude, rng) => factDraft(world, c, exclude, rng, 'person'),
+  history: (world, c, closeness, exclude, rng) => factDraft(world, c, exclude, rng, 'history', closeness),
+  star: (world, c, closeness, exclude, rng) => factDraft(world, c, exclude, rng, 'star', closeness),
 
   independence(_world, c, _closeness, exclude, rng) {
     const sig = `independence:${c.id}`;
@@ -885,7 +952,7 @@ const GENERATORS: Record<QuestionType, Generator> = {
     return null;
   },
 
-  population(world, c, _closeness, exclude, rng) {
+  population(world, c, closeness, exclude, rng) {
     if (!(c.population > 0)) return null;
     const people = (o: Country) => o.population;
     const forms: Record<'' | 'most' | 'fewest', () => Draft | null> = {
@@ -910,14 +977,17 @@ const GENERATORS: Record<QuestionType, Generator> = {
       most: () => ranking(world, c, rng, exclude, 'population:most', 'Which of these has the most people?', people, true),
       fewest: () => ranking(world, c, rng, exclude, 'population:fewest', 'Which of these has the fewest people?', people, false),
     };
-    for (const form of leastAskedFirst(rng, exclude, 'population', ['', 'most', 'fewest'] as const)) {
+    // The close call is the range: knowing a country's population to within a factor of two or three. The
+    // line-ups only ask which of four is bigger.
+    const allowed = closeness === 1 ? (['' as const]) : (['most', 'fewest'] as const);
+    for (const form of leastAskedFirst(rng, exclude, 'population', allowed)) {
       const draft = forms[form]();
       if (draft) return draft;
     }
     return null;
   },
 
-  area(world, c, _closeness, exclude, rng) {
+  area(world, c, closeness, exclude, rng) {
     if (!(c.area > 0)) return null;
     const tiers = regionTiers(world, c);
     const size = (o: Country) => o.area;
@@ -981,7 +1051,9 @@ const GENERATORS: Record<QuestionType, Generator> = {
       smallest: () => ranking(world, c, rng, exclude, 'area:smallest', 'Which of these is the smallest by area?', size, false),
       closest,
     };
-    for (const form of leastAskedFirst(rng, exclude, 'area', ['larger', 'smaller', 'biggest', 'smallest', 'closest'] as const)) {
+    // The close call is "closest in size", which takes knowing the sizes of all five countries.
+    const allowed = closeness === 1 ? (['closest'] as const) : (['larger', 'smaller', 'biggest', 'smallest'] as const);
+    for (const form of leastAskedFirst(rng, exclude, 'area', allowed)) {
       const draft = forms[form]();
       if (draft) return draft;
     }
@@ -1115,11 +1187,12 @@ export function pickForTier(
 ): Question | null {
   const country = world.byId[countryId];
   if (!country) return null;
-  const uses = new Map<QuestionType, number>();
-  for (const sig of exclude) uses.set(sigType(sig), (uses.get(sigType(sig)) ?? 0) + 1);
+  // History and stars share a turn: asking one counts as a use of both.
+  const uses = new Map<string, number>();
+  for (const sig of exclude) uses.set(turnOf(sigType(sig)), (uses.get(turnOf(sigType(sig))) ?? 0) + 1);
   const combos = combinations(country);
   const hardest = (type: QuestionType) => Math.max(...combos.filter((combo) => combo.type === type).map((combo) => RANK[combo.tier]));
-  const all = combos.map((combo) => ({ ...combo, uses: uses.get(combo.type) ?? 0, spare: hardest(combo.type) > RANK[combo.tier] }));
+  const all = combos.map((combo) => ({ ...combo, uses: uses.get(turnOf(combo.type)) ?? 0, spare: hardest(combo.type) > RANK[combo.tier] }));
   const levels = [...new Set(all.map((combo) => combo.uses))].sort((a, b) => a - b);
   // For less familiar countries, lean towards questions that can be reasoned out from the map.
   // The roll decides which kind of question this slot prefers.
@@ -1240,7 +1313,9 @@ export function nextRecruitQuestion(
 ): Question {
   const exclude = new Set(asked);
   const index = asked.length;
-  const target = RECRUIT_RAMP[Math.min(index, RECRUIT_RAMP.length - 1)];
+  const ramp = RECRUIT_RAMP[Math.min(index, RECRUIT_RAMP.length - 1)];
+  // A famous start recruits as it always has (at most 20 troops): its Hard questions are kept for battles.
+  const target = ramp === 'hard' && world.byId[countryId]?.fame === 0 ? 'medium' : ramp;
   const question =
     (index === 0 ? openingFlag(world, countryId, rng, exclude, decoys) : null) ??
     pickForTier(world, countryId, target, rng, exclude, { stale: new Set(recent), decoys }) ??

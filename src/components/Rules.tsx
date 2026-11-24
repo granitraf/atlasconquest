@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, type CSSProperties } from 'react';
 import type { GameData } from '../data';
 import {
   CONTINENT_BONUS,
+  DECIMATE_STREAK,
   DEFENDERS_PER_TROOP,
   ESCALATION_EVERY,
   MIN_DEFENDERS,
@@ -113,7 +114,7 @@ const FAME: { fame: 0 | 1 | 2; title: string; detail: string }[] = [
   { fame: 2, title: 'Obscure', detail: 'Andorra, Laos, Palau' },
 ];
 const TIER_NAME: Record<Difficulty, string> = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
-/** The five recruit questions a well-known start is asked: it has nothing that scores Hard, so the last one is Medium. */
+/** The five recruit questions a well-known start is asked: its recruiting is capped at Medium, so the last one is Medium. */
 const FAMOUS_RECRUIT: Difficulty[] = ['easy', 'easy', 'medium', 'medium', 'medium'];
 /** Countries shown as examples of what a number of defenders means. */
 const EXAMPLES = ['LUX', 'IRL', 'FRA', 'IND'];
@@ -447,6 +448,21 @@ export function Rules({ data, onClose }: Props) {
           <p className="rule-note">
             Scroll, pinch or use + and − to zoom the map, drag to move it. Answer with a click, or with 1–4 or A–D.
           </p>
+        </article>
+
+        <article className="rule" data-rule="streak">
+          <h2>
+            <i>11</i> On a streak
+          </h2>
+          <p>
+            Every right answer in a row adds to your <b>streak</b>. A wrong answer, running out of time or retreating sets it back to 0.
+          </p>
+          <p>
+            Reach <b>{DECIMATE_STREAK} in a row</b> and the streak flame starts to pulse. Take the country you are fighting without another
+            mistake and you earn a <b className="decimate-word">DECIMATE</b>: every target turns gold, and the one you pick falls without a
+            single question, with all its spoils.
+          </p>
+          <p className="rule-note">It counts as a battle won and spends your streak. Use it on your next attack: it cannot be saved.</p>
         </article>
 
         <footer className="rules-foot">

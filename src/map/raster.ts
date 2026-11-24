@@ -74,6 +74,8 @@ export interface PlotOptions {
   thick?: boolean;
   /** Dash pattern in cells: [on, off]. */
   dash?: [number, number];
+  /** Where in the dash pattern each line starts, in cells: changing it over time makes the dashes travel. */
+  dashOffset?: number;
 }
 
 /**
@@ -95,7 +97,7 @@ export function plotLines(buf: Uint32Array, grid: Grid, set: LineSet, colour: nu
   for (let line = 0; line < starts.length - 1; line++) {
     const b = line * 4;
     if (boxes[b + 2] < ox || boxes[b] > viewX1 || boxes[b + 3] < oy || boxes[b + 1] > viewY1) continue;
-    let step = 0;
+    let step = options.dashOffset ?? 0;
     let lastX = NaN;
     let lastY = NaN;
     const end = starts[line + 1];

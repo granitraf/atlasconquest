@@ -129,7 +129,7 @@ MECHANICS.md             the rules in full
 supabase/schema.sql      the leaderboard's database: one table, read-only to the public, and the function that records a run
 .env.example             the two settings the leaderboard needs (copy to .env.local)
 reports/                 review files: difficulty (fame, start ratings), every curated fact, and the four newer themes
-                         (national sport, main export, year of independence, famous person) with every doubtful entry
+                         (national sport, main export, year of independence, famous figures) with every doubtful entry
 public/data, public/flags   the bundled data
 src/game/                pure game logic, no React or DOM
   rules.ts               defenders and escalation, wounds, streaks, battle resolution, retreat, targets, start ratings, scoring

@@ -110,26 +110,38 @@ for: the only things to do on the map are attack or start a new game.
 
 A question's difficulty is not fixed by its type. It is a score:
 
-**score = type weight + country fame + option closeness**
+**score = type weight + country fame + close-call bonus + expert bonus**
 
-Score 1–2 is **Easy**, 3–4 is **Medium**, 5–6 is **Hard**.
+Score 1–2 is **Easy**, 3–4 is **Medium**, 5 or more is **Hard**.
 
 **Type weight** (one table, `TYPE_WEIGHT`):
 
 | Weight | Types |
 |---|---|
 | 1 | flag, capital, water |
-| 2 | border, currency, language, domain, brand, major feature, globe line, curated fact, national sport, main export, famous person |
+| 2 | border, currency, language, domain, brand, major feature, globe line, curated fact, national sport, main export, history makers, stars |
 | 3 | population, area, not-border, year of independence |
 
-National sport, main export and famous person carry the weight of the curated facts they are
+National sport, main export, history makers and stars carry the weight of the curated facts they are
 (2): something a player knows about a country or does not, harder than its flag or capital,
 no harder than its currency. The year of independence carries 3, with population and area:
 it is a number to recall, the options are neighbouring decades, and nothing on the map helps.
 
+**Expert bonus** (`EXPERT_BONUS`): +2 for the year of independence. A year is hard to know
+about any country, however famous, so it scores Hard for every country.
+
 **Country fame:** 0, 1 or 2 (section 2), for the country the question is about.
 
-**Option closeness:** 0 or 1.
+**Option closeness:** 0 or 1, the plain version of a question or its close call.
+
+**Close-call bonus** (`CLOSENESS_BONUS`): what the close call adds to the score, by how much
+harder it really makes the question.
+
+| Bonus | Types | Why |
+|---|---|---|
+| +2 | border, not-border, major feature, population, area | Neighbouring countries and the next range over genuinely confuse people; for population and area the close call is the hardest way of asking (below) |
+| +1 | flag, capital, water, brand, domain | A lookalike flag or a nearby capital helps a little |
+| 0 | currency, language | Close options barely matter: France's euro is as easy to pick out from the pound as from anything |
 
 No option is far-fetched at either level. Every wrong option is at least from the same
 continent, every flag resembles the right one, and a capital question always includes
@@ -141,8 +153,12 @@ another city of the country itself.
   of the country's own cities for capital questions.
 - If a continent has too few candidates (few countries in South America or Oceania share a
   given kind of answer), the pool widens to the rest of the world rather than repeating one.
-- For population, area, globe-line, curated-fact, national-sport, main-export, famous-person
-  and year-of-independence questions closeness does not apply and counts as 0.
+- For population and area the close call is a form of the question rather than a set of
+  options: **"What is the population of X?"** (the range) and **"Which of these is closest in
+  size to X?"**. Their plainer forms are the line-ups ("which has the most people", "which is
+  the biggest") and "larger / smaller than X".
+- For globe-line, curated-fact, national-sport, main-export, famous-person and
+  year-of-independence questions closeness does not apply and counts as 0.
 
 **Reason-out weighting.** Water, major feature, globe line, border and language questions can
 be worked out from the map and the region. For less familiar countries a set share of
@@ -168,15 +184,19 @@ The other slots prefer the remaining types.
    that cannot be asked any harder go first, which saves the others for later, harder slots.
 
 Types with several forms (size, population, borders) take their forms in turn: the form
-asked least so far comes first, so "closest in size" is one size question in five.
+asked least so far comes first.
 
 What each fame level can produce:
 
 | Fame | Easy | Medium | Hard |
 |---|---|---|---|
-| Famous | weight-1 types; weight-2 types with far options | weight-2 types with close options; all weight-3 types | none |
-| Mid-known | flag and capital with far options | everything else except… | not-border with close options |
-| Obscure | none | weight-1 types; weight-2 types with far options | weight-2 types with close options; all weight-3 types |
+| Famous | flag, capital, water, globe line, facts, sport, export, person, currency, language; border, domain, brand, feature with plain options | border, domain, brand, feature as close calls; population and size line-ups; not-border with plain options | population range, closest in size, not-border as a close call, year of independence |
+| Mid-known | capital and water with plain options | most types | border, feature, not-border as close calls; population range; closest in size; year of independence |
+| Obscure | none | weight-1 types; most weight-2 types; currency and language at either level | border, feature, domain, brand as close calls; all weight-3 types; year of independence |
+
+Measured over many battles (10 questions each, including the flag): famous countries come
+out about 35% Easy, 35% Medium and 30% Hard; mid-known 11%, 49%, 40%; obscure 0%, 58%,
+42%.
 
 **Rewards follow the tier a question actually scored,** not the slot it filled (sections 7
 and 9). The question card shows the tier.
@@ -195,8 +215,9 @@ and 9). The question card shows the tier.
 - Reward per correct answer: Easy 1 troop, Medium 2, Hard 3. Wrong answer: 0.
 - **The fifth correct answer in a row is doubled** (`streakMultiplier`: ×2 once the streak
   reaches 5).
-- **What a perfect phase is worth depends on the start.** A famous country has no Hard
-  questions: 1 + 1 + 2 + 2 + (2 × 2) = 10, taking the army from 10 to 20. A mid-known country
+- **What a perfect phase is worth depends on the start.** A famous country is not asked Hard
+  questions in the recruit phase (its last slot is capped at Medium, so its Hard questions are
+  kept for battles): 1 + 1 + 2 + 2 + (2 × 2) = 10, taking the army from 10 to 20. A mid-known country
   that can reach Hard ends on 3 × 2, and its flag scores Medium: 2 + 1 + 2 + 2 + (3 × 2) = 13, up to 23. An obscure country has no Easy questions:
   2 + 2 + 2 + 2 + (3 × 2) = 14, up to 24. Harder starts are asked harder questions and can
   field a larger army.
@@ -286,6 +307,18 @@ The attack panel shows each target's defenders before the player commits, includ
   never drops back. Above it: the most right answers still needed to win (a Hard answer
   counts twice). Below it: the wrong answers the army can still survive, which is
   `ceil(troops / 2) - 1`. A wrong answer shakes the bar and takes one away.
+- **DECIMATE.** If a country falls while the streak is at 25 or more (`DECIMATE_STREAK`), a
+  DECIMATE is ready. The streak only counts if it holds until the country falls: passing 25
+  mid-battle makes the streak chip pulse, but one wrong answer before the country is taken
+  breaks the streak and the charge with it.
+  - While it is ready, every target is outlined in shimmering gold and the Attack button
+    becomes a flaming DECIMATE button. It must be used on the next attack: it cannot be saved.
+  - DECIMATE takes the chosen target (land or sea) with no questions: "[ LOCATION LOCKED ]"
+    flickers over the map, a pixel explosion goes off on the target, and the country falls
+    like any conquest, with its flash, fanfare and **full spoils**.
+  - It counts as a battle won (so a run always has at least as many battles as conquests, as
+    the leaderboard requires) and spends the streak, which starts again from 0. The best
+    streak keeps the record.
 - **The last stand.** With 2,000 troops or fewer in a battle (`isLastStand`), the next wrong
   answer ends the game. A heartbeat plays over a low drone, the edges of the screen pulse
   red, and the siege bar reads "Last chance". It stops when the battle ends or the player
@@ -314,7 +347,7 @@ The attack panel shows each target's defenders before the player commits, includ
 
 ## 12. Question types
 
-Eighteen types, four options each, all generated from bundled data. In every question the
+Nineteen types, four options each, all generated from bundled data. In every question the
 country is named in the prompt and the answer is something about it, never its own name:
 an answer that would name the country ("Niger River" for Niger, "Indian Ocean" for India,
 the capital "Djibouti" for Djibouti) is never used. The one exception is the line-up
@@ -336,7 +369,8 @@ country is one of the four options, and is sometimes the answer.
 | 2 | Curated fact | (written per fact) | Highest mountains, landmarks, dishes, former names, sporting moments and one-off hooks. See below. 218 qualify. |
 | 2 | National sport | What is the national sport of X? | Only where a sport is officially declared or is a tradition strongly identified with the country: never "football, like everywhere". See the four themes below. 57 qualify, counting sporting facts worded their own way. |
 | 2 | Main export | What is X's biggest export? | The largest export by value in recent years. 114 qualify. |
-| 2 | Famous person | Which of these footballers is from X? (and one wording per field) | Only people recognisable worldwide. 50 qualify. |
+| 2 | History makers | Which of these historical leaders came from X? (and one wording per field: thinkers, religious leaders, composers, scientists, writers, artists, explorers) | 113 people in 54 countries. See "Famous figures" below. |
+| 2 | Stars | Which of these music stars is from X? (and actors, footballers, sports stars) | 214 people in 90 countries. See "Famous figures" below. |
 | 3 | Year of independence | In which year did X gain independence? | Four years in ascending order, a fixed distance apart. 150 qualify. |
 | 3 | Population | What is the population of X? / Which of these has the most people? / Which of these has the fewest people? | Three forms, taken in turn. The range form shows four adjacent ranges out of ten (under 10k … over 250M). The line-ups rank X against three countries from its region; the winner leads by at least 1.3×. No closeness. |
 | 3 | Area | Which of these is larger than X? / smaller than X? / Which of these is the biggest by area? / the smallest? / Which is closest in size to X? | Five forms, taken in turn. "Biggest" and "smallest" are line-ups of X and three countries from its region. Compared areas always differ by at least 1.3×. Effectively unlimited variants. No closeness. |
@@ -368,8 +402,8 @@ barely reaches). An avoided item is never the right answer and never a wrong opt
 - Each fact has a country, a category (landmark, person, food, history, nature, culture,
   film, sport, economy), a prompt, an answer and a recognition rating: 3 known worldwide,
   2 known to a well-read player, 1 known mostly inside the country.
-- **A fact is asked only if its recognition is 2 or higher** (`FACT_MIN_RECOGNITION`), and a
-  person only at 3 (`PERSON_MIN_RECOGNITION`). If a country has nothing that qualifies in a
+- **A fact is asked only if its recognition is 2 or higher** (`FACT_MIN_RECOGNITION`), and so is
+  a person (`PERSON_MIN_RECOGNITION`). If a country has nothing that qualifies in a
   category, that category is simply not asked about it; there is no filler.
 - **Hooks:** every one of the 230 countries has at least one memorable, specific fact (177
   have one, 47 have two, 6 have three), phrased as a question about that country.
@@ -380,7 +414,7 @@ barely reaches). An avoided item is never the right answer and never a wrong opt
   are never set against each other. A fact can also list things that are arguably true of
   its country (`avoid`): they are never offered as wrong options for it.
 
-**The four themes.** National sport, main export and famous person are curated facts asked
+**The themes.** National sport, main export, history makers and stars are curated facts asked
 as question types of their own, so each takes its turn in the rotation; the year of
 independence comes from `config/independence.json`, applied by `npm run derive`. Every
 entry, every doubtful one and every country left out is listed in
@@ -408,10 +442,32 @@ entry, every doubtful one and every country left out is listed in
   no wrong option comes within 5 years of it (`INDEPENDENCE_CLEARANCE`). Countries that
   were never colonised, became independent by steps, have competing dates too close
   together, or are territories are left out: 80 in all.
-- **Famous person** (81 people, 50 countries). Only people recognisable worldwide:
-  recognition 3. The other 81 on file are not asked. Wrong options are people of the same
-  field, nearest regions first. A person claimed by two countries (Einstein, Chopin, Marie
-  Curie) lists the other, and is never a wrong option for it.
+- **Famous figures**, in two types:
+  - **History makers:** leaders (Lincoln, Churchill, Marcus Aurelius, Atatürk, Nkrumah),
+    thinkers (Confucius, Socrates), religious leaders, composers, scientists, writers,
+    artists and explorers. 113 people in 54 countries.
+  - **Stars:** music stars (Dua Lipa, Rihanna, BTS, Burna Boy), actors (Margot Robbie, Cillian
+    Murphy, Joseph Zada), footballers and sports stars. 214 people in 90 countries.
+  - **Two levels of fame.** Someone known worldwide (recognition 3) is the plain version of the
+    question; someone a well-read player would know (2) is its harder version, worth 2 more
+    (`CLOSENESS_BONUS`). People known mostly at home (1) are never asked.
+  - **Wrong options** are people of the same field (pop stars against pop stars, composers
+    against composers), nearest regions first, and just as famous as the answer wherever there
+    are enough of them, so the one name a player recognises is never the giveaway.
+  - **People with a second home** list it (`sharedWith`) and are never a wrong option for it:
+    Dua Lipa is from Kosovo and is never offered as wrong for the United Kingdom or Albania;
+    Rita Ora, born in Pristina too, is never a wrong answer for Kosovo; Alexander Hamilton,
+    born on Nevis, never for the United States.
+  - **A few surprising birthplaces** with their own wrong options: Trajan (Spain), Catherine
+    the Great (Poland), Saladin (Iraq), Anne Frank (Germany), Russell Crowe (New Zealand),
+    Keanu Reeves (Lebanon), Emma Watson (France), Audrey Hepburn (Belgium), Freddie Mercury
+    (Tanzania).
+  - **Left out on purpose:** dictators and perpetrators of atrocities, and figures of today's
+    politics. Retired leaders (Obama, Merkel, Ardern) are in.
+  - **They share one turn** in the rotation (`SHARED_TURN`): a battle asks about a history
+    maker or a star, not both, until every other type has had its go. About 3% of battle
+    questions are about people.
+  - A country with nobody well known (Palau, Nauru) is never asked either.
 
 ## 13. Information deliberately hidden
 
@@ -501,15 +557,14 @@ These are derived facts, not design intentions.
   least 1 unit, so an army below 2 (2,000 on screen) cannot retreat.
 - The choice of start sets the opening army: a famous start tops out at 20 troops with easier
   questions, an obscure one at up to 24 with harder ones, and scores more per conquest.
-- A famous target can never be asked a Hard question, so every correct answer against it
-  kills exactly 1 defender. Against an obscure target most late questions are Hard and kill 2.
-- A mid-known target has a single Hard combination (not-border with close options), which
-  needs three land neighbours. Mid-known islands and countries with fewer neighbours never
-  produce a Hard question; mid-known countries that do qualify are asked it once per battle,
-  in the first Hard slot, and the other late slots are Medium.
+- A famous target is asked Hard questions only of the genuinely hard kinds: its population
+  range, which country is closest in size, which country does NOT border it (as a close call),
+  and its year of independence where it has one. Those kill 2 defenders; the rest kill 1.
+- Every country, however small its data, has at least the population range and "closest in
+  size" to reach Hard with.
 - Because an unused type beats the slot's tier, a long battle against a famous country ends
   on its leftover Easy types (capital, sea, globe line, curated fact, national sport, main
-  export, famous person) once the Medium ones have each been asked.
+  export, history makers and stars) once the others have each been asked.
 - The only way to lose is to reach 0 troops inside a battle. With 2 troops a retreat (−1)
   avoids this; with 1 troop there is no retreat and the next wrong answer ends the game.
 - A wrong answer costs a flat 2 troops regardless of army size, while a retreat costs a

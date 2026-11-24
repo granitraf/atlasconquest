@@ -11,6 +11,7 @@ import {
   seaBonus,
 } from '../src/game/rules';
 import { RHYTHM_DECK } from '../src/game/questions';
+import { DECIMATE_STREAK } from '../src/game/rules';
 import { DECOYS_KEPT, RECENT_SIGS_KEPT, createGame, gameStats, reduce, remember, reviveGame, sanitizeMemory, targetStrength, type Action } from '../src/game/state';
 import type { GameState } from '../src/game/types';
 import { buildWorld } from '../src/game/world';
@@ -201,12 +202,14 @@ describe('troops', () => {
     const big: GameState = { ...newGame('DEU'), troops: 100, owned: ['DEU', ...world.ids.filter((id) => !['DEU', 'FRA'].includes(id)).slice(0, 44)] };
     expect(targetStrength(world, big, 'FRA', false).full).toBe(12);
     expect(conquer(world, big, 'FRA').lastEvent).toMatchObject({ troopsGained: 3 });
-    // Retreat from France after beating 5 of its 9 defenders, then finish it: still worth 2.25.
+    // Retreat from France after beating some of its 9 defenders, then finish it: still worth 2.25.
     let s: GameState = { ...newGame('DEU'), troops: 100 };
     s = reduce(world, s, { type: 'attack', targetId: 'FRA' });
-    for (let i = 0; i < 5; i++) s = answerOnce(world, s, true);
+    for (let i = 0; i < 3; i++) s = answerOnce(world, s, true);
+    const left = s.battle!.defenders;
+    expect(left).toBeLessThan(9);
     s = reduce(world, s, { type: 'retreat' });
-    expect(targetStrength(world, s, 'FRA', false)).toEqual({ full: 9, standing: 4 });
+    expect(targetStrength(world, s, 'FRA', false)).toEqual({ full: 9, standing: left });
     expect(conquer(world, s, 'FRA').lastEvent).toMatchObject({ troopsGained: 2.25 });
   });
 
@@ -320,8 +323,8 @@ describe('battles', () => {
       const romania = tiersIn('HUN', 'ROU', seed);
       openings.add(romania.rhythm.slice(0, 6).join());
       expect(romania.seen.slice(1)).toContain(2);
-      // France is famous: no question about it scores Hard.
-      expect(Math.max(...tiersIn('DEU', 'FRA', seed).seen)).toBe(1);
+      // France is famous: Hard only on the genuinely hard kinds (checked in questions.test.ts), and its flag is Easy.
+      expect(tiersIn('DEU', 'FRA', seed).seen[0]).toBe(0);
       // Andorra is obscure: no question about it scores Easy, not even its flag.
       expect(Math.min(...tiersIn('FRA', 'AND', seed).seen)).toBe(1);
     }
@@ -427,24 +430,25 @@ describe('battles', () => {
     s = answerOnce(world, s, true);
     s = answerOnce(world, s, true);
     expect(s.streak).toBe(2);
-    expect(s.battle).toMatchObject({ defenders: 7, maxDefenders: 9 });
+    // Two right answers: a defender each, or two for a Hard one.
+    const left = s.battle!.defenders;
+    expect(left).toBeGreaterThanOrEqual(5);
+    expect(left).toBeLessThanOrEqual(7);
+    expect(s.battle!.maxDefenders).toBe(9);
     s = reduce(world, s, { type: 'retreat' });
     // A quarter of 10, rounded up.
     expect(s).toMatchObject({ phase: 'attack', streak: 0, lives: START_LIVES, troops: 7, battle: null });
     expect(s.bestStreak).toBe(2);
     expect(s.owned).toEqual(['DEU']);
-    expect(s.wounds).toEqual({ FRA: 2 });
-    expect(s.lastEvent).toEqual({ kind: 'retreated', countryId: 'FRA', troopsLost: 3, defendersLeft: 7, defendersFull: 9 });
-    expect(targetStrength(world, s, 'FRA', false)).toEqual({ full: 9, standing: 7 });
+    expect(s.wounds).toEqual({ FRA: 9 - left });
+    expect(s.lastEvent).toEqual({ kind: 'retreated', countryId: 'FRA', troopsLost: 3, defendersLeft: left, defendersFull: 9 });
+    expect(targetStrength(world, s, 'FRA', false)).toEqual({ full: 9, standing: left });
   });
 
   it('a wounded country can be finished off, and wins back 2 defenders each time the player attacks elsewhere', () => {
-    let s: GameState = { ...newGame('DEU'), troops: 100 };
-    s = reduce(world, s, { type: 'attack', targetId: 'FRA' });
-    for (let i = 0; i < 5; i++) s = answerOnce(world, s, true);
-    expect(s.battle!.defenders).toBe(4);
-    s = reduce(world, s, { type: 'retreat' });
-    expect(s.wounds).toEqual({ FRA: 5 });
+    // France left with 5 of its 9 defenders beaten (as a retreat leaves it).
+    const s: GameState = { ...newGame('DEU'), troops: 100, wounds: { FRA: 5 } };
+    expect(targetStrength(world, s, 'FRA', false)).toEqual({ full: 9, standing: 4 });
     // Going straight back in meets only the defenders left standing, however often.
     const again = reduce(world, s, { type: 'attack', targetId: 'FRA' });
     expect(again.battle).toMatchObject({ defenders: 4, maxDefenders: 9 });
@@ -671,3 +675,64 @@ describe('save and resume', () => {
     expect(reviveGame({ ...s, empire: { name: 'X', flag: { pattern: 99, colours: ['#fff', 'red', 'blue'] } } }, worldFor)).toBeNull();
   });
 });
+
+describe('DECIMATE', () => {
+  /** A game in the attack phase with a long streak behind it. */
+  const onAStreak = (streak: number): GameState => ({ ...newGame('DEU'), streak, troops: 50 });
+
+  it('is earned when a country falls while the streak is at 25 or more', () => {
+    expect(DECIMATE_STREAK).toBe(25);
+    const s = conquer(world, onAStreak(DECIMATE_STREAK - 1), 'LUX');
+    expect(s.streak).toBeGreaterThanOrEqual(DECIMATE_STREAK);
+    expect(s.decimateReady).toBe(true);
+    // Short of 25 when the country falls: nothing.
+    expect(conquer(world, onAStreak(0), 'LUX').decimateReady).toBe(false);
+  });
+
+  it('is lost with a single mistake before the country falls, even past 25', () => {
+    let s = reduce(world, onAStreak(DECIMATE_STREAK + 4), { type: 'attack', targetId: 'FRA' });
+    s = answerOnce(world, s, false);
+    while (s.phase === 'battle') s = answerOnce(world, s, true);
+    expect(s.owned).toContain('FRA');
+    expect(s.decimateReady).toBe(false);
+  });
+
+  it('takes any target outright: no battle questions, full spoils, one battle, streak back to 0', () => {
+    const ready = conquer(world, onAStreak(DECIMATE_STREAK), 'LUX');
+    expect(ready.decimateReady).toBe(true);
+    const targets = getTargets(world, ready.owned);
+    const target = targets.sea[0] ?? targets.land[0];
+    const sea = targets.sea.includes(target);
+    const { full } = targetStrength(world, ready, target, sea);
+    const s = reduce(world, ready, { type: 'decimate', targetId: target });
+    expect(s.owned).toContain(target);
+    expect(s.phase).toBe('attack');
+    expect(s.battle).toBeNull();
+    expect(s.troops).toBe(ready.troops + conquestTroops(full));
+    expect(s.battles).toBe(ready.battles + 1);
+    expect(s.streak).toBe(0);
+    expect(s.bestStreak).toBe(ready.bestStreak);
+    expect(s.decimateReady).toBe(false);
+    expect(s.lastEvent).toMatchObject({ kind: 'conquered', countryId: target, troopsGained: conquestTroops(full), decimated: true });
+    // The leaderboard's own check still holds: at least as many battles as conquests.
+    expect(s.battles).toBeGreaterThanOrEqual(s.owned.length - 1);
+  });
+
+  it('cannot be held: a normal attack gives it up, and it cannot be used without one ready', () => {
+    const ready = conquer(world, onAStreak(DECIMATE_STREAK), 'LUX');
+    const target = getTargets(world, ready.owned).land[0];
+    expect(reduce(world, ready, { type: 'attack', targetId: target }).decimateReady).toBe(false);
+    const plain = newGame('DEU');
+    expect(reduce(world, plain, { type: 'decimate', targetId: 'FRA' })).toBe(plain);
+    // Nor on a country that is not a target.
+    expect(reduce(world, ready, { type: 'decimate', targetId: 'JPN' })).toBe(ready);
+  });
+
+  it('survives a reload while ready', () => {
+    const ready = conquer(world, onAStreak(DECIMATE_STREAK), 'LUX');
+    expect(reviveGame(JSON.parse(JSON.stringify(ready)), () => world)!.decimateReady).toBe(true);
+    const { decimateReady: _gone, ...old } = ready;
+    expect(reviveGame(old, () => world)!.decimateReady).toBe(false);
+  });
+});
+

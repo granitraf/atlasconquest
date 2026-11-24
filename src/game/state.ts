@@ -3,6 +3,7 @@ import { sanitizeEmpire, type Empire } from './flag';
 import { createRng, nextSeed, type Rng } from './rng';
 import {
   CONTINENT_BONUS,
+  DECIMATE_STREAK,
   RECRUIT_QUESTIONS,
   START_LIVES,
   START_TROOPS,
@@ -71,6 +72,8 @@ export type Action =
   /** Dismiss answer feedback and move on. */
   | { type: 'continue' }
   | { type: 'attack'; targetId: string }
+  /** Take a target outright with a ready DECIMATE: no battle questions. */
+  | { type: 'decimate'; targetId: string }
   | { type: 'retreat' };
 
 /** A new game. `memory` is what this device remembers of earlier games: their questions wait their turn. */
@@ -101,6 +104,7 @@ export function createGame(world: World, startId: string, seed: number, empire: 
     wounds: {},
     recentSigs: memory.sigs.slice(-RECENT_SIGS_KEPT),
     recentDecoys: memory.decoys,
+    decimateReady: false,
     lastEvent: null,
     eventSeq: 0,
     answersCorrect: 0,
@@ -230,33 +234,8 @@ function advance(world: World, state: GameState, rng: Rng): GameState {
     const recentSigs = memory.sigs;
     state = { ...state, recentSigs, recentDecoys: memory.decoys };
     if (feedback.outcome === 'won') {
-      const owned = [...state.owned, battle.targetId];
-      const ownedSet = new Set(owned);
-      const continent = world.byId[battle.targetId].continent;
-      const members = world.continents[continent] ?? [];
-      const continentDone =
-        !state.continentsCompleted.includes(continent) && members.every((id) => ownedSet.has(id));
-      const continentsCompleted: Continent[] = continentDone
-        ? [...state.continentsCompleted, continent]
-        : state.continentsCompleted;
-      const { [battle.targetId]: _healed, ...wounds } = state.wounds;
-      return {
-        ...state,
-        owned,
-        troops: state.troops + feedback.troopsGained,
-        continentsCompleted,
-        wounds,
-        battle: null,
-        feedback: null,
-        phase: owned.length >= world.ids.length ? 'victory' : 'attack',
-        lastEvent: {
-          kind: 'conquered',
-          countryId: battle.targetId,
-          continent: continentDone ? continent : null,
-          troopsGained: feedback.troopsGained,
-        },
-        eventSeq: state.eventSeq + 1,
-      };
+      // A country that falls without a single mistake on a long enough streak earns a DECIMATE.
+      return takeCountry(world, { ...state, decimateReady: state.streak >= DECIMATE_STREAK }, battle.targetId, feedback.troopsGained, false);
     }
     if (feedback.outcome === 'lost') {
       // The last troop is gone and there is no way to raise more: the empire falls.
@@ -287,6 +266,54 @@ function advance(world: World, state: GameState, rng: Rng): GameState {
   return state;
 }
 
+/** A country changes hands: added to the empire with the troops it was worth, completing a continent or the campaign. */
+function takeCountry(world: World, state: GameState, targetId: string, troopsGained: number, decimated: boolean): GameState {
+  const owned = [...state.owned, targetId];
+  const ownedSet = new Set(owned);
+  const continent = world.byId[targetId].continent;
+  const members = world.continents[continent] ?? [];
+  const continentDone = !state.continentsCompleted.includes(continent) && members.every((id) => ownedSet.has(id));
+  const continentsCompleted: Continent[] = continentDone ? [...state.continentsCompleted, continent] : state.continentsCompleted;
+  const { [targetId]: _healed, ...wounds } = state.wounds;
+  return {
+    ...state,
+    owned,
+    troops: state.troops + troopsGained,
+    continentsCompleted,
+    wounds,
+    battle: null,
+    feedback: null,
+    phase: owned.length >= world.ids.length ? 'victory' : 'attack',
+    lastEvent: {
+      kind: 'conquered',
+      countryId: targetId,
+      continent: continentDone ? continent : null,
+      troopsGained,
+      ...(decimated ? { decimated: true } : {}),
+    },
+    eventSeq: state.eventSeq + 1,
+  };
+}
+
+/**
+ * A ready DECIMATE takes a target outright: no questions. It counts as a battle won and pays the full
+ * spoils, and it spends the streak, which starts again from 0.
+ */
+function decimate(world: World, state: GameState, targetId: string): GameState {
+  if (state.phase !== 'attack' || !state.decimateReady) return state;
+  const targets = getTargets(world, state.owned);
+  const sea = targets.sea.includes(targetId);
+  if (!sea && !targets.land.includes(targetId)) return state;
+  const { full } = targetStrength(world, state, targetId, sea);
+  return takeCountry(
+    world,
+    { ...state, battles: state.battles + 1, wounds: healWounds(state.wounds, targetId), streak: 0, decimateReady: false },
+    targetId,
+    conquestTroops(full),
+    true,
+  );
+}
+
 /**
  * How strongly a country is held right now: its full strength (own defenders, escalation for the size of
  * the player's empire, sea bonus) and how many are standing if an earlier retreat left it wounded.
@@ -314,6 +341,8 @@ function attack(world: World, state: GameState, targetId: string, rng: Rng): Gam
     phase: 'battle',
     feedback: null,
     battles: state.battles + 1,
+    // A DECIMATE cannot be held: attacking any other way gives it up.
+    decimateReady: false,
     // Countries left wounded by an earlier retreat recover while the army is busy here.
     wounds: healWounds(state.wounds, targetId),
     battle: {
@@ -342,6 +371,9 @@ export function reduce(world: World, state: GameState, action: Action): GameStat
       break;
     case 'attack':
       next = attack(world, state, action.targetId, rng);
+      break;
+    case 'decimate':
+      next = decimate(world, state, action.targetId);
       break;
     case 'retreat':
       // Retreating saves your life but costs troops and the streak. Not available once the battle is
@@ -433,5 +465,12 @@ export function reviveGame(raw: unknown, worldFor: (mode: ModeId) => World | nul
   const battle = s.battle
     ? { ...s.battle, rhythm: Array.isArray(s.battle.rhythm) && s.battle.rhythm.length > 0 ? s.battle.rhythm : battleRhythm(createRng(s.seed)) }
     : null;
-  return { ...(s as GameState), empire, battle, recentSigs: memory.sigs, recentDecoys: memory.decoys };
+  return {
+    ...(s as GameState),
+    empire,
+    battle,
+    recentSigs: memory.sigs,
+    recentDecoys: memory.decoys,
+    decimateReady: s.phase === 'attack' && s.decimateReady === true,
+  };
 }

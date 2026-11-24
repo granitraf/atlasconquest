@@ -167,11 +167,28 @@ export async function recruit(page, pattern = [true, true, true, true, true]) {
   await page.getByTestId('attack-panel').waitFor();
 }
 
-/** Picks a target from the list and attacks it. */
-export async function attack(page, id) {
-  await page.getByTestId(`target-${id}`).click();
+/**
+ * With a target picked, presses whichever button the panel offers: Attack, which opens a battle, or
+ * DECIMATE (when a 25 streak has earned one), which takes the country outright. Returns which it was.
+ */
+export async function strike(page) {
+  await page.getByTestId('target-card').waitFor();
+  if ((await page.getByTestId('decimate-button').count()) > 0) {
+    const before = (await state(page)).owned.length;
+    // The DECIMATE button never stops pulsing, so it is clicked without waiting for it to hold still.
+    await page.getByTestId('decimate-button').click({ force: true });
+    await page.waitForFunction((n) => window.__atlas.state.owned.length > n, before, { timeout: 8000 });
+    return 'decimated';
+  }
   await page.getByTestId('attack-button').click();
   await page.getByTestId('question-card').waitFor();
+  return 'battle';
+}
+
+/** Picks a target from the list and attacks it (or decimates it, if a DECIMATE is ready). */
+export async function attack(page, id) {
+  await page.getByTestId(`target-${id}`).click();
+  return strike(page);
 }
 
 /** Waits until the game has moved past the question with this signature (or on to the map). */

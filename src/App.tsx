@@ -6,18 +6,20 @@ import { QuestionCard } from './components/QuestionCard';
 import { Leaderboard } from './components/Leaderboard';
 import { Rules } from './components/Rules';
 import { StartScreen } from './components/StartScreen';
-import { WorldMap, type CountryStatus, type FocusRequest, type MapPadding, type TooltipInfo, type TooltipPart } from './components/WorldMap';
+import { BLAST_MS, WorldMap, type CountryStatus, type FocusRequest, type MapPadding, type TooltipInfo, type TooltipPart } from './components/WorldMap';
 import { loadEmpire, loadGameData, loadMemory, loadSave, runIdFor, saveEmpire, saveMemory, writeSave, type GameData } from './data';
 import { defaultEmpireName, type Empire } from './game/flag';
 import { validateEmpireName } from './names/validateEmpireName';
 import { runRecord } from './leaderboard';
-import { CONTINENT_BONUS, SEA_TIMER_SECONDS, canRetreat, conquestTroops, escalation, getTargets, isLastStand, lanesNeeded, retreatCost, soldiers, startDifficulty } from './game/rules';
+import { CONTINENT_BONUS, DECIMATE_STREAK, SEA_TIMER_SECONDS, canRetreat, conquestTroops, escalation, getTargets, isLastStand, lanesNeeded, retreatCost, soldiers, startDifficulty } from './game/rules';
 import { sound, soundLog } from './sound';
 import { createGame, gameStats, reduce, targetStrength, type Action } from './game/state';
 import type { GameState, ModeId, Targets } from './game/types';
 import { WORLD_BOUNDS, unionBounds, type Bounds } from './map/geo';
 
 const NO_TARGETS: Targets = { land: [], sea: [], seaFallback: false };
+/** How long "[ LOCATION LOCKED ]" flickers before a DECIMATE strikes. */
+const LOCK_MS = 1100;
 
 export function App() {
   const [data, setData] = useState<GameData | null>(null);
@@ -85,6 +87,10 @@ function Game({ data }: { data: GameData }) {
   const [panel, setPanel] = useState<'rules' | 'leaderboard' | null>(null);
   const closePanel = useCallback(() => setPanel(null), []);
   const [targetId, setTargetId] = useState<string | null>(null);
+  /** A DECIMATE under way: the target is locked on, then blown up, then taken. */
+  const [decimating, setDecimating] = useState<{ id: string; stage: 'lock' | 'blast' } | null>(null);
+  const decimateTimers = useRef<number[]>([]);
+  useEffect(() => () => decimateTimers.current.forEach((timer) => window.clearTimeout(timer)), []);
   /** Set when a target is chosen from the list, so the camera goes and finds it. */
   const [targetFocus, setTargetFocus] = useState<string | null>(null);
   const [topRef, topHeight] = useMeasuredHeight();
@@ -137,12 +143,13 @@ function Game({ data }: { data: GameData }) {
       return out;
     }
     for (const id of game.owned) out[id] = 'owned';
-    for (const id of targets.land) out[id] = 'land';
-    for (const id of targets.sea) out[id] = 'sea';
+    // With a DECIMATE ready, every target shimmers gold: any of them can be taken outright.
+    for (const id of targets.land) out[id] = game.decimateReady ? 'decimate' : 'land';
+    for (const id of targets.sea) out[id] = game.decimateReady ? 'decimate' : 'sea';
     if (selectedTarget) out[selectedTarget] = 'selected';
     if (game.phase === 'battle' && game.battle) out[game.battle.targetId] = 'battle';
     return out;
-  }, [data.countries, world, game?.owned, game?.phase, game?.battle?.targetId, targets, selectedTarget, startId, !game]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data.countries, world, game?.owned, game?.phase, game?.battle?.targetId, game?.decimateReady, targets, selectedTarget, startId, !game]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const focus = useMemo((): FocusRequest => {
     const boundsOf = (ids: readonly string[]): Bounds =>
@@ -153,6 +160,8 @@ function Game({ data }: { data: GameData }) {
       }
       return { key: `mode:${mode}`, bounds: mode === 'World' ? WORLD_BOUNDS : boundsOf(world.ids) };
     }
+    // A DECIMATE closes in on its target.
+    if (decimating) return { key: `decimate:${decimating.id}`, bounds: boundsOf([decimating.id]), maxZoom: 6 };
     switch (game.phase) {
       case 'battle':
         return {
@@ -175,7 +184,7 @@ function Game({ data }: { data: GameData }) {
       default:
         return { key: `end:${game.phase}`, bounds: boundsOf(game.owned), maxZoom: 3 };
     }
-  }, [geometry, game, mode, startId, world, targets, targetFocus, selectedTarget]);
+  }, [geometry, game, mode, startId, world, targets, targetFocus, selectedTarget, decimating]);
 
   const inBattle = phase === 'battle' && game?.battle != null;
   // Width of the battle progress bar on the left, which is narrower on phones (see .progress in styles.css).
@@ -226,6 +235,10 @@ function Game({ data }: { data: GameData }) {
         return { title, detail: `${d.label} start · score ×${d.multiplier}` };
       }
       if (game.owned.includes(id)) return { title, detail: 'Your territory' };
+      if (game.decimateReady && (targets.land.includes(id) || targets.sea.includes(id))) {
+        const { full } = targetStrength(world, game, id, targets.sea.includes(id));
+        return { title, detail: [{ text: 'DECIMATE: taken without a fight' }, { text: `worth +${soldiers(conquestTroops(full))} troops`, tone: 'gain' }] };
+      }
       if (targets.land.includes(id)) {
         return { title, detail: [{ text: 'Attackable by land' }, ...strengthParts(id, false)] };
       }
@@ -286,7 +299,32 @@ function Game({ data }: { data: GameData }) {
     setGame(createGame(data.worlds[mode], id, seed, { name, flag: empire.flag }, loadMemory()));
   };
 
+  /**
+   * DECIMATE: the camera closes in, "[ LOCATION LOCKED ]" flickers, the target blows up, and then it falls
+   * like any conquest, with its flash, fanfare and troops.
+   */
+  const startDecimate = (id: string) => {
+    if (decimating) return;
+    setTargetId(null);
+    setTargetFocus(null);
+    setDecimating({ id, stage: 'lock' });
+    sound.lockOn();
+    decimateTimers.current.push(
+      window.setTimeout(() => {
+        setDecimating({ id, stage: 'blast' });
+        sound.explosion();
+      }, LOCK_MS),
+      window.setTimeout(() => {
+        setDecimating(null);
+        dispatch({ type: 'decimate', targetId: id });
+      }, LOCK_MS + BLAST_MS),
+    );
+  };
+
   const quit = () => {
+    decimateTimers.current.forEach((timer) => window.clearTimeout(timer));
+    decimateTimers.current = [];
+    setDecimating(null);
     setGame(null);
     setTargetId(null);
     setTargetFocus(null);
@@ -315,7 +353,7 @@ function Game({ data }: { data: GameData }) {
         return {
           seq,
           tone: 'good',
-          title: `${byId[event.countryId].name} conquered!`,
+          title: event.decimated ? `${byId[event.countryId].name} DECIMATED!` : `${byId[event.countryId].name} conquered!`,
           detail: event.continent ? `${gained} All of ${event.continent} is yours: +${CONTINENT_BONUS} bonus points` : gained,
         };
       }
@@ -346,6 +384,8 @@ function Game({ data }: { data: GameData }) {
       if (game.feedback.correct) sound.correct(game.streak);
       else sound.wrong();
     }
+    // A DECIMATE has just been earned: a shimmer after the conquest fanfare.
+    if (game.decimateReady && !before.decimateReady) sound.charged();
     if (game.eventSeq !== before.eventSeq && game.lastEvent) {
       const kind = game.lastEvent.kind;
       if (kind === 'conquered') game.phase === 'victory' ? sound.victory() : sound.conquer();
@@ -384,7 +424,7 @@ function Game({ data }: { data: GameData }) {
 
   return (
     <div
-      className={`app ${game ? `phase-${game.phase}` : 'phase-start'} ${!game && panel ? `showing-${panel}` : ''} ${lastStand ? 'last-stand' : ''}`}
+      className={`app ${game ? `phase-${game.phase}` : 'phase-start'} ${!game && panel ? `showing-${panel}` : ''} ${lastStand ? 'last-stand' : ''} ${decimating?.stage === 'blast' ? 'blasting' : ''}`}
       data-terrain={data.terrainKind}
     >
       <WorldMap
@@ -397,6 +437,7 @@ function Game({ data }: { data: GameData }) {
         pinBottom={game !== null}
         scene={game ? `${game.phase}:${game.battles}:${game.battle?.targetId ?? ''}` : 'start'}
         flash={flash}
+        blast={decimating?.stage === 'blast' ? { id: decimating.id, key: `blast:${decimating.id}` } : null}
         empireFlag={game ? game.empire.flag : empire.flag}
         // Your flag flies over everything you hold; on the start screen it previews on the country you picked.
         flagOn={game ? 'owned' : 'selected'}
@@ -456,7 +497,12 @@ function Game({ data }: { data: GameData }) {
       {game && (
         <>
           <div ref={topRef} className="top-dock">
-            <TopBar state={game} total={world.ids.length} onQuit={quit} />
+            <TopBar
+              state={game}
+              total={world.ids.length}
+              onQuit={quit}
+              charge={game.decimateReady ? 'armed' : game.phase === 'battle' && game.streak >= DECIMATE_STREAK ? 'charging' : 'none'}
+            />
           </div>
 
           {inBattle && game.battle && (
@@ -520,7 +566,7 @@ function Game({ data }: { data: GameData }) {
                   onContinue={() => dispatch({ type: 'continue' })}
                 />
               )}
-              {game.phase === 'attack' && (
+              {game.phase === 'attack' && !decimating && (
                 <AttackPanel
                   targets={targets}
                   byId={byId}
@@ -536,8 +582,17 @@ function Game({ data }: { data: GameData }) {
                     setTargetFocus(null);
                     dispatch({ type: 'attack', targetId: id });
                   }}
+                  decimate={game.decimateReady}
+                  onDecimate={startDecimate}
                 />
               )}
+            </div>
+          )}
+
+          {decimating?.stage === 'lock' && (
+            <div className="lock-on" role="status" data-testid="location-locked">
+              <strong>[ LOCATION LOCKED ]</strong>
+              <span>{byId[decimating.id].name}</span>
             </div>
           )}
 

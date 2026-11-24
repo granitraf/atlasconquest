@@ -12,12 +12,15 @@ interface Props {
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   onAttack: (id: string) => void;
+  /** A DECIMATE is ready: the next target is taken outright, and Attack becomes DECIMATE. */
+  decimate?: boolean;
+  onDecimate?: (id: string) => void;
 }
 
 const troopsText = (troops: number) => `+${soldiers(troops)} troops`;
 
 /** Between battles: pick a target (on the map or from the list) and attack it. */
-export function AttackPanel({ targets, byId, escalation, strength, selectedId, onSelect, onAttack }: Props) {
+export function AttackPanel({ targets, byId, escalation, strength, selectedId, onSelect, onAttack, decimate = false, onDecimate }: Props) {
   const selected = selectedId ? byId[selectedId] : null;
   const selectedSea = selectedId ? targets.sea.includes(selectedId) : false;
   const selectedStrength = selected ? strength(selected.id, selectedSea) : null;
@@ -28,9 +31,9 @@ export function AttackPanel({ targets, byId, escalation, strength, selectedId, o
   const sea = [...targets.sea].sort(byName);
 
   return (
-    <section className="card attack" data-testid="attack-panel">
+    <section className={`card attack ${decimate ? 'decimate-ready' : ''}`} data-testid="attack-panel">
       <div className="card-head">
-        <span className="chip context">Choose a target</span>
+        <span className={`chip context ${decimate ? 'decimate' : ''}`}>{decimate ? 'DECIMATE ready' : 'Choose a target'}</span>
         <span className="legend">
           <i className="swatch land" /> land border
           <i className="swatch sea" /> sea crossing
@@ -55,29 +58,44 @@ export function AttackPanel({ targets, byId, escalation, strength, selectedId, o
             </p>
             <p className="target-reward" data-testid="target-reward" data-troops={selectedReward}>
               <b className="gain">{troopsText(selectedReward)} upon victory</b>
+              {decimate && <span className="decimate-note"> · taken without a fight</span>}
             </p>
           </div>
           <div className="target-actions">
             <button type="button" className="btn ghost" onClick={() => onSelect(null)}>
               Cancel
             </button>
-            <button
-              type="button"
-              className="btn danger"
-              onClick={() => {
-                sound.attack();
-                onAttack(selected.id);
-              }}
-              data-testid="attack-button"
-            >
-              Attack
-            </button>
+            {decimate ? (
+              <button
+                type="button"
+                className="btn decimate"
+                onClick={() => onDecimate?.(selected.id)}
+                data-testid="decimate-button"
+                title="Your streak of 25 takes this country outright: no questions. It spends the streak."
+              >
+                <span className="decimate-flames" aria-hidden="true" />
+                <span className="decimate-label">DECIMATE</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn danger"
+                onClick={() => {
+                  sound.attack();
+                  onAttack(selected.id);
+                }}
+                data-testid="attack-button"
+              >
+                Attack
+              </button>
+            )}
           </div>
         </div>
       ) : (
-        <p className="hint lead">
-          Pick a highlighted country on the map or from the list to attack. Recruiting is over: new troops come only from
-          conquests, and the more enemies a country has, the more it is worth.
+        <p className={`hint lead ${decimate ? 'decimate' : ''}`} data-testid="attack-hint">
+          {decimate
+            ? 'Your streak earned a DECIMATE. Pick any gold country: it falls without a fight, and you take all its spoils. Use it now: it cannot be saved.'
+            : 'Pick a highlighted country on the map or from the list to attack. Recruiting is over: new troops come only from conquests, and the more enemies a country has, the more it is worth.'}
         </p>
       )}
 

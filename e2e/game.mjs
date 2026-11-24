@@ -1,6 +1,6 @@
 // Checklist 2-7: the game itself, played through the real UI in Chrome.
 // Run one section with: node e2e/game.mjs <section>
-import { launch, SHOTS, check, open, startGame, recruit, attack, answer, movedOn, k, misfits, mapEdges, lastSound, hush, fight, state, hud, classOf, clickCountry, pointOn, settle, sample, countPixels, sounds, isGreen } from './lib.mjs';
+import { launch, SHOTS, check, open, startGame, recruit, attack, strike, answer, movedOn, k, misfits, mapEdges, lastSound, hush, fight, state, hud, classOf, clickCountry, pointOn, settle, sample, countPixels, sounds, isGreen } from './lib.mjs';
 
 const results = [];
 const allProblems = [];
@@ -291,7 +291,8 @@ section('germany', async (page) => {
     s = await state(page);
     if (s.phase !== 'battle') break;
     hardSeen ||= s.battle.question.difficulty !== 'easy';
-    if (s.battle.question.difficulty === 'hard') throw new Error('a famous country produced a Hard question');
+    // France is famous: Hard only on the genuinely hard kinds.
+    if (s.battle.question.difficulty === 'hard' && !['population', 'area', 'notBorder', 'independence'].includes(s.battle.question.type)) throw new Error(`a famous country produced a Hard ${s.battle.question.type} question`);
     if ((await page.getByTestId('difficulty').getAttribute('data-value')) !== s.battle.question.difficulty) throw new Error('tier label does not match the question');
     check(results, `battle question ${s.battle.asked.length + 1} is about France and not a repeat`, s.battle.question.countryId === 'FRA' && !sigs.has(s.battle.question.sig) && !s.battle.asked.includes(s.battle.question.sig), s.battle.question.prompt);
     sigs.add(s.battle.question.sig);
@@ -788,9 +789,7 @@ async function conquerAll(page, label) {
       const p = battles % 2 === 0 ? await pointOn(page, id) : null;
       if (p) await page.mouse.click(p.x, p.y);
       else await page.getByTestId(`target-${id}`).click();
-      await page.getByTestId('target-card').waitFor();
-      await page.getByTestId('attack-button').click();
-      await page.getByTestId('question-card').waitFor();
+      await strike(page);
       battles++;
     }
   }
@@ -837,8 +836,7 @@ section('continent-bonus', async (page) => {
     else {
       const id = await page.evaluate(() => [...document.querySelectorAll('.target-chip')].map((c) => c.getAttribute('data-testid').slice(7)).find((id) => window.__atlas.data.byId[id].continent === 'South America'));
       await page.getByTestId(`target-${id}`).click();
-      await page.getByTestId('attack-button').click();
-      await page.getByTestId('question-card').waitFor();
+      await strike(page);
     }
   }
   await page.getByTestId('attack-panel').waitFor();
@@ -910,8 +908,7 @@ section('campaign-oceania', async (page) => {
       if ((await first.getAttribute('data-kind')) === 'sea') seaBattles++;
       if (/nearest ones beyond/.test(await page.getByTestId('attack-panel').innerText())) fallbackOffered = true;
       await first.click();
-      await page.getByTestId('attack-button').click();
-      await page.getByTestId('question-card').waitFor();
+      await strike(page);
     }
   }
   check(results, 'an island campaign (Oceania, 23 countries) can be won entirely through the UI', s.phase === 'victory' && s.owned.length === 23, `${s.phase}, ${s.owned.length}/23, ${seaBattles} sea battles`);
@@ -1003,7 +1000,7 @@ section('rules', async (page) => {
 
   const text = (await rules.innerText()).replace(/\s+/g, ' ');
   const chapters = await page.locator('.rule h2').allInnerTexts();
-  check(results, 'ten chapters: the game, the goal, campaigns, the start, recruitment, enemies, battle, spoils, retreat, a growing empire', chapters.length === 10 && ['GAME', 'GOAL', 'CAMPAIGNS', 'START', 'RECRUITMENT', 'ENEMIES', 'BATTLE', 'SPOILS', 'RETREAT', 'EMPIRE'].every((word, i) => chapters[i].toUpperCase().includes(word)), chapters.map((c) => c.replace(/\s+/g, ' ')).join(' | '));
+  check(results, 'eleven chapters: the game, the goal, campaigns, the start, recruitment, enemies, battle, spoils, retreat, a growing empire, on a streak', chapters.length === 11 && ['GAME', 'GOAL', 'CAMPAIGNS', 'START', 'RECRUITMENT', 'ENEMIES', 'BATTLE', 'SPOILS', 'RETREAT', 'EMPIRE', 'STREAK'].every((word, i) => chapters[i].toUpperCase().includes(word)), chapters.map((c) => c.replace(/\s+/g, ' ')).join(' | '));
   const campaigns = await page.getByTestId('rules-campaigns').locator('li').allInnerTexts();
   const counts = await page.evaluate(() => Object.fromEntries(Object.entries(window.__atlas.data.worlds).map(([mode, w]) => [mode, w.ids.length])));
   check(results, 'it lists the 7 campaigns with their real sizes', campaigns.length === 7 && campaigns.every((c) => { const [, name, n] = /^(.*?)\s+(\d+)$/.exec(c.trim()); return counts[name] === Number(n); }) && /7 CAMPAIGNS/i.test(chapters[2]), campaigns.join(', '));
@@ -1371,6 +1368,70 @@ section('leaderboard', async (page, board) => {
   const after = await fight(page, true);
   check(results, 'with the leaderboard unreachable a game still starts, recruits, attacks and conquers', after.phase === 'attack' && after.owned.includes('LUX'), after.phase);
   board.mode = 'ok';
+});
+
+// --------------------------------------------------------------- decimate
+// 25 right answers in a row, held until a country falls, earn a DECIMATE: the next target falls outright.
+section('decimate', async (page) => {
+  await open(page);
+  await startGame(page, 'World', 'DEU');
+  await recruit(page);
+  const chip = page.getByTestId('streak');
+  check(results, 'the streak chip counts toward 25', (await chip.getAttribute('data-charge')) === 'none' && /5\s*\/25/.test(await chip.innerText()), (await chip.innerText()).replace(/\s+/g, ' '));
+  let s = await state(page);
+  let chargingSeen = false;
+  let chargingBeforeWin = null;
+  // Conquer Germany's neighbours with nothing but right answers until the DECIMATE is earned.
+  for (let guard = 0; guard < 8 && !s.decimateReady; guard++) {
+    const targets = await page.locator('.target-chip').evaluateAll((els) => els.map((el) => el.getAttribute('data-testid').slice(7)));
+    const pick = ['FRA', 'POL', 'CZE', 'AUT', 'NLD', 'BEL', 'DNK', 'CHE', 'GBR'].find((id) => targets.includes(id)) ?? targets[0];
+    await attack(page, pick);
+    for (let i = 0; i < 40; i++) {
+      s = await state(page);
+      if (s.phase !== 'battle') break;
+      if (s.streak >= 25 && !chargingSeen) {
+        chargingSeen = true;
+        chargingBeforeWin = { charge: await chip.getAttribute('data-charge'), animation: await chip.evaluate((el) => getComputedStyle(el).animationName) };
+      }
+      await answer(page, true);
+    }
+    await page.getByTestId('attack-panel').waitFor();
+    s = await state(page);
+  }
+  check(results, 'past 25 in a battle the streak chip pulses, but the DECIMATE is not ready until the country falls', chargingSeen && chargingBeforeWin.charge === 'charging' && /charge-pulse/.test(chargingBeforeWin.animation), JSON.stringify(chargingBeforeWin));
+  check(results, 'the country falls with the streak intact: a DECIMATE is ready, and a shimmer plays', s.decimateReady && s.streak >= 25 && (await sounds(page)).some((x) => x.name === 'charged'), `streak ${s.streak}`);
+  check(results, 'the streak chip glows READY', (await chip.getAttribute('data-charge')) === 'armed' && /READY/.test(await chip.innerText()));
+  const targets = await page.locator('.target-chip').evaluateAll((els) => els.map((el) => el.getAttribute('data-testid').slice(7)));
+  const classes = await Promise.all(targets.map((id) => classOf(page, id)));
+  check(results, 'every target turns gold on the map', classes.length > 0 && classes.every((c) => c.includes('s-decimate')), classes.slice(0, 4).join(' | '));
+  await settle(page, 400);
+  check(results, 'the gold outlines shimmer: sparks travel round them', (await countPixels(page, 'fx', [255, 250, 210])) > 0 && (await countPixels(page, 'fx', [240, 176, 32])) > 0);
+  check(results, 'the attack panel says a DECIMATE is ready and cannot be saved', /DECIMATE ready/i.test(await page.locator('.attack .chip.context').innerText()) && /cannot be saved/.test(await page.getByTestId('attack-hint').innerText()), await page.locator('.attack .chip.context').innerText());
+
+  const before = await state(page);
+  const target = targets[0];
+  await page.getByTestId(`target-${target}`).click();
+  const button = page.getByTestId('decimate-button');
+  const look = await button.evaluate((el) => { const cs = getComputedStyle(el); return { text: el.innerText.trim(), font: cs.fontFamily, animation: cs.animationName, flames: getComputedStyle(el.querySelector('.decimate-flames')).animationName }; });
+  check(results, 'the button reads DECIMATE in capitals, pulsing, with flames', look.text === 'DECIMATE' && /Press Start 2P/.test(look.font) && /decimate-pulse/.test(look.animation) && /flames/.test(look.flames) && (await page.getByTestId('attack-button').count()) === 0, JSON.stringify(look));
+  await page.screenshot({ path: SHOTS + '90-decimate-ready.png' });
+  await hush(page);
+  // The button never stops pulsing, so it is clicked without waiting for it to hold still.
+  await button.click({ force: true });
+  const locked = page.getByTestId('location-locked');
+  await locked.waitFor();
+  check(results, 'pressing it flickers "[ LOCATION LOCKED ]" over the map, with radar blips', /\[ LOCATION LOCKED \]/.test(await locked.innerText()) && (await lastSound(page)) === 'lockOn' && /lock-flicker/.test(await locked.locator('strong').evaluate((el) => getComputedStyle(el).animationName)));
+  await page.screenshot({ path: SHOTS + '91-location-locked.png' });
+  await page.locator('.app.blasting').waitFor({ timeout: 3000 });
+  await page.waitForTimeout(250);
+  const fire = (await countPixels(page, 'fx', [255, 140, 36])) + (await countPixels(page, 'fx', [255, 226, 92])) + (await countPixels(page, 'fx', [214, 48, 30]));
+  check(results, 'then a pixel explosion goes off on the target, with a boom, and the map shakes', fire > 20 && (await sounds(page)).some((x) => x.name === 'explosion') && (await locked.count()) === 0, `${fire} fire pixels`);
+  await page.screenshot({ path: SHOTS + '92-decimate-blast.png' });
+  await page.waitForFunction((id) => window.__atlas.state.owned.includes(id), target, { timeout: 4000 });
+  s = await state(page);
+  const gained = s.troops - before.troops;
+  check(results, 'then the country is taken like any conquest: no questions, full spoils, the fanfare and the troops message', s.phase === 'attack' && s.lastEvent.decimated === true && gained === s.lastEvent.troopsGained && gained > 0 && (await page.getByTestId('question-card').count()) === 0 && (await lastSound(page)) === 'conquer' && /DECIMATED!/.test(await page.locator('.toast').innerText()) && /troops join your army/.test(await page.locator('.toast').innerText()), `+${gained}; ${(await page.locator('.toast').innerText()).replace(/\n/g, ' ')}`);
+  check(results, 'it counts as a battle and spends the streak; the map is back to white targets', s.battles === before.battles + 1 && s.streak === 0 && !s.decimateReady && (await chip.getAttribute('data-charge')) === 'none' && (await page.locator('path.country.s-decimate').count()) === 0, `battles ${before.battles} -> ${s.battles}, streak ${s.streak}`);
 });
 
 // ----------------------------------------------------------------- runner

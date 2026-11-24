@@ -203,7 +203,7 @@
    "id": "ARG-pope-francis",
    "country": "ARG",
    "category": "person",
-   "kind": "custom",
+   "kind": "religious",
    "prompt": "Which pope was born in Buenos Aires, Argentina?",
    "answer": "Pope Francis",
    "recognition": 3,
@@ -340,8 +340,8 @@
    "id": "AUT-wolfgang-amadeus-mozart",
    "country": "AUT",
    "category": "person",
-   "kind": "musician",
-   "prompt": "Which of these musicians is from Austria?",
+   "kind": "composer",
+   "prompt": "Which of these composers came from Austria?",
    "answer": "Wolfgang Amadeus Mozart",
    "recognition": 3,
    "sharedWith": [
@@ -490,7 +490,7 @@
    "country": "BRB",
    "category": "person",
    "kind": "musician",
-   "prompt": "Which of these musicians is from Barbados?",
+   "prompt": "Which of these music stars is from Barbados?",
    "answer": "Rihanna",
    "recognition": 3,
    "hook": true,
@@ -517,7 +517,7 @@
    "id": "BLR-marc-chagall",
    "country": "BLR",
    "category": "person",
-   "kind": "custom",
+   "kind": "artist",
    "prompt": "Which painter was born near Vitebsk in present-day Belarus?",
    "answer": "Marc Chagall",
    "recognition": 2,
@@ -526,6 +526,10 @@
     "Wassily Kandinsky",
     "Gustav Klimt",
     "Edvard Munch"
+   ],
+   "sharedWith": [
+    "FRA",
+    "RUS"
    ]
   },
   {
@@ -1077,7 +1081,7 @@
    "country": "CAN",
    "category": "person",
    "kind": "musician",
-   "prompt": "Which of these musicians is from Canada?",
+   "prompt": "Which of these music stars is from Canada?",
    "answer": "Celine Dion",
    "recognition": 3,
    "sharedWith": [
@@ -1102,7 +1106,7 @@
    "country": "CPV",
    "category": "person",
    "kind": "musician",
-   "prompt": "Which of these musicians is from Cape Verde?",
+   "prompt": "Which of these music stars is from Cape Verde?",
    "answer": "Cesária Évora",
    "recognition": 2,
    "hook": true
@@ -1275,7 +1279,7 @@
    "country": "COL",
    "category": "person",
    "kind": "musician",
-   "prompt": "Which of these musicians is from Colombia?",
+   "prompt": "Which of these music stars is from Colombia?",
    "answer": "Shakira",
    "recognition": 3
   },
@@ -2272,7 +2276,7 @@
    "id": "PYF-paul-gauguin",
    "country": "PYF",
    "category": "person",
-   "kind": "custom",
+   "kind": "artist",
    "prompt": "Which French painter spent his last years painting in Tahiti and the Marquesas, in French Polynesia?",
    "answer": "Paul Gauguin",
    "recognition": 3,
@@ -2281,6 +2285,9 @@
     "Claude Monet",
     "Pierre-Auguste Renoir",
     "Edgar Degas"
+   ],
+   "sharedWith": [
+    "FRA"
    ]
   },
   {
@@ -2350,18 +2357,6 @@
     "Beer",
     "Tea",
     "Mead"
-   ]
-  },
-  {
-   "id": "GEO-joseph-stalin",
-   "country": "GEO",
-   "category": "person",
-   "kind": "leader",
-   "prompt": "Which of these historical figures was born in Georgia?",
-   "answer": "Joseph Stalin",
-   "recognition": 3,
-   "sharedWith": [
-    "RUS"
    ]
   },
   {
@@ -2447,8 +2442,8 @@
    "id": "DEU-ludwig-van-beethoven",
    "country": "DEU",
    "category": "person",
-   "kind": "musician",
-   "prompt": "Which of these musicians is from Germany?",
+   "kind": "composer",
+   "prompt": "Which of these composers came from Germany?",
    "answer": "Ludwig van Beethoven",
    "recognition": 3,
    "sharedWith": [
@@ -2513,7 +2508,7 @@
    "id": "GHA-kofi-annan",
    "country": "GHA",
    "category": "person",
-   "kind": "custom",
+   "kind": "leader",
    "prompt": "Which Secretary-General of the United Nations came from Ghana?",
    "answer": "Kofi Annan",
    "recognition": 3,
@@ -2694,7 +2689,7 @@
    "id": "GGY-victor-hugo",
    "country": "GGY",
    "category": "person",
-   "kind": "custom",
+   "kind": "writer",
    "prompt": "Which French author finished Les Misérables while living in exile on Guernsey?",
    "answer": "Victor Hugo",
    "recognition": 3,
@@ -2874,7 +2869,7 @@
    "id": "HKG-jackie-chan",
    "country": "HKG",
    "category": "person",
-   "kind": "custom",
+   "kind": "actor",
    "prompt": "Which martial-arts film star was born in Hong Kong?",
    "answer": "Jackie Chan",
    "recognition": 3,
@@ -2883,6 +2878,9 @@
     "Jet Li",
     "Donnie Yen",
     "Michelle Yeoh"
+   ],
+   "sharedWith": [
+    "CHN"
    ]
   },
   {
@@ -2933,7 +2931,7 @@
    "country": "ISL",
    "category": "person",
    "kind": "musician",
-   "prompt": "Which of these musicians is from Iceland?",
+   "prompt": "Which of these music stars is from Iceland?",
    "answer": "Björk",
    "recognition": 2
   },
@@ -3427,7 +3425,7 @@
    "country": "JAM",
    "category": "person",
    "kind": "musician",
-   "prompt": "Which of these musicians is from Jamaica?",
+   "prompt": "Which of these music stars is from Jamaica?",
    "answer": "Bob Marley",
    "recognition": 3
   },
@@ -4887,7 +4885,7 @@
    "id": "NPL-the-buddha",
    "country": "NPL",
    "category": "person",
-   "kind": "custom",
+   "kind": "religious",
    "prompt": "Which religious teacher was born at Lumbini, in present-day Nepal, around 2,500 years ago?",
    "answer": "The Buddha",
    "recognition": 3,
@@ -4896,6 +4894,9 @@
     "Confucius",
     "Guru Nanak",
     "Laozi"
+   ],
+   "sharedWith": [
+    "IND"
    ]
   },
   {
@@ -5217,7 +5218,7 @@
    "id": "MKD-mother-teresa",
    "country": "MKD",
    "category": "person",
-   "kind": "custom",
+   "kind": "religious",
    "prompt": "Which Nobel Peace Prize winner was born in 1910 in Skopje, now the capital of North Macedonia?",
    "answer": "Mother Teresa",
    "recognition": 3,
@@ -5226,6 +5227,10 @@
     "Marie Curie",
     "Florence Nightingale",
     "Malala Yousafzai"
+   ],
+   "sharedWith": [
+    "ALB",
+    "IND"
    ]
   },
   {
@@ -5356,7 +5361,7 @@
    "id": "PAK-malala-yousafzai",
    "country": "PAK",
    "category": "person",
-   "kind": "custom",
+   "kind": "leader",
    "prompt": "Which schoolgirl from Pakistan became the youngest ever Nobel Peace Prize winner in 2014?",
    "answer": "Malala Yousafzai",
    "recognition": 3,
@@ -5640,8 +5645,8 @@
    "id": "POL-frederic-chopin",
    "country": "POL",
    "category": "person",
-   "kind": "musician",
-   "prompt": "Which of these musicians is from Poland?",
+   "kind": "composer",
+   "prompt": "Which of these composers came from Poland?",
    "answer": "Frédéric Chopin",
    "recognition": 3,
    "sharedWith": [
@@ -5759,7 +5764,7 @@
    "country": "PRI",
    "category": "person",
    "kind": "musician",
-   "prompt": "Which of these musicians is from Puerto Rico?",
+   "prompt": "Which of these music stars is from Puerto Rico?",
    "answer": "Bad Bunny",
    "recognition": 3
   },
@@ -6034,7 +6039,7 @@
    "id": "KNA-alexander-hamilton",
    "country": "KNA",
    "category": "person",
-   "kind": "custom",
+   "kind": "leader",
    "prompt": "Which US founding father, later the subject of a hit musical, was born on Nevis in Saint Kitts and Nevis?",
    "answer": "Alexander Hamilton",
    "recognition": 3,
@@ -6043,6 +6048,9 @@
     "Benjamin Franklin",
     "Thomas Jefferson",
     "George Washington"
+   ],
+   "sharedWith": [
+    "USA"
    ]
   },
   {
@@ -6134,7 +6142,7 @@
    "id": "WSM-robert-louis-stevenson",
    "country": "WSM",
    "category": "person",
-   "kind": "custom",
+   "kind": "writer",
    "prompt": "Which Scottish author of Treasure Island spent his final years in Samoa and is buried there?",
    "answer": "Robert Louis Stevenson",
    "recognition": 3,
@@ -6143,6 +6151,9 @@
     "Rudyard Kipling",
     "Herman Melville",
     "Arthur Conan Doyle"
+   ],
+   "sharedWith": [
+    "GBR"
    ]
   },
   {
@@ -6301,7 +6312,7 @@
    "id": "SRB-constantine-the-great",
    "country": "SRB",
    "category": "person",
-   "kind": "custom",
+   "kind": "leader",
    "prompt": "Which Roman emperor, the first to convert to Christianity, was born in what is now Niš, Serbia?",
    "answer": "Constantine the Great",
    "recognition": 3,
@@ -6310,6 +6321,10 @@
     "Julius Caesar",
     "Nero",
     "Marcus Aurelius"
+   ],
+   "sharedWith": [
+    "ITA",
+    "TUR"
    ]
   },
   {
@@ -6505,21 +6520,6 @@
     "Andalusian",
     "Camargue",
     "Friesian"
-   ]
-  },
-  {
-   "id": "SVN-melania-trump",
-   "country": "SVN",
-   "category": "person",
-   "kind": "custom",
-   "prompt": "Which First Lady of the United States was born in Slovenia?",
-   "answer": "Melania Trump",
-   "recognition": 3,
-   "hook": true,
-   "wrong": [
-    "Jacqueline Kennedy",
-    "Hillary Clinton",
-    "Michelle Obama"
    ]
   },
   {
@@ -6872,7 +6872,7 @@
    "id": "SUR-clarence-seedorf",
    "country": "SUR",
    "category": "person",
-   "kind": "custom",
+   "kind": "footballer",
    "prompt": "Which Dutch football star was born in Paramaribo, Suriname?",
    "answer": "Clarence Seedorf",
    "recognition": 2,
@@ -6881,6 +6881,9 @@
     "Johan Cruyff",
     "Arjen Robben",
     "Marco van Basten"
+   ],
+   "sharedWith": [
+    "NLD"
    ]
   },
   {
@@ -6909,7 +6912,7 @@
    "country": "SWE",
    "category": "person",
    "kind": "musician",
-   "prompt": "Which of these musicians is from Sweden?",
+   "prompt": "Which of these music stars is from Sweden?",
    "answer": "ABBA",
    "recognition": 3
   },
@@ -7177,7 +7180,7 @@
    "id": "TZA-freddie-mercury",
    "country": "TZA",
    "category": "person",
-   "kind": "custom",
+   "kind": "musician",
    "prompt": "Which Queen frontman was born in Zanzibar, now part of Tanzania?",
    "answer": "Freddie Mercury",
    "recognition": 3,
@@ -7186,6 +7189,9 @@
     "Elton John",
     "David Bowie",
     "George Michael"
+   ],
+   "sharedWith": [
+    "GBR"
    ]
   },
   {
@@ -7623,7 +7629,7 @@
    "country": "GBR",
    "category": "person",
    "kind": "musician",
-   "prompt": "Which of these musicians is from the United Kingdom?",
+   "prompt": "Which of these music stars is from the United Kingdom?",
    "answer": "The Beatles",
    "recognition": 3
   },
@@ -9790,6 +9796,1623 @@
     "Mauritania",
     "Morocco",
     "Guinea"
+   ]
+  },
+  {
+   "id": "USA-abraham-lincoln",
+   "country": "USA",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from the United States?",
+   "answer": "Abraham Lincoln",
+   "recognition": 3
+  },
+  {
+   "id": "USA-george-washington",
+   "country": "USA",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from the United States?",
+   "answer": "George Washington",
+   "recognition": 3
+  },
+  {
+   "id": "USA-martin-luther-king-jr",
+   "country": "USA",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from the United States?",
+   "answer": "Martin Luther King Jr.",
+   "recognition": 3
+  },
+  {
+   "id": "USA-barack-obama",
+   "country": "USA",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from the United States?",
+   "answer": "Barack Obama",
+   "recognition": 3
+  },
+  {
+   "id": "GBR-winston-churchill",
+   "country": "GBR",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from the United Kingdom?",
+   "answer": "Winston Churchill",
+   "recognition": 3
+  },
+  {
+   "id": "GBR-queen-elizabeth-ii",
+   "country": "GBR",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from the United Kingdom?",
+   "answer": "Queen Elizabeth II",
+   "recognition": 3
+  },
+  {
+   "id": "FRA-joan-of-arc",
+   "country": "FRA",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from France?",
+   "answer": "Joan of Arc",
+   "recognition": 3
+  },
+  {
+   "id": "FRA-charles-de-gaulle",
+   "country": "FRA",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from France?",
+   "answer": "Charles de Gaulle",
+   "recognition": 2
+  },
+  {
+   "id": "ITA-julius-caesar",
+   "country": "ITA",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Italy?",
+   "answer": "Julius Caesar",
+   "recognition": 3
+  },
+  {
+   "id": "ITA-marcus-aurelius",
+   "country": "ITA",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Italy?",
+   "answer": "Marcus Aurelius",
+   "recognition": 2
+  },
+  {
+   "id": "ITA-augustus",
+   "country": "ITA",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Italy?",
+   "answer": "Augustus",
+   "recognition": 2
+  },
+  {
+   "id": "DEU-otto-von-bismarck",
+   "country": "DEU",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Germany?",
+   "answer": "Otto von Bismarck",
+   "recognition": 2
+  },
+  {
+   "id": "DEU-angela-merkel",
+   "country": "DEU",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Germany?",
+   "answer": "Angela Merkel",
+   "recognition": 3
+  },
+  {
+   "id": "RUS-peter-the-great",
+   "country": "RUS",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Russia?",
+   "answer": "Peter the Great",
+   "recognition": 3
+  },
+  {
+   "id": "EGY-tutankhamun",
+   "country": "EGY",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Egypt?",
+   "answer": "Tutankhamun",
+   "recognition": 3
+  },
+  {
+   "id": "EGY-ramesses-ii",
+   "country": "EGY",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Egypt?",
+   "answer": "Ramesses II",
+   "recognition": 2
+  },
+  {
+   "id": "EGY-gamal-abdel-nasser",
+   "country": "EGY",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Egypt?",
+   "answer": "Gamal Abdel Nasser",
+   "recognition": 2
+  },
+  {
+   "id": "IND-jawaharlal-nehru",
+   "country": "IND",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from India?",
+   "answer": "Jawaharlal Nehru",
+   "recognition": 2
+  },
+  {
+   "id": "IND-ashoka-the-great",
+   "country": "IND",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from India?",
+   "answer": "Ashoka the Great",
+   "recognition": 2
+  },
+  {
+   "id": "TUR-mustafa-kemal-ataturk",
+   "country": "TUR",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Turkey?",
+   "answer": "Mustafa Kemal Atatürk",
+   "recognition": 2
+  },
+  {
+   "id": "TUR-suleiman-the-magnificent",
+   "country": "TUR",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Turkey?",
+   "answer": "Suleiman the Magnificent",
+   "recognition": 2
+  },
+  {
+   "id": "MNG-kublai-khan",
+   "country": "MNG",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Mongolia?",
+   "answer": "Kublai Khan",
+   "recognition": 2
+  },
+  {
+   "id": "ISR-golda-meir",
+   "country": "ISR",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Israel?",
+   "answer": "Golda Meir",
+   "recognition": 2
+  },
+  {
+   "id": "ISR-david-ben-gurion",
+   "country": "ISR",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Israel?",
+   "answer": "David Ben-Gurion",
+   "recognition": 2
+  },
+  {
+   "id": "ARG-eva-peron",
+   "country": "ARG",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Argentina?",
+   "answer": "Eva Perón",
+   "recognition": 2
+  },
+  {
+   "id": "MEX-benito-juarez",
+   "country": "MEX",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Mexico?",
+   "answer": "Benito Juárez",
+   "recognition": 2
+  },
+  {
+   "id": "MEX-emiliano-zapata",
+   "country": "MEX",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Mexico?",
+   "answer": "Emiliano Zapata",
+   "recognition": 2
+  },
+  {
+   "id": "GHA-kwame-nkrumah",
+   "country": "GHA",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Ghana?",
+   "answer": "Kwame Nkrumah",
+   "recognition": 2
+  },
+  {
+   "id": "TZA-julius-nyerere",
+   "country": "TZA",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Tanzania?",
+   "answer": "Julius Nyerere",
+   "recognition": 2
+  },
+  {
+   "id": "ETH-haile-selassie",
+   "country": "ETH",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Ethiopia?",
+   "answer": "Haile Selassie",
+   "recognition": 2
+  },
+  {
+   "id": "SEN-leopold-sedar-senghor",
+   "country": "SEN",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Senegal?",
+   "answer": "Léopold Sédar Senghor",
+   "recognition": 2
+  },
+  {
+   "id": "KEN-wangari-maathai",
+   "country": "KEN",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Kenya?",
+   "answer": "Wangari Maathai",
+   "recognition": 2
+  },
+  {
+   "id": "JPN-tokugawa-ieyasu",
+   "country": "JPN",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Japan?",
+   "answer": "Tokugawa Ieyasu",
+   "recognition": 2
+  },
+  {
+   "id": "KOR-king-sejong-the-great",
+   "country": "KOR",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from South Korea?",
+   "answer": "King Sejong the Great",
+   "recognition": 2
+  },
+  {
+   "id": "CZE-vaclav-havel",
+   "country": "CZE",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Czechia?",
+   "answer": "Václav Havel",
+   "recognition": 2
+  },
+  {
+   "id": "POL-lech-wa-esa",
+   "country": "POL",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Poland?",
+   "answer": "Lech Wałęsa",
+   "recognition": 2
+  },
+  {
+   "id": "PHL-jose-rizal",
+   "country": "PHL",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from the Philippines?",
+   "answer": "José Rizal",
+   "recognition": 2
+  },
+  {
+   "id": "PHL-corazon-aquino",
+   "country": "PHL",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from the Philippines?",
+   "answer": "Corazon Aquino",
+   "recognition": 2
+  },
+  {
+   "id": "IDN-sukarno",
+   "country": "IDN",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Indonesia?",
+   "answer": "Sukarno",
+   "recognition": 2
+  },
+  {
+   "id": "PAK-benazir-bhutto",
+   "country": "PAK",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Pakistan?",
+   "answer": "Benazir Bhutto",
+   "recognition": 2
+  },
+  {
+   "id": "PAK-muhammad-ali-jinnah",
+   "country": "PAK",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Pakistan?",
+   "answer": "Muhammad Ali Jinnah",
+   "recognition": 2
+  },
+  {
+   "id": "IRN-cyrus-the-great",
+   "country": "IRN",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Iran?",
+   "answer": "Cyrus the Great",
+   "recognition": 2
+  },
+  {
+   "id": "IRQ-hammurabi",
+   "country": "IRQ",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Iraq?",
+   "answer": "Hammurabi",
+   "recognition": 2
+  },
+  {
+   "id": "TUN-hannibal",
+   "country": "TUN",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which general, who crossed the Alps with war elephants, came from Carthage in what is now Tunisia?",
+   "answer": "Hannibal",
+   "recognition": 2,
+   "wrong": [
+    "Julius Caesar",
+    "Alexander the Great",
+    "Attila the Hun"
+   ]
+  },
+  {
+   "id": "HTI-toussaint-louverture",
+   "country": "HTI",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Haiti?",
+   "answer": "Toussaint Louverture",
+   "recognition": 2
+  },
+  {
+   "id": "CHL-salvador-allende",
+   "country": "CHL",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Chile?",
+   "answer": "Salvador Allende",
+   "recognition": 2
+  },
+  {
+   "id": "URY-jose-mujica",
+   "country": "URY",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from Uruguay?",
+   "answer": "José Mujica",
+   "recognition": 2
+  },
+  {
+   "id": "NZL-jacinda-ardern",
+   "country": "NZL",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from New Zealand?",
+   "answer": "Jacinda Ardern",
+   "recognition": 3
+  },
+  {
+   "id": "ZAF-desmond-tutu",
+   "country": "ZAF",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which of these historical leaders came from South Africa?",
+   "answer": "Desmond Tutu",
+   "recognition": 2
+  },
+  {
+   "id": "CHN-confucius",
+   "country": "CHN",
+   "category": "person",
+   "kind": "thinker",
+   "prompt": "Which of these great thinkers came from China?",
+   "answer": "Confucius",
+   "recognition": 3
+  },
+  {
+   "id": "CHN-sun-tzu",
+   "country": "CHN",
+   "category": "person",
+   "kind": "thinker",
+   "prompt": "Which of these great thinkers came from China?",
+   "answer": "Sun Tzu",
+   "recognition": 2
+  },
+  {
+   "id": "GRC-socrates",
+   "country": "GRC",
+   "category": "person",
+   "kind": "thinker",
+   "prompt": "Which of these great thinkers came from Greece?",
+   "answer": "Socrates",
+   "recognition": 3
+  },
+  {
+   "id": "GRC-aristotle",
+   "country": "GRC",
+   "category": "person",
+   "kind": "thinker",
+   "prompt": "Which of these great thinkers came from Greece?",
+   "answer": "Aristotle",
+   "recognition": 3
+  },
+  {
+   "id": "DEU-karl-marx",
+   "country": "DEU",
+   "category": "person",
+   "kind": "thinker",
+   "prompt": "Which of these great thinkers came from Germany?",
+   "answer": "Karl Marx",
+   "recognition": 3
+  },
+  {
+   "id": "NLD-erasmus",
+   "country": "NLD",
+   "category": "person",
+   "kind": "thinker",
+   "prompt": "Which of these great thinkers came from the Netherlands?",
+   "answer": "Erasmus",
+   "recognition": 2
+  },
+  {
+   "id": "FRA-rene-descartes",
+   "country": "FRA",
+   "category": "person",
+   "kind": "thinker",
+   "prompt": "Which of these great thinkers came from France?",
+   "answer": "René Descartes",
+   "recognition": 2
+  },
+  {
+   "id": "GBR-charles-darwin",
+   "country": "GBR",
+   "category": "person",
+   "kind": "thinker",
+   "prompt": "Which of these great thinkers came from the United Kingdom?",
+   "answer": "Charles Darwin",
+   "recognition": 3
+  },
+  {
+   "id": "POL-pope-john-paul-ii",
+   "country": "POL",
+   "category": "person",
+   "kind": "religious",
+   "prompt": "Which of these religious leaders came from Poland?",
+   "answer": "Pope John Paul II",
+   "recognition": 3
+  },
+  {
+   "id": "DEU-martin-luther",
+   "country": "DEU",
+   "category": "person",
+   "kind": "religious",
+   "prompt": "Which of these religious leaders came from Germany?",
+   "answer": "Martin Luther",
+   "recognition": 2
+  },
+  {
+   "id": "UNK-dua-lipa",
+   "country": "UNK",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Kosovo?",
+   "answer": "Dua Lipa",
+   "recognition": 3,
+   "sharedWith": [
+    "GBR",
+    "ALB"
+   ]
+  },
+  {
+   "id": "UNK-rita-ora",
+   "country": "UNK",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Kosovo?",
+   "answer": "Rita Ora",
+   "recognition": 2,
+   "sharedWith": [
+    "GBR"
+   ]
+  },
+  {
+   "id": "TTO-nicki-minaj",
+   "country": "TTO",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Trinidad and Tobago?",
+   "answer": "Nicki Minaj",
+   "recognition": 3,
+   "sharedWith": [
+    "USA"
+   ]
+  },
+  {
+   "id": "CAN-justin-bieber",
+   "country": "CAN",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Canada?",
+   "answer": "Justin Bieber",
+   "recognition": 3
+  },
+  {
+   "id": "CAN-drake",
+   "country": "CAN",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Canada?",
+   "answer": "Drake",
+   "recognition": 3
+  },
+  {
+   "id": "CAN-the-weeknd",
+   "country": "CAN",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Canada?",
+   "answer": "The Weeknd",
+   "recognition": 3
+  },
+  {
+   "id": "GBR-adele",
+   "country": "GBR",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from the United Kingdom?",
+   "answer": "Adele",
+   "recognition": 3
+  },
+  {
+   "id": "GBR-ed-sheeran",
+   "country": "GBR",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from the United Kingdom?",
+   "answer": "Ed Sheeran",
+   "recognition": 3
+  },
+  {
+   "id": "GBR-elton-john",
+   "country": "GBR",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from the United Kingdom?",
+   "answer": "Elton John",
+   "recognition": 3
+  },
+  {
+   "id": "IRL-u2",
+   "country": "IRL",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Ireland?",
+   "answer": "U2",
+   "recognition": 3
+  },
+  {
+   "id": "IRL-enya",
+   "country": "IRL",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Ireland?",
+   "answer": "Enya",
+   "recognition": 2
+  },
+  {
+   "id": "USA-taylor-swift",
+   "country": "USA",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from the United States?",
+   "answer": "Taylor Swift",
+   "recognition": 3
+  },
+  {
+   "id": "USA-beyonce",
+   "country": "USA",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from the United States?",
+   "answer": "Beyoncé",
+   "recognition": 3
+  },
+  {
+   "id": "USA-elvis-presley",
+   "country": "USA",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from the United States?",
+   "answer": "Elvis Presley",
+   "recognition": 3
+  },
+  {
+   "id": "USA-michael-jackson",
+   "country": "USA",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from the United States?",
+   "answer": "Michael Jackson",
+   "recognition": 3
+  },
+  {
+   "id": "AUS-kylie-minogue",
+   "country": "AUS",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Australia?",
+   "answer": "Kylie Minogue",
+   "recognition": 3
+  },
+  {
+   "id": "AUS-sia",
+   "country": "AUS",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Australia?",
+   "answer": "Sia",
+   "recognition": 2
+  },
+  {
+   "id": "NZL-lorde",
+   "country": "NZL",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from New Zealand?",
+   "answer": "Lorde",
+   "recognition": 2
+  },
+  {
+   "id": "SWE-avicii",
+   "country": "SWE",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Sweden?",
+   "answer": "Avicii",
+   "recognition": 2
+  },
+  {
+   "id": "NOR-a-ha",
+   "country": "NOR",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Norway?",
+   "answer": "a-ha",
+   "recognition": 2
+  },
+  {
+   "id": "DEU-rammstein",
+   "country": "DEU",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Germany?",
+   "answer": "Rammstein",
+   "recognition": 2
+  },
+  {
+   "id": "DEU-scorpions",
+   "country": "DEU",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Germany?",
+   "answer": "Scorpions",
+   "recognition": 2
+  },
+  {
+   "id": "FRA-daft-punk",
+   "country": "FRA",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from France?",
+   "answer": "Daft Punk",
+   "recognition": 2
+  },
+  {
+   "id": "FRA-edith-piaf",
+   "country": "FRA",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from France?",
+   "answer": "Édith Piaf",
+   "recognition": 2
+  },
+  {
+   "id": "ITA-luciano-pavarotti",
+   "country": "ITA",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Italy?",
+   "answer": "Luciano Pavarotti",
+   "recognition": 3
+  },
+  {
+   "id": "ITA-andrea-bocelli",
+   "country": "ITA",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Italy?",
+   "answer": "Andrea Bocelli",
+   "recognition": 2
+  },
+  {
+   "id": "ITA-maneskin",
+   "country": "ITA",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Italy?",
+   "answer": "Måneskin",
+   "recognition": 2
+  },
+  {
+   "id": "ESP-julio-iglesias",
+   "country": "ESP",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Spain?",
+   "answer": "Julio Iglesias",
+   "recognition": 2
+  },
+  {
+   "id": "ESP-enrique-iglesias",
+   "country": "ESP",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Spain?",
+   "answer": "Enrique Iglesias",
+   "recognition": 2
+  },
+  {
+   "id": "BEL-stromae",
+   "country": "BEL",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Belgium?",
+   "answer": "Stromae",
+   "recognition": 2
+  },
+  {
+   "id": "NLD-martin-garrix",
+   "country": "NLD",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from the Netherlands?",
+   "answer": "Martin Garrix",
+   "recognition": 2
+  },
+  {
+   "id": "NLD-tiesto",
+   "country": "NLD",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from the Netherlands?",
+   "answer": "Tiësto",
+   "recognition": 2
+  },
+  {
+   "id": "KOR-bts",
+   "country": "KOR",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from South Korea?",
+   "answer": "BTS",
+   "recognition": 3
+  },
+  {
+   "id": "KOR-psy",
+   "country": "KOR",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from South Korea?",
+   "answer": "Psy",
+   "recognition": 3
+  },
+  {
+   "id": "KOR-blackpink",
+   "country": "KOR",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from South Korea?",
+   "answer": "Blackpink",
+   "recognition": 3
+  },
+  {
+   "id": "IND-a-r-rahman",
+   "country": "IND",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from India?",
+   "answer": "A. R. Rahman",
+   "recognition": 2
+  },
+  {
+   "id": "NGA-burna-boy",
+   "country": "NGA",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Nigeria?",
+   "answer": "Burna Boy",
+   "recognition": 2
+  },
+  {
+   "id": "NGA-wizkid",
+   "country": "NGA",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Nigeria?",
+   "answer": "Wizkid",
+   "recognition": 2
+  },
+  {
+   "id": "NGA-fela-kuti",
+   "country": "NGA",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Nigeria?",
+   "answer": "Fela Kuti",
+   "recognition": 2
+  },
+  {
+   "id": "ZAF-tyla",
+   "country": "ZAF",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from South Africa?",
+   "answer": "Tyla",
+   "recognition": 2
+  },
+  {
+   "id": "ZAF-miriam-makeba",
+   "country": "ZAF",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from South Africa?",
+   "answer": "Miriam Makeba",
+   "recognition": 2
+  },
+  {
+   "id": "SEN-youssou-n-dour",
+   "country": "SEN",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Senegal?",
+   "answer": "Youssou N'Dour",
+   "recognition": 2
+  },
+  {
+   "id": "EGY-umm-kulthum",
+   "country": "EGY",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Egypt?",
+   "answer": "Umm Kulthum",
+   "recognition": 2
+  },
+  {
+   "id": "LBN-fairuz",
+   "country": "LBN",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Lebanon?",
+   "answer": "Fairuz",
+   "recognition": 2
+  },
+  {
+   "id": "TUR-tarkan",
+   "country": "TUR",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Turkey?",
+   "answer": "Tarkan",
+   "recognition": 2
+  },
+  {
+   "id": "GRC-vangelis",
+   "country": "GRC",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Greece?",
+   "answer": "Vangelis",
+   "recognition": 2
+  },
+  {
+   "id": "RUS-pyotr-ilyich-tchaikovsky",
+   "country": "RUS",
+   "category": "person",
+   "kind": "composer",
+   "prompt": "Which of these composers came from Russia?",
+   "answer": "Pyotr Ilyich Tchaikovsky",
+   "recognition": 3
+  },
+  {
+   "id": "HUN-franz-liszt",
+   "country": "HUN",
+   "category": "person",
+   "kind": "composer",
+   "prompt": "Which of these composers came from Hungary?",
+   "answer": "Franz Liszt",
+   "recognition": 2
+  },
+  {
+   "id": "CZE-antonin-dvorak",
+   "country": "CZE",
+   "category": "person",
+   "kind": "composer",
+   "prompt": "Which of these composers came from Czechia?",
+   "answer": "Antonín Dvořák",
+   "recognition": 2
+  },
+  {
+   "id": "MEX-luis-miguel",
+   "country": "MEX",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Mexico?",
+   "answer": "Luis Miguel",
+   "recognition": 2
+  },
+  {
+   "id": "COL-j-balvin",
+   "country": "COL",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Colombia?",
+   "answer": "J Balvin",
+   "recognition": 2
+  },
+  {
+   "id": "COL-karol-g",
+   "country": "COL",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Colombia?",
+   "answer": "Karol G",
+   "recognition": 2
+  },
+  {
+   "id": "PRI-ricky-martin",
+   "country": "PRI",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Puerto Rico?",
+   "answer": "Ricky Martin",
+   "recognition": 3
+  },
+  {
+   "id": "PRI-daddy-yankee",
+   "country": "PRI",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Puerto Rico?",
+   "answer": "Daddy Yankee",
+   "recognition": 2
+  },
+  {
+   "id": "DOM-juan-luis-guerra",
+   "country": "DOM",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from the Dominican Republic?",
+   "answer": "Juan Luis Guerra",
+   "recognition": 2
+  },
+  {
+   "id": "CUB-camila-cabello",
+   "country": "CUB",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Cuba?",
+   "answer": "Camila Cabello",
+   "recognition": 2,
+   "sharedWith": [
+    "USA"
+   ]
+  },
+  {
+   "id": "CUB-celia-cruz",
+   "country": "CUB",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Cuba?",
+   "answer": "Celia Cruz",
+   "recognition": 2
+  },
+  {
+   "id": "BRA-anitta",
+   "country": "BRA",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Brazil?",
+   "answer": "Anitta",
+   "recognition": 2
+  },
+  {
+   "id": "JAM-sean-paul",
+   "country": "JAM",
+   "category": "person",
+   "kind": "musician",
+   "prompt": "Which of these music stars is from Jamaica?",
+   "answer": "Sean Paul",
+   "recognition": 2
+  },
+  {
+   "id": "AUS-hugh-jackman",
+   "country": "AUS",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Australia?",
+   "answer": "Hugh Jackman",
+   "recognition": 3
+  },
+  {
+   "id": "AUS-margot-robbie",
+   "country": "AUS",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Australia?",
+   "answer": "Margot Robbie",
+   "recognition": 3
+  },
+  {
+   "id": "AUS-chris-hemsworth",
+   "country": "AUS",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Australia?",
+   "answer": "Chris Hemsworth",
+   "recognition": 3
+  },
+  {
+   "id": "AUS-joseph-zada",
+   "country": "AUS",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Australia?",
+   "answer": "Joseph Zada",
+   "recognition": 2,
+   "unsure": true
+  },
+  {
+   "id": "CAN-ryan-reynolds",
+   "country": "CAN",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Canada?",
+   "answer": "Ryan Reynolds",
+   "recognition": 3
+  },
+  {
+   "id": "CAN-ryan-gosling",
+   "country": "CAN",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Canada?",
+   "answer": "Ryan Gosling",
+   "recognition": 3
+  },
+  {
+   "id": "CAN-jim-carrey",
+   "country": "CAN",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Canada?",
+   "answer": "Jim Carrey",
+   "recognition": 3
+  },
+  {
+   "id": "GBR-idris-elba",
+   "country": "GBR",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from the United Kingdom?",
+   "answer": "Idris Elba",
+   "recognition": 3
+  },
+  {
+   "id": "GBR-daniel-radcliffe",
+   "country": "GBR",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from the United Kingdom?",
+   "answer": "Daniel Radcliffe",
+   "recognition": 3
+  },
+  {
+   "id": "USA-tom-cruise",
+   "country": "USA",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from the United States?",
+   "answer": "Tom Cruise",
+   "recognition": 3
+  },
+  {
+   "id": "USA-leonardo-dicaprio",
+   "country": "USA",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from the United States?",
+   "answer": "Leonardo DiCaprio",
+   "recognition": 3
+  },
+  {
+   "id": "USA-meryl-streep",
+   "country": "USA",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from the United States?",
+   "answer": "Meryl Streep",
+   "recognition": 3
+  },
+  {
+   "id": "IRL-cillian-murphy",
+   "country": "IRL",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Ireland?",
+   "answer": "Cillian Murphy",
+   "recognition": 3
+  },
+  {
+   "id": "IRL-colin-farrell",
+   "country": "IRL",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Ireland?",
+   "answer": "Colin Farrell",
+   "recognition": 2
+  },
+  {
+   "id": "IRL-paul-mescal",
+   "country": "IRL",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Ireland?",
+   "answer": "Paul Mescal",
+   "recognition": 2
+  },
+  {
+   "id": "FRA-marion-cotillard",
+   "country": "FRA",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from France?",
+   "answer": "Marion Cotillard",
+   "recognition": 2
+  },
+  {
+   "id": "FRA-omar-sy",
+   "country": "FRA",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from France?",
+   "answer": "Omar Sy",
+   "recognition": 2
+  },
+  {
+   "id": "ESP-penelope-cruz",
+   "country": "ESP",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Spain?",
+   "answer": "Penélope Cruz",
+   "recognition": 3
+  },
+  {
+   "id": "ESP-antonio-banderas",
+   "country": "ESP",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Spain?",
+   "answer": "Antonio Banderas",
+   "recognition": 3
+  },
+  {
+   "id": "ITA-sophia-loren",
+   "country": "ITA",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Italy?",
+   "answer": "Sophia Loren",
+   "recognition": 2
+  },
+  {
+   "id": "DEU-diane-kruger",
+   "country": "DEU",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Germany?",
+   "answer": "Diane Kruger",
+   "recognition": 2
+  },
+  {
+   "id": "AUT-arnold-schwarzenegger",
+   "country": "AUT",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Austria?",
+   "answer": "Arnold Schwarzenegger",
+   "recognition": 3,
+   "sharedWith": [
+    "USA"
+   ]
+  },
+  {
+   "id": "AUT-christoph-waltz",
+   "country": "AUT",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Austria?",
+   "answer": "Christoph Waltz",
+   "recognition": 2
+  },
+  {
+   "id": "SWE-alicia-vikander",
+   "country": "SWE",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Sweden?",
+   "answer": "Alicia Vikander",
+   "recognition": 2
+  },
+  {
+   "id": "SWE-greta-garbo",
+   "country": "SWE",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Sweden?",
+   "answer": "Greta Garbo",
+   "recognition": 2
+  },
+  {
+   "id": "DNK-mads-mikkelsen",
+   "country": "DNK",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Denmark?",
+   "answer": "Mads Mikkelsen",
+   "recognition": 2
+  },
+  {
+   "id": "DNK-nikolaj-coster-waldau",
+   "country": "DNK",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Denmark?",
+   "answer": "Nikolaj Coster-Waldau",
+   "recognition": 2
+  },
+  {
+   "id": "MEX-salma-hayek",
+   "country": "MEX",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Mexico?",
+   "answer": "Salma Hayek",
+   "recognition": 3
+  },
+  {
+   "id": "MEX-gael-garcia-bernal",
+   "country": "MEX",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Mexico?",
+   "answer": "Gael García Bernal",
+   "recognition": 2
+  },
+  {
+   "id": "IND-shah-rukh-khan",
+   "country": "IND",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from India?",
+   "answer": "Shah Rukh Khan",
+   "recognition": 3
+  },
+  {
+   "id": "IND-priyanka-chopra",
+   "country": "IND",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from India?",
+   "answer": "Priyanka Chopra",
+   "recognition": 3
+  },
+  {
+   "id": "CHN-jet-li",
+   "country": "CHN",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from China?",
+   "answer": "Jet Li",
+   "recognition": 2
+  },
+  {
+   "id": "CHN-zhang-ziyi",
+   "country": "CHN",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from China?",
+   "answer": "Zhang Ziyi",
+   "recognition": 2
+  },
+  {
+   "id": "MYS-michelle-yeoh",
+   "country": "MYS",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Malaysia?",
+   "answer": "Michelle Yeoh",
+   "recognition": 3
+  },
+  {
+   "id": "KOR-lee-jung-jae",
+   "country": "KOR",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from South Korea?",
+   "answer": "Lee Jung-jae",
+   "recognition": 2
+  },
+  {
+   "id": "JPN-ken-watanabe",
+   "country": "JPN",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Japan?",
+   "answer": "Ken Watanabe",
+   "recognition": 2
+  },
+  {
+   "id": "ZAF-charlize-theron",
+   "country": "ZAF",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from South Africa?",
+   "answer": "Charlize Theron",
+   "recognition": 3
+  },
+  {
+   "id": "ISR-gal-gadot",
+   "country": "ISR",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Israel?",
+   "answer": "Gal Gadot",
+   "recognition": 3
+  },
+  {
+   "id": "CUB-ana-de-armas",
+   "country": "CUB",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Cuba?",
+   "answer": "Ana de Armas",
+   "recognition": 3
+  },
+  {
+   "id": "BEL-jean-claude-van-damme",
+   "country": "BEL",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Belgium?",
+   "answer": "Jean-Claude Van Damme",
+   "recognition": 3
+  },
+  {
+   "id": "ROU-sebastian-stan",
+   "country": "ROU",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Romania?",
+   "answer": "Sebastian Stan",
+   "recognition": 2
+  },
+  {
+   "id": "KEN-lupita-nyong-o",
+   "country": "KEN",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Kenya?",
+   "answer": "Lupita Nyong'o",
+   "recognition": 2,
+   "sharedWith": [
+    "MEX"
+   ]
+  },
+  {
+   "id": "EGY-omar-sharif",
+   "country": "EGY",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which of these actors is from Egypt?",
+   "answer": "Omar Sharif",
+   "recognition": 2
+  },
+  {
+   "id": "ESP-trajan",
+   "country": "ESP",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which Roman emperor was born in what is now Spain?",
+   "answer": "Trajan",
+   "recognition": 2,
+   "wrong": [
+    "Nero",
+    "Caligula",
+    "Augustus"
+   ],
+   "avoid": [
+    "Hadrian",
+    "Theodosius I"
+   ],
+   "sharedWith": [
+    "ITA"
+   ]
+  },
+  {
+   "id": "POL-catherine-the-great",
+   "country": "POL",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which empress of Russia was born in Stettin, now Szczecin in Poland?",
+   "answer": "Catherine the Great",
+   "recognition": 2,
+   "wrong": [
+    "Anna of Russia",
+    "Elizabeth of Russia",
+    "Maria Theresa"
+   ],
+   "sharedWith": [
+    "RUS",
+    "DEU"
+   ]
+  },
+  {
+   "id": "IRQ-saladin",
+   "country": "IRQ",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which sultan, who took Jerusalem in 1187, was born in Tikrit in what is now Iraq?",
+   "answer": "Saladin",
+   "recognition": 2,
+   "wrong": [
+    "Suleiman the Magnificent",
+    "Mehmed the Conqueror",
+    "Harun al-Rashid"
+   ],
+   "sharedWith": [
+    "EGY",
+    "SYR"
+   ]
+  },
+  {
+   "id": "DEU-anne-frank",
+   "country": "DEU",
+   "category": "person",
+   "kind": "leader",
+   "prompt": "Which diarist, who hid from the Nazis in Amsterdam, was born in Frankfurt, Germany?",
+   "answer": "Anne Frank",
+   "recognition": 3,
+   "wrong": [
+    "Etty Hillesum",
+    "Sophie Scholl",
+    "Corrie ten Boom"
+   ],
+   "sharedWith": [
+    "NLD"
+   ]
+  },
+  {
+   "id": "NZL-russell-crowe",
+   "country": "NZL",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which Gladiator star was born in Wellington, New Zealand?",
+   "answer": "Russell Crowe",
+   "recognition": 2,
+   "wrong": [
+    "Hugh Jackman",
+    "Heath Ledger",
+    "Eric Bana"
+   ],
+   "sharedWith": [
+    "AUS"
+   ]
+  },
+  {
+   "id": "LBN-keanu-reeves",
+   "country": "LBN",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which star of The Matrix and John Wick was born in Beirut, Lebanon?",
+   "answer": "Keanu Reeves",
+   "recognition": 3,
+   "wrong": [
+    "Tom Cruise",
+    "Brad Pitt",
+    "Johnny Depp"
+   ],
+   "sharedWith": [
+    "CAN"
+   ]
+  },
+  {
+   "id": "FRA-emma-watson",
+   "country": "FRA",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which Harry Potter star was born in Paris, France?",
+   "answer": "Emma Watson",
+   "recognition": 3,
+   "wrong": [
+    "Daniel Radcliffe",
+    "Rupert Grint",
+    "Tom Felton"
+   ],
+   "sharedWith": [
+    "GBR"
+   ]
+  },
+  {
+   "id": "BEL-audrey-hepburn",
+   "country": "BEL",
+   "category": "person",
+   "kind": "actor",
+   "prompt": "Which star of Breakfast at Tiffany's was born in Brussels, Belgium?",
+   "answer": "Audrey Hepburn",
+   "recognition": 3,
+   "wrong": [
+    "Marilyn Monroe",
+    "Grace Kelly",
+    "Elizabeth Taylor"
+   ],
+   "sharedWith": [
+    "GBR",
+    "NLD"
    ]
   }
  ]

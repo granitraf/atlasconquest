@@ -113,7 +113,8 @@ export type QuestionType =
   | 'fact'
   | 'sport'
   | 'export'
-  | 'person'
+  | 'history'
+  | 'star'
   | 'independence'
   | 'population'
   | 'area'
@@ -216,7 +217,7 @@ export type GameEvent =
   /** The opening recruit phase is over. */
   | { kind: 'recruited'; earned: number; correct: number }
   /** `continent` is set when this conquest completed a whole continent. `troopsGained` is what the conquest was worth. */
-  | { kind: 'conquered'; countryId: string; continent: Continent | null; troopsGained: number }
+  | { kind: 'conquered'; countryId: string; continent: Continent | null; troopsGained: number; decimated?: boolean }
   | { kind: 'defeated'; countryId: string }
   /** `defendersLeft` of `defendersFull` were still standing; the country stays wounded. */
   | { kind: 'retreated'; countryId: string; troopsLost: number; defendersLeft: number; defendersFull: number };
@@ -249,6 +250,11 @@ export interface GameState {
   recentSigs: string[];
   /** The wrong options shown with each recent question, by signature, so a returning question rotates them. */
   recentDecoys: Record<string, string[]>;
+  /**
+   * A DECIMATE is ready: the last country fell with a streak of DECIMATE_STREAK or more. It must be used on
+   * the next attack, and it cannot be held: attacking any other way gives it up.
+   */
+  decimateReady: boolean;
   lastEvent: GameEvent | null;
   /** Bumped on every event so the UI can key animations and toasts. */
   eventSeq: number;

@@ -7,6 +7,7 @@ import {
   INDEPENDENCE_CLEARANCE,
   LATEST_YEAR,
   PERSON_MIN_RECOGNITION,
+  WORLD_FAMOUS,
   WINTER_SPORTS,
   WINTER_SPORT_MIN_LATITUDE,
   factAskable,
@@ -30,6 +31,8 @@ import {
   RHYTHM_DECK,
   battleDifficulty,
   battleRhythm,
+  CLOSENESS_BONUS,
+  EXPERT_BONUS,
   bearing,
   bearingGap,
   combinations,
@@ -104,7 +107,8 @@ function isTrue(q: Question, optionIndex: number): boolean {
     case 'fact':
     case 'sport':
     case 'export':
-    case 'person':
+    case 'history':
+    case 'star':
       // True for this country if it is one of its own answers, or another country's answer shared with it.
       return (
         (world.factsByCountry[c.id] ?? []).some((f) => f.answer === option.label) ||
@@ -171,7 +175,8 @@ describe('difficulty score', () => {
       fact: 2,
       sport: 2,
       export: 2,
-      person: 2,
+      history: 2,
+      star: 2,
       independence: 3,
       population: 3,
       area: 3,
@@ -179,14 +184,28 @@ describe('difficulty score', () => {
     });
     expect(questionScore('capital', 0, 0)).toBe(1);
     expect(questionScore('capital', 2, 1)).toBe(4);
-    expect(questionScore('notBorder', 2, 1)).toBe(6);
+    // A close call adds what it really adds: two for neighbours, one for a lookalike, nothing for a currency.
+    expect(CLOSENESS_BONUS).toMatchObject({ border: 2, notBorder: 2, feature: 2, population: 2, area: 2, flag: 1, capital: 1, water: 1, domain: 1, brand: 1, currency: 0, language: 0 });
+    expect(questionScore('notBorder', 2, 1)).toBe(7);
+    expect(questionScore('border', 1, 1)).toBe(5);
+    expect(questionScore('currency', 0, 1)).toBe(questionScore('currency', 0, 0));
+    // A year is expert knowledge about any country.
+    expect(EXPERT_BONUS).toEqual({ independence: 2 });
+    expect(questionScore('independence', 0, 0)).toBe(5);
   });
 
-  it('closeness does not count for population and area questions', () => {
-    expect(USES_CLOSENESS.population).toBe(false);
-    expect(USES_CLOSENESS.area).toBe(false);
-    expect(questionScore('population', 1, 1)).toBe(questionScore('population', 1, 0));
-    expect(questionScore('area', 2, 1)).toBe(5);
+  it('for population and area the close call is the hardest way of asking: the range, and closest in size', () => {
+    expect(USES_CLOSENESS.population).toBe(true);
+    expect(USES_CLOSENESS.area).toBe(true);
+    expect(questionScore('population', 0, 1)).toBe(5);
+    expect(questionScore('population', 0, 0)).toBe(3);
+    const rng = createRng(8);
+    for (let i = 0; i < 20; i++) {
+      expect(sigKind(generateQuestion(world, 'FRA', 'population', rng, undefined, 1)!.sig)).toBe('population');
+      expect(['population:most', 'population:fewest']).toContain(sigKind(generateQuestion(world, 'FRA', 'population', rng, undefined, 0)!.sig));
+      expect(sigKind(generateQuestion(world, 'FRA', 'area', rng, undefined, 1)!.sig)).toBe('area:closest');
+      expect(sigKind(generateQuestion(world, 'FRA', 'area', rng, undefined, 0)!.sig)).not.toBe('area:closest');
+    }
   });
 
   it('scores 1-2 Easy, 3-4 Medium, 5-6 Hard', () => {
@@ -201,12 +220,18 @@ describe('difficulty score', () => {
     expect(ask('Palau', 'capital', 1)).toMatchObject({ score: 4, difficulty: 'medium' });
     expect(ask('Japan', 'flag', 0)).toMatchObject({ score: 1, difficulty: 'easy' });
     expect(byName.get('Comoros')!.fame).toBe(2);
-    expect(ask('Comoros', 'population', 1)).toMatchObject({ score: 5, difficulty: 'hard', closeness: 0 });
+    expect(ask('Comoros', 'population', 0)).toMatchObject({ score: 5, difficulty: 'hard', closeness: 0 });
+    expect(ask('Comoros', 'population', 1)).toMatchObject({ score: 7, difficulty: 'hard', closeness: 1 });
+    // France: its euro is easy whatever the options; which neighbour it does NOT have, with close options, is Hard.
+    expect(ask('France', 'currency', 1)).toMatchObject({ score: 2, difficulty: 'easy' });
+    expect(ask('France', 'notBorder', 1)).toMatchObject({ score: 5, difficulty: 'hard' });
   });
 
-  it('a famous country has no Hard questions and an obscure one no Easy ones', () => {
+  it('a famous country has Hard questions too, only the genuinely hard ones; an obscure one has no Easy ones', () => {
     const tiers = (name: string) => new Set(combinations(byName.get(name)!).map((c) => c.tier));
-    expect([...tiers('France')].sort()).toEqual(['easy', 'medium']);
+    expect([...tiers('France')].sort()).toEqual(['easy', 'hard', 'medium']);
+    const franceHard = combinations(byName.get('France')!).filter((c) => c.tier === 'hard').map((c) => c.type).sort();
+    expect(franceHard).toEqual(['area', 'independence', 'notBorder', 'population']);
     expect([...tiers('Romania')].sort()).toEqual(['easy', 'hard', 'medium']);
     expect([...tiers('Palau')].sort()).toEqual(['hard', 'medium']);
   });
@@ -617,7 +642,7 @@ describe('filling difficulty slots', () => {
     }
     // Variety comes first (no kind of question twice while another is unused), so not every slot can match.
     expect(followed / slots).toBeGreaterThan(0.45);
-    // France is famous: its Hard slots fall back to Medium. Palau is obscure: its Easy slot rises to Medium.
+    // France is famous: its Hard questions are only the genuinely hard kinds. Palau is obscure: its Easy slot rises to Medium.
     const tiersFor = (code: string) => {
       const asked: string[] = [];
       const rhythm = battleRhythm(rng);
@@ -627,8 +652,16 @@ describe('filling difficulty slots', () => {
         return q.difficulty;
       });
     };
-    expect(tiersFor('FRA')).not.toContain('hard');
     expect(tiersFor(id('Palau'))).not.toContain('easy');
+    for (let run = 0; run < 10; run++) {
+      const asked: string[] = [];
+      const rhythm = battleRhythm(rng);
+      for (let i = 0; i < 10; i++) {
+        const q = nextBattleQuestion(world, 'FRA', asked, rng, { rhythm });
+        asked.push(q.sig);
+        if (q.difficulty === 'hard') expect(['area', 'independence', 'notBorder', 'population']).toContain(q.type);
+      }
+    }
   });
 
   it('a returning question rotates its wrong options, drawing them from the same pools', () => {
@@ -737,8 +770,8 @@ describe('opening recruit phase', () => {
 });
 
 describe('variety', () => {
-  const ask = (code: string, type: 'border' | 'area' | 'population' | 'notBorder', seed: number, known: string[] = [], exclude: string[] = []) =>
-    generateQuestion(world, code, type, createRng(seed), new Set(exclude), 1, new Set(known));
+  const ask = (code: string, type: 'border' | 'area' | 'population' | 'notBorder', seed: number, known: string[] = [], exclude: string[] = [], closeness: Closeness = 1) =>
+    generateQuestion(world, code, type, createRng(seed), new Set(exclude), closeness, new Set(known));
   const names = (q: Question) => q.options.map((o) => o.label);
 
   it('reads the form of a question from its signature', () => {
@@ -753,9 +786,13 @@ describe('variety', () => {
   it('asks about size in five forms, including which of four is the biggest, with the country in the line-up', () => {
     const seen = new Map<string, Question>();
     for (let seed = 0; seed < 200; seed++) {
-      const q = ask('DEU', 'area', seed)!;
-      checkWellFormed(q);
-      seen.set(sigKind(q.sig), q);
+      for (const closeness of [0, 1] as const) {
+        const q = ask('DEU', 'area', seed, [], [], closeness)!;
+        checkWellFormed(q);
+        seen.set(sigKind(q.sig), q);
+        // "Closest in size" is the close call; the other four are the plainer forms.
+        expect(sigKind(q.sig) === 'area:closest').toBe(closeness === 1);
+      }
     }
     expect([...seen.keys()].sort()).toEqual(['area:biggest', 'area:closest', 'area:larger', 'area:smaller', 'area:smallest']);
     expect(seen.get('area:biggest')!.prompt).toBe('Which of these is the biggest by area?');
@@ -763,7 +800,7 @@ describe('variety', () => {
     // Across many line-ups the country is sometimes the answer and sometimes not.
     const answers = new Set<boolean>();
     for (let seed = 0; seed < 300; seed++) {
-      const q = ask('DEU', 'area', seed)!;
+      const q = ask('DEU', 'area', seed, [], [], 0)!;
       if (isLineUp(q)) answers.add(q.options[q.correctIndex].label === 'Germany');
     }
     expect([...answers].sort()).toEqual([false, true]);
@@ -772,9 +809,13 @@ describe('variety', () => {
   it('asks about population as a range or as a line-up of four', () => {
     const kinds = new Set<string>();
     for (let seed = 0; seed < 120; seed++) {
-      const q = ask('BRA', 'population', seed)!;
-      checkWellFormed(q);
-      kinds.add(sigKind(q.sig));
+      for (const closeness of [0, 1] as const) {
+        const q = ask('BRA', 'population', seed, [], [], closeness)!;
+        checkWellFormed(q);
+        kinds.add(sigKind(q.sig));
+        // The range is the close call; the line-ups are the plainer forms.
+        expect(sigKind(q.sig) === 'population').toBe(closeness === 1);
+      }
     }
     expect([...kinds].sort()).toEqual(['population', 'population:fewest', 'population:most']);
   });
@@ -782,9 +823,9 @@ describe('variety', () => {
   it('takes the forms of a type in turn: the one asked least comes first', () => {
     for (let seed = 0; seed < 60; seed++) {
       const asked: string[] = [];
-      for (let i = 0; i < 5; i++) asked.push(ask('DEU', 'area', seed * 7 + i, [], asked)!.sig);
-      // Five size questions in a row use all five forms: "closest in size" comes up once, not again and again.
-      expect(new Set(asked.map(sigKind)).size, asked.join(' ')).toBe(5);
+      for (let i = 0; i < 4; i++) asked.push(ask('DEU', 'area', seed * 7 + i, [], asked, 0)!.sig);
+      // Four plain size questions in a row use all four plain forms, not the same one again and again.
+      expect(new Set(asked.map(sigKind)).size, asked.join(' ')).toBe(4);
     }
   });
 
@@ -906,25 +947,26 @@ describe('variety', () => {
   it('a battle does not ask the same type twice while another type is still unused', () => {
     const rng = createRng(73);
     for (const c of ALL) {
-      // Every type this country can be asked at all.
-      const available = new Set(QUESTION_TYPES.filter((type) => [0, 1].some((closeness) => generateQuestion(world, c.id, type, rng, undefined, closeness as Closeness))));
+      // Every turn this country can be asked at all (history and stars share one).
+      const turn = (type: string) => (type === 'history' || type === 'star' ? 'people' : type);
+      const available = new Set(QUESTION_TYPES.filter((type) => [0, 1].some((closeness) => generateQuestion(world, c.id, type, rng, undefined, closeness as Closeness))).map(turn));
       const asked: string[] = [];
       const types: string[] = [];
       for (let i = 0; i < available.size; i++) {
         const q = nextBattleQuestion(world, c.id, asked, rng);
         asked.push(q.sig);
-        types.push(q.type);
+        types.push(turn(q.type));
       }
       expect(new Set(types).size, `${c.name}: ${types.join(' ')}`).toBe(available.size);
     }
   });
 
-  it('"closest in size" comes up at most once in the first dozen questions of a battle', () => {
+  it('"closest in size" does not crowd a battle: at most twice in the first dozen questions', () => {
     const rng = createRng(19);
     for (const c of ALL.filter((x) => x.fame < 2).slice(0, 80)) {
       const asked: string[] = [];
       for (let i = 0; i < 12; i++) asked.push(nextBattleQuestion(world, c.id, asked, rng).sig);
-      expect(asked.filter((sig) => sigKind(sig) === 'area:closest').length, `${c.name}: ${asked.join(' ')}`).toBeLessThanOrEqual(1);
+      expect(asked.filter((sig) => sigKind(sig) === 'area:closest').length, `${c.name}: ${asked.join(' ')}`).toBeLessThanOrEqual(2);
     }
   });
 
@@ -1142,14 +1184,19 @@ describe('curated facts and hooks', () => {
     let asked = 0;
     for (const c of ALL) {
       const own = world.factsByCountry[c.id] ?? [];
-      for (const theme of ['fact', 'sport', 'export', 'person'] as const) {
-        const askable = own.filter((f) => factTheme(f) === theme && factAskable(f, c));
+      for (const theme of ['fact', 'sport', 'export', 'history', 'star'] as const) {
+        const people = theme === 'history' || theme === 'star';
         for (let i = 0; i < 6; i++) {
-          const q = generateQuestion(world, c.id, theme, rng);
+          // People come in two levels: closeness 0 asks the world-famous, 1 the semi-known.
+          const closeness = people ? ((i % 2) as Closeness) : 0;
+          const level = (f: (typeof own)[number]) => !people || (closeness === 0 ? f.recognition >= 3 : f.recognition < 3);
+          const askable = own.filter((f) => factTheme(f) === theme && factAskable(f, c) && level(f));
+          const q = generateQuestion(world, c.id, theme, rng, undefined, closeness);
           if (askable.length === 0) expect(q, `${c.name} ${theme}`).toBeNull();
           if (!q) continue;
           asked++;
-          expect(byId.get(q.sig)!.recognition, q.sig).toBeGreaterThanOrEqual(theme === 'person' ? 3 : 2);
+          expect(byId.get(q.sig)!.recognition, q.sig).toBeGreaterThanOrEqual(2);
+          if (people) expect(byId.get(q.sig)!.recognition >= 3, q.sig).toBe(closeness === 0);
           expect(byId.get(q.sig)!.country).toBe(c.id);
           expect(q.type).toBe(theme);
         }
@@ -1166,10 +1213,10 @@ describe('curated facts and hooks', () => {
   it('no wrong option is also true for the country, including shared rivers, peaks and dishes', () => {
     for (const c of ALL) {
       const own = new Set((world.factsByCountry[c.id] ?? []).map((f) => f.answer));
-      for (const theme of ['fact', 'sport', 'export', 'person'] as const) {
+      for (const theme of ['fact', 'sport', 'export', 'history', 'star'] as const) {
         for (let i = 0; i < 8; i++) {
-          const q = generateQuestion(world, c.id, theme, rng);
-          if (!q) break;
+          const q = generateQuestion(world, c.id, theme, rng, undefined, (i % 2) as Closeness);
+          if (!q) continue;
           for (const [index, option] of q.options.entries()) {
             if (index === q.correctIndex) continue;
             expect(own.has(option.label), `${q.sig}: ${option.label}`).toBe(false);
@@ -1191,9 +1238,9 @@ describe('curated facts and hooks', () => {
   });
 
   it('skips a category the country has nothing well known in', () => {
-    // No footballer on file for Palau: it never gets a famous-person question.
+    // Nobody famous on file for Palau: it never gets a history or stars question.
     const palau = id('Palau');
-    expect(generateQuestion(world, palau, 'person', rng)).toBeNull();
+    for (const type of ['history', 'star'] as const) for (const closeness of [0, 1] as const) expect(generateQuestion(world, palau, type, rng, undefined, closeness)).toBeNull();
     for (let i = 0; i < 100; i++) {
       const q = generateQuestion(world, palau, 'fact', rng);
       if (q) expect(q.prompt).not.toMatch(/footballers|sports stars|musicians/);
@@ -1201,7 +1248,7 @@ describe('curated facts and hooks', () => {
     const kinds = new Set((world.factsByCountry.HRV ?? []).map((f) => f.kind));
     expect(kinds.has('footballer')).toBe(true);
     const croatia = new Set<string>();
-    for (let i = 0; i < 50; i++) croatia.add(generateQuestion(world, 'HRV', 'person', rng)!.prompt);
+    for (let i = 0; i < 50; i++) croatia.add(generateQuestion(world, 'HRV', 'star', rng, undefined, 0)!.prompt);
     expect(croatia).toContain("Which of these footballers has played for Croatia's national team?");
   });
 });
@@ -1213,16 +1260,20 @@ describe('the four themes: national sport, main export, year of independence, fa
   const factsOf = (code: string) => world.factsByCountry[code] ?? [];
 
   it('each theme is its own question type, drawn from the curated facts', () => {
-    expect(QUESTION_TYPES).toEqual(expect.arrayContaining(['sport', 'export', 'person', 'independence']));
-    expect(QUESTION_TYPES).toHaveLength(18);
+    expect(QUESTION_TYPES).toEqual(expect.arrayContaining(['sport', 'export', 'history', 'star', 'independence']));
+    expect(QUESTION_TYPES).toHaveLength(19);
     // A curated fact is asked under exactly one type.
-    expect(factTheme({ category: 'person', kind: 'footballer' })).toBe('person');
+    expect(factTheme({ category: 'person', kind: 'footballer' })).toBe('star');
+    expect(factTheme({ category: 'person', kind: 'actor' })).toBe('star');
+    expect(factTheme({ category: 'person', kind: 'leader' })).toBe('history');
+    expect(factTheme({ category: 'person', kind: 'scientist' })).toBe('history');
     expect(factTheme({ category: 'sport', kind: 'national-sport' })).toBe('sport');
     expect(factTheme({ category: 'economy', kind: 'export' })).toBe('export');
     expect(factTheme({ category: 'landmark', kind: 'landmark' })).toBe('fact');
-    for (const type of ['sport', 'export', 'person', 'independence'] as const) expect(USES_CLOSENESS[type]).toBe(false);
+    for (const type of ['sport', 'export', 'independence'] as const) expect(USES_CLOSENESS[type]).toBe(false);
+    for (const type of ['history', 'star'] as const) expect(USES_CLOSENESS[type]).toBe(true);
     expect(questionScore('sport', 0, 0)).toBe(2);
-    expect(questionScore('independence', 2, 0)).toBe(5);
+    expect(questionScore('independence', 2, 0)).toBe(7);
   });
 
   it('national sport: only where a country has one of its own, never just "football"', () => {
@@ -1349,43 +1400,94 @@ describe('the four themes: national sport, main export, year of independence, fa
     expect(world.byId.UNK.independence!.year).toBe(2008);
   });
 
-  it('famous person: only people recognisable worldwide, with wrong options from the same field', () => {
-    expect(PERSON_MIN_RECOGNITION).toBe(3);
+  it('famous figures: history makers and stars, world-famous or semi-known, against people of the same field and fame', () => {
+    expect(PERSON_MIN_RECOGNITION).toBe(2);
+    expect(WORLD_FAMOUS).toBe(3);
     const people = FACTS.filter((f) => f.category === 'person');
-    const famous = people.filter((f) => f.recognition === 3);
-    expect(famous.length).toBeGreaterThan(70);
-    expect(people.length - famous.length).toBeGreaterThan(60);
+    expect(people.filter((f) => factTheme(f) === 'history').length).toBeGreaterThan(80);
+    expect(people.filter((f) => factTheme(f) === 'star').length).toBeGreaterThan(200);
     let asked = 0;
+    let sameFame = 0;
+    let wrongs = 0;
     for (const c of ALL) {
-      const own = factsOf(c.id).filter((f) => f.category === 'person');
-      for (let i = 0; i < 6; i++) {
-        const q = generateQuestion(world, c.id, 'person', rng);
-        if (!own.some((f) => f.recognition === 3)) {
-          expect(q, c.name).toBeNull();
-          break;
-        }
-        asked++;
-        checkWellFormed(q!);
-        const fact = FACTS.find((f) => `person:${f.id}` === q!.sig)!;
-        expect(fact.recognition).toBe(3);
-        if (fact.kind === 'custom') continue;
-        // The wrong options are people of the same field, each tied to another country and not shared with this one.
-        for (const name of wrongOf(q!)) {
-          const other = FACTS.find((f) => f.answer === name && f.kind === fact.kind)!;
-          expect(other, `${q!.sig}: ${name}`).toBeDefined();
-          expect(other.country).not.toBe(c.id);
-          expect(other.sharedWith ?? [], `${q!.sig}: ${name}`).not.toContain(c.id);
+      for (const type of ['history', 'star'] as const) {
+        for (const closeness of [0, 1] as const) {
+          const own = factsOf(c.id).filter((f) => factTheme(f) === type && f.recognition >= 2 && (f.recognition >= 3) === (closeness === 0));
+          for (let i = 0; i < 4; i++) {
+            const q = generateQuestion(world, c.id, type, rng, undefined, closeness);
+            if (own.length === 0) {
+              expect(q, `${c.name} ${type}`).toBeNull();
+              break;
+            }
+            if (!q) break;
+            asked++;
+            checkWellFormed(q);
+            const fact = FACTS.find((f) => `${type}:${f.id}` === q.sig)!;
+            expect(fact.recognition >= 3).toBe(closeness === 0);
+            if (fact.wrong) continue;
+            // The wrong options are people of the same field, each tied to another country and not shared with this one…
+            for (const name of wrongOf(q)) {
+              const other = FACTS.find((f) => f.answer === name && f.kind === fact.kind)!;
+              expect(other, `${q.sig}: ${name}`).toBeDefined();
+              expect(other.country).not.toBe(c.id);
+              expect(other.sharedWith ?? [], `${q.sig}: ${name}`).not.toContain(c.id);
+              expect(other.recognition).toBeGreaterThanOrEqual(2);
+              // …and as famous as the answer wherever there are enough of them.
+              wrongs++;
+              if ((other.recognition >= 3) === (fact.recognition >= 3)) sameFame++;
+            }
+          }
         }
       }
     }
-    expect(asked).toBeGreaterThan(250);
-    // Not recognisable enough: on file, but never asked.
-    expect(FACTS.find((f) => f.answer === 'Riyad Mahrez')!.recognition).toBe(2);
-    expect(generateQuestion(world, 'DZA', 'person', rng)).toBeNull();
+    expect(asked).toBeGreaterThan(400);
+    expect(sameFame / wrongs).toBeGreaterThan(0.8);
+    // Known only at home: on file, but never asked.
+    const local = FACTS.find((f) => f.answer === 'Maria Mutola')!;
+    expect(local.recognition).toBe(1);
+    for (const closeness of [0, 1] as const) for (let i = 0; i < 20; i++) expect(generateQuestion(world, 'MOZ', 'star', rng, undefined, closeness)?.sig ?? '').not.toContain('maria-mutola');
     // Claimed by two countries: never a wrong option for the other.
     expect(FACTS.find((f) => f.answer === 'Albert Einstein')!.sharedWith).toEqual(expect.arrayContaining(['CHE', 'USA']));
-    expect(FACTS.find((f) => f.answer === 'Marie Curie')!.sharedWith).toContain('FRA');
-    for (let i = 0; i < 60; i++) expect(labelsOf(generateQuestion(world, 'FRA', 'person', rng)!)).not.toContain('Marie Curie');
+    for (let i = 0; i < 60; i++) expect(labelsOf(generateQuestion(world, 'FRA', 'history', rng, undefined, 0)!)).not.toContain('Marie Curie');
+    // No dictators and no figures of today's politics.
+    for (const name of ['Joseph Stalin', 'Adolf Hitler', 'Mao Zedong', 'Pol Pot', 'Benito Mussolini', 'Melania Trump']) expect(FACTS.some((f) => f.answer === name && f.category === 'person'), name).toBe(false);
+  });
+
+  it('Dua Lipa is from Kosovo', () => {
+    const dua = FACTS.find((f) => f.answer === 'Dua Lipa')!;
+    expect(dua).toMatchObject({ country: world.byId.UNK.id, kind: 'musician', recognition: 3 });
+    for (let i = 0; i < 20; i++) {
+      const q = generateQuestion(world, 'UNK', 'star', rng, undefined, 0)!;
+      expect(q.prompt).toBe('Which of these music stars is from Kosovo?');
+      expect(q.options[q.correctIndex].label).toBe('Dua Lipa');
+      // Rita Ora was born in Pristina too: she is never a wrong answer for Kosovo.
+      expect(labelsOf(q)).not.toContain('Rita Ora');
+    }
+    // Nor is Dua Lipa ever a wrong answer for anywhere else that has a claim on her.
+    for (const code of ['GBR', 'ALB']) for (let i = 0; i < 30; i++) expect(labelsOf(generateQuestion(world, code, 'star', rng, undefined, i % 2 as Closeness) ?? { options: [] } as unknown as Question)).not.toContain('Dua Lipa');
+  });
+
+  it('history makers and stars share one turn, so famous figures never take over a battle', () => {
+    const r = createRng(31);
+    let people = 0;
+    let total = 0;
+    for (const code of ['USA', 'GBR', 'FRA', 'DEU', 'ITA', 'IND', 'KOR', 'AUS', 'MEX', 'NGA']) {
+      for (let run = 0; run < 10; run++) {
+        const asked: string[] = [];
+        for (let i = 0; i < 12; i++) {
+          const q = nextBattleQuestion(world, code, asked, r);
+          asked.push(q.sig);
+          total++;
+          if (q.type === 'history' || q.type === 'star') people++;
+        }
+        // Not both in the same round of the rotation.
+        const firstRound = asked.slice(0, 10).map(sigType);
+        expect(firstRound.includes('history') && firstRound.includes('star'), `${code}: ${firstRound.join(' ')}`).toBe(false);
+      }
+    }
+    // About one question in ten or twelve, as before the split.
+    expect(people / total).toBeLessThan(0.12);
+    expect(people / total).toBeGreaterThan(0.04);
   });
 
   it('the themes come up in battles and never crowd each other out', () => {
@@ -1401,6 +1503,7 @@ describe('the four themes: national sport, main export, year of independence, fa
         }
       }
     }
-    for (const type of ['sport', 'export', 'person', 'independence']) expect(seen.get(type) ?? 0, type).toBeGreaterThan(10);
+    for (const type of ['sport', 'export', 'independence']) expect(seen.get(type) ?? 0, type).toBeGreaterThan(10);
+    expect((seen.get('history') ?? 0) + (seen.get('star') ?? 0)).toBeGreaterThan(10);
   });
 });
