@@ -10,7 +10,8 @@ import {
   getTargets,
   seaBonus,
 } from '../src/game/rules';
-import { createGame, gameStats, reduce, reviveGame, targetStrength, type Action } from '../src/game/state';
+import { RHYTHM_DECK } from '../src/game/questions';
+import { DECOYS_KEPT, RECENT_SIGS_KEPT, createGame, gameStats, reduce, remember, reviveGame, sanitizeMemory, targetStrength, type Action } from '../src/game/state';
 import type { GameState } from '../src/game/types';
 import { buildWorld } from '../src/game/world';
 import { ALL, EMPIRE, FACTS, answerOnce, conquer, fake, playRecruit } from './helpers';
@@ -299,32 +300,77 @@ describe('battles', () => {
     }
   });
 
-  it('every battle opens with the target flag, then asks for Easy, Medium, Medium and mostly Hard', () => {
+  it('every battle opens with the target flag, then deals its own shuffled rhythm, kept through a reload', () => {
     const rank = { easy: 0, medium: 1, hard: 2 } as const;
     const tiersIn = (start: string, target: string, seed: number) => {
       let s: GameState = { ...newGame(start, seed), troops: 500 };
       s = reduce(world, s, { type: 'attack', targetId: target });
       expect(s.battle!.question).toMatchObject({ type: 'flag', countryId: target });
+      expect(s.battle!.rhythm.slice(0, 6).sort()).toEqual([...RHYTHM_DECK].sort());
       const seen: number[] = [];
       // Wrong answers, so the battle lasts long enough to see every slot.
       for (let i = 0; i < 12 && s.phase === 'battle'; i++) {
         seen.push(rank[s.battle!.question.difficulty]);
         s = answerOnce(world, s, false);
       }
-      return seen;
+      return { seen, rhythm: s.battle?.rhythm ?? [] };
     };
+    const openings = new Set<string>();
     for (let seed = 1; seed <= 10; seed++) {
-      // Hungary attacks Romania, which can reach every tier.
       const romania = tiersIn('HUN', 'ROU', seed);
-      expect(romania[1]).toBe(0);
-      expect([romania[2], romania[3]]).toEqual([1, 1]);
-      expect(Math.min(...romania.slice(4))).toBeGreaterThanOrEqual(1);
-      expect(romania.slice(4)).toContain(2);
+      openings.add(romania.rhythm.slice(0, 6).join());
+      expect(romania.seen.slice(1)).toContain(2);
       // France is famous: no question about it scores Hard.
-      expect(Math.max(...tiersIn('DEU', 'FRA', seed))).toBe(1);
+      expect(Math.max(...tiersIn('DEU', 'FRA', seed).seen)).toBe(1);
       // Andorra is obscure: no question about it scores Easy, not even its flag.
-      expect(Math.min(...tiersIn('FRA', 'AND', seed))).toBe(1);
+      expect(Math.min(...tiersIn('FRA', 'AND', seed).seen)).toBe(1);
     }
+    // No two games run the same rhythm.
+    expect(openings.size).toBeGreaterThan(6);
+    // A reload keeps the rhythm; a save from before rhythms existed is given one.
+    const battle = reduce(world, { ...newGame('HUN', 3), troops: 500 }, { type: 'attack', targetId: 'ROU' });
+    const revived = reviveGame(JSON.parse(JSON.stringify(battle)), () => world)!;
+    expect(revived.battle!.rhythm).toEqual(battle.battle!.rhythm);
+    const { rhythm: _gone, ...old } = battle.battle!;
+    expect(reviveGame({ ...battle, battle: old }, () => world)!.battle!.rhythm).toHaveLength(battle.battle!.rhythm.length);
+  });
+
+  it('remembers what was asked across games: a new game steers clear of it and rotates its wrong options', () => {
+    // Play a few battles, then carry the memory into a new game.
+    let s: GameState = { ...newGame('HUN', 5), troops: 500 };
+    s = reduce(world, s, { type: 'attack', targetId: 'ROU' });
+    for (let i = 0; i < 6; i++) s = answerOnce(world, s, false);
+    const memory = { sigs: s.recentSigs, decoys: s.recentDecoys };
+    expect(memory.sigs.length).toBeGreaterThan(8);
+    for (const sig of memory.sigs) expect(memory.decoys[sig]).toBeDefined();
+    const next = createGame(world, 'HUN', 6, EMPIRE, memory);
+    expect(next.recentSigs).toEqual(memory.sigs);
+    // The new game's recruit questions about Hungary avoid the ones the last game asked.
+    const asked = new Set(memory.sigs);
+    let repeat = 0;
+    let g = next;
+    for (let i = 0; i < 4; i++) {
+      if (g.recruit && asked.has(g.recruit.question.sig) && g.recruit.question.type !== 'flag') repeat++;
+      g = answerOnce(world, g, true);
+    }
+    expect(repeat).toBe(0);
+  });
+
+  it('keeps its memory small and tidy', () => {
+    const q = (sig: string, labels: string[]) => ({ sig, options: [{ label: 'right' }, ...labels.map((label) => ({ label }))], correctIndex: 0 }) as unknown as Parameters<typeof remember>[1];
+    let memory = { sigs: [] as string[], decoys: {} as Record<string, string[]> };
+    memory = remember(memory, q('capital:DEU', ['A', 'B', 'C']));
+    memory = remember(memory, q('capital:DEU', ['D', 'B', 'E']));
+    expect(memory.sigs).toEqual(['capital:DEU']);
+    expect(memory.decoys['capital:DEU']).toEqual(['D', 'B', 'E', 'A', 'C']);
+    for (let i = 0; i < RECENT_SIGS_KEPT + 20; i++) memory = remember(memory, q(`fact:${i}`, ['X', 'Y', 'Z', 'W']));
+    expect(memory.sigs).toHaveLength(RECENT_SIGS_KEPT);
+    expect(Object.keys(memory.decoys)).toHaveLength(RECENT_SIGS_KEPT);
+    expect(memory.decoys['capital:DEU']).toBeUndefined();
+    expect(Math.max(...Object.values(memory.decoys).map((d) => d.length))).toBeLessThanOrEqual(DECOYS_KEPT);
+    // Stored memory is read defensively.
+    expect(sanitizeMemory(null)).toEqual({ sigs: [], decoys: {} });
+    expect(sanitizeMemory({ sigs: ['a', 3, 'b'], decoys: { a: ['x', 1], c: ['y'] } })).toEqual({ sigs: ['a', 'b'], decoys: { a: ['x'] } });
   });
 
   it('a correct answer kills 2 defenders only when the question actually scored Hard', () => {

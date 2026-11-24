@@ -1,7 +1,7 @@
 import type { Topology } from 'topojson-specification';
 import { DEFAULT_FLAG, sanitizeEmpire, type Empire } from './game/flag';
 import { NEW_EMPIRE } from './names/validateEmpireName';
-import { reviveGame } from './game/state';
+import { reviveGame, sanitizeMemory, type GameMemory } from './game/state';
 import { MODES, type Country, type Fact, type GameState, type ModeId } from './game/types';
 import { buildWorld, type World } from './game/world';
 import { buildMapGeometry, type MapGeometry } from './map/geo';
@@ -11,6 +11,7 @@ const BASE = import.meta.env.BASE_URL;
 const SAVE_KEY = 'atlas-conquest:save:v1';
 const EMPIRE_KEY = 'atlas-conquest:empire:v1';
 const RUN_KEY = 'atlas-conquest:run:v1';
+const MEMORY_KEY = 'atlas-conquest:memory:v1';
 
 export interface Manifest {
   countryCount: number;
@@ -149,4 +150,25 @@ export function runIdFor(seed: number): string {
     // Without storage the run still gets an id; it just cannot be recognised after a refresh.
   }
   return id;
+}
+
+/**
+ * The questions this device has been asked, across games, with the wrong options each one showed. A new
+ * game starts from it, so it asks something else first and rotates the wrong options of what it repeats.
+ * It stays in this browser: nothing about it is sent anywhere.
+ */
+export function loadMemory(): GameMemory {
+  try {
+    return sanitizeMemory(JSON.parse(localStorage.getItem(MEMORY_KEY) ?? 'null'));
+  } catch {
+    return sanitizeMemory(null);
+  }
+}
+
+export function saveMemory(memory: GameMemory): void {
+  try {
+    localStorage.setItem(MEMORY_KEY, JSON.stringify(memory));
+  } catch {
+    // Without storage every game starts fresh; it still plays.
+  }
 }

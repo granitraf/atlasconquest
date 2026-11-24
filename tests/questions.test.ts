@@ -13,7 +13,6 @@ import {
   factTheme,
   independenceGap,
   FLAG_NEAREST,
-  FLAG_CLOSE_CHANCE,
   GLOBE_LINES,
   NO_LINE,
   REASON_OUT_SHARE,
@@ -27,6 +26,10 @@ import {
   QUESTION_TYPES,
   TYPE_WEIGHT,
   USES_CLOSENESS,
+  DECOY_DRAFTS,
+  RHYTHM_DECK,
+  battleDifficulty,
+  battleRhythm,
   bearing,
   bearingGap,
   combinations,
@@ -453,17 +456,20 @@ describe('flags', () => {
         for (const o of wide) if (o.id !== c.id) expect(similar.has(o.id), `${c.name} at closeness 0: ${o.name}`).toBe(true);
         const close = flagOptions(generateQuestion(world, c.id, 'flag', rng, undefined, 1)!);
         for (const o of close) if (o.id !== c.id) expect(similar.has(o.id), `${c.name} at closeness 1: ${o.name}`).toBe(true);
-        // A close call uses every available lookalike, up to the three wrong slots (identical twins share one slot)…
-        const used = close.filter((o) => flagsLookAlike(o, c)).length;
-        const distinct = new Set(lookalikes.map((o) => IDENTICAL_FLAGS.find((g) => g.includes(o.id))?.[0] ?? o.id)).size;
-        expect(used, `${c.name} at closeness 1`).toBeGreaterThanOrEqual(Math.min(3, distinct));
-        // …and fills the rest from the few most similar flags of all.
+        // A close call always has a hand-picked lookalike where one exists…
+        const used = close.filter((o) => o.id !== c.id && flagsLookAlike(o, c) && !flagsIdentical(o, c)).length;
+        const available = lookalikes.filter((o) => !flagsIdentical(o, c)).length;
+        expect(used, `${c.name} at closeness 1`).toBeGreaterThanOrEqual(Math.min(1, available));
+        // …and fills the rest from the other lookalikes and the few most similar flags of all.
         const nearest = new Set([...lookalikes.map((o) => o.id), ...c.flagKin.slice(0, FLAG_NEAREST + 3)]);
         for (const o of close) if (o.id !== c.id) expect(nearest.has(o.id), `${c.name} close: ${o.name}`).toBe(true);
       }
     }
-    const ireland = flagOptions(generateQuestion(world, 'IRL', 'flag', rng, undefined, 1)!).map((o) => o.id);
-    expect(ireland).toEqual(expect.arrayContaining(['CIV', 'ITA']));
+    // Ireland's close calls: always one of its lookalikes (Côte d'Ivoire, Italy), the rest from the same family.
+    for (let i = 0; i < 20; i++) {
+      const ireland = flagOptions(generateQuestion(world, 'IRL', 'flag', rng, undefined, 1)!).map((o) => o.id);
+      expect(ireland.some((id) => id === 'CIV' || id === 'ITA')).toBe(true);
+    }
     // Flags are matched on their colours: Andorra's blue, yellow and red bring Moldova, Romania or Chad, Colombia and Ecuador.
     const kin = (code: string) => world.byId[code].flagKin;
     expect(kin('AND')).toEqual(expect.arrayContaining(['MDA', 'COL', 'ECU']));
@@ -474,13 +480,16 @@ describe('flags', () => {
     expect(kin('JPN').length).toBe(10);
   });
 
-  it('opening flags use close-call options about half the time', () => {
-    expect(FLAG_CLOSE_CHANCE).toBe(0.5);
+  it('opening flags always use the closest calls: the hand-picked lookalikes first, then the most alike in colour', () => {
     const rng = createRng(4);
-    let close = 0;
-    for (let i = 0; i < 400; i++) close += nextBattleQuestion(world, 'IRL', [], rng).closeness;
-    expect(close).toBeGreaterThan(160);
-    expect(close).toBeLessThan(240);
+    for (let i = 0; i < 100; i++) expect(nextBattleQuestion(world, 'IRL', [], rng).closeness).toBe(1);
+    // Every Irish flag question has one of Ireland's hand-picked lookalikes on it.
+    const lookalikes = ALL.filter((o) => flagsLookAlike(o, world.byId.IRL)).map((o) => o.cca2);
+    for (let i = 0; i < 30; i++) {
+      const q = nextBattleQuestion(world, 'IRL', [], rng);
+      expect(q.options.some((o) => o.flag !== world.byId.IRL.cca2 && lookalikes.includes(o.flag!))).toBe(true);
+    }
+    for (let i = 0; i < 30; i++) expect(nextRecruitQuestion(world, 'IRL', [], rng).closeness).toBe(1);
   });
 });
 
@@ -571,35 +580,78 @@ describe('filling difficulty slots', () => {
     }
   });
 
-  it('a battle opens with the flag, then follows Easy, Medium, Medium, then mostly Hard, as far as the country allows', () => {
+  it('after the flag, a battle follows a shuffled rhythm: no fixed order, but always one Easy, two Medium and three Hard in six', () => {
+    const counts = (tiers: Difficulty[]) => ({ easy: tiers.filter((t) => t === 'easy').length, medium: tiers.filter((t) => t === 'medium').length, hard: tiers.filter((t) => t === 'hard').length });
+    expect(counts(RHYTHM_DECK)).toEqual({ easy: 1, medium: 2, hard: 3 });
+    const rhythms = Array.from({ length: 40 }, (_, seed) => battleRhythm(createRng(seed + 1)));
+    for (const rhythm of rhythms) {
+      for (let i = 0; i < rhythm.length; i += 6) expect(counts(rhythm.slice(i, i + 6))).toEqual({ easy: 1, medium: 2, hard: 3 });
+    }
+    // Unpredictable: the opening stretch differs from battle to battle, and any tier can come straight after the flag.
+    expect(new Set(rhythms.map((r) => r.slice(0, 6).join())).size).toBeGreaterThan(20);
+    expect(new Set(rhythms.map((r) => battleDifficulty(1, r)))).toEqual(new Set(['easy', 'medium', 'hard']));
+    // The question after the flag is the first card dealt; a long battle deals the deck again.
+    const rhythm = rhythms[0];
+    expect(battleDifficulty(1, rhythm)).toBe(rhythm[0]);
+    expect(battleDifficulty(rhythm.length + 1, rhythm)).toBe(rhythm[0]);
+  });
+
+  it('a battle asks for the tier its rhythm deals, as far as the country allows', () => {
     const rank = { easy: 0, medium: 1, hard: 2 } as const;
     const rng = createRng(61);
     // Romania is mid-known with five neighbours: it can reach every tier.
+    let followed = 0;
+    let slots = 0;
     for (let run = 0; run < 20; run++) {
+      const rhythm = battleRhythm(rng);
       const asked: string[] = [];
-      const tiers: Difficulty[] = [];
       for (let i = 0; i < 12; i++) {
-        const q = nextBattleQuestion(world, 'ROU', asked, rng);
+        const q = nextBattleQuestion(world, 'ROU', asked, rng, { rhythm });
         if (i === 0) expect(q.type).toBe('flag');
+        else {
+          slots++;
+          if (rank[q.difficulty] === rank[battleDifficulty(i, rhythm)]) followed++;
+        }
         asked.push(q.sig);
-        tiers.push(q.difficulty);
       }
-      expect(tiers[1]).toBe('easy');
-      expect(tiers[2]).toBe('medium');
-      expect(tiers[3]).toBe('medium');
-      expect(Math.min(...tiers.slice(4).map((t) => rank[t]))).toBeGreaterThanOrEqual(1);
     }
+    // Variety comes first (no kind of question twice while another is unused), so not every slot can match.
+    expect(followed / slots).toBeGreaterThan(0.45);
     // France is famous: its Hard slots fall back to Medium. Palau is obscure: its Easy slot rises to Medium.
     const tiersFor = (code: string) => {
       const asked: string[] = [];
+      const rhythm = battleRhythm(rng);
       return Array.from({ length: 10 }, () => {
-        const q = nextBattleQuestion(world, code, asked, rng);
+        const q = nextBattleQuestion(world, code, asked, rng, { rhythm });
         asked.push(q.sig);
         return q.difficulty;
       });
     };
     expect(tiersFor('FRA')).not.toContain('hard');
     expect(tiersFor(id('Palau'))).not.toContain('easy');
+  });
+
+  it('a returning question rotates its wrong options, drawing them from the same pools', () => {
+    const rng = createRng(17);
+    const wrongOf = (q: Question) => q.options.filter((_, i) => i !== q.correctIndex).map((o) => o.label);
+    let fresh = 0;
+    let plain = 0;
+    const cases: [string, 'capital' | 'flag' | 'currency' | 'language'][] = [['DEU', 'capital'], ['ROU', 'flag'], ['KEN', 'currency'], ['BRA', 'language'], ['PER', 'capital'], ['IRL', 'flag']];
+    for (const [code, type] of cases) {
+      for (let i = 0; i < 20; i++) {
+        const first = generateQuestion(world, code, type, rng, undefined, 1)!;
+        const seen = { [first.sig]: wrongOf(first) };
+        const again = generateQuestion(world, code, type, rng, undefined, 1, undefined, seen)!;
+        const blind = generateQuestion(world, code, type, rng, undefined, 1)!;
+        checkWellFormed(again);
+        // Still a close call: the same tier as before.
+        expect(again.difficulty).toBe(first.difficulty);
+        fresh += wrongOf(again).filter((l) => seen[first.sig].includes(l)).length;
+        if (blind.sig === first.sig) plain += wrongOf(blind).filter((l) => seen[first.sig].includes(l)).length;
+      }
+    }
+    expect(DECOY_DRAFTS).toBeGreaterThan(1);
+    expect(fresh).toBeLessThan(plain * 0.75);
   });
 
   it('every country can fill every slot of a long battle without errors or repeats', () => {

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { flagUrl } from '../data';
 import { sound } from '../sound';
-import { battleProgress, soldiers, soldiersShort } from '../game/rules';
+import { isLastStand, mistakesLeft, siegeProgress, soldiers, soldiersShort } from '../game/rules';
 import { FlagIcon } from './FlagIcon';
 import type { BattleState, Feedback, GameState } from '../game/types';
 
@@ -233,43 +233,59 @@ interface ProgressProps {
   viewHeight: number;
 }
 
-/** Below this much room the bar shows its percentage only; below PROGRESS_MIN_ROOM it steps aside altogether. */
+/** Below this much room the bar shows the count to win only; below PROGRESS_MIN_ROOM it steps aside altogether. */
 const PROGRESS_FULL_ROOM = 150;
 const PROGRESS_MIN_ROOM = 56;
 
-/** Left bar: fills as defenders fall, and drops when a wrong answer costs troops. */
+/**
+ * Left bar: the siege. The enemy's wall is one brick per 1,000 enemies, and a brick falls for every 1,000
+ * beaten, so the bar fills exactly as far as the battle has got and never jumps back. Above it, the most
+ * right answers still needed to win; below it, the wrong answers the army can still survive, which turns
+ * into "Last chance" when the next one would end the game.
+ */
 export function BattleProgress({ troops, battle, feedback, seq, top, bottom, viewHeight }: ProgressProps) {
   const room = viewHeight - top - bottom;
   // On a short screen the question card leaves no space for it; the bar across the top already tells the story.
   if (room < PROGRESS_MIN_ROOM) return null;
   const compact = room < PROGRESS_FULL_ROOM;
-  const progress = battleProgress(battle.defenders, battle.maxDefenders, troops, battle.startTroops);
-  const percent = Math.round(progress * 100);
+  const siege = siegeProgress(battle.defenders, battle.maxDefenders);
+  const percent = Math.round(siege.share * 100);
   const hit = feedback !== null && !feedback.correct;
-  const eliminated = battle.maxDefenders - battle.defenders;
+  // Bricks knocked down by the answer just given flash as they fall.
+  const freshFrom = feedback?.correct ? siege.fallen - Math.round(feedback.defendersKilled) : siege.fallen;
+  const spare = mistakesLeft(troops);
+  const lastStand = isLastStand(troops);
   return (
     <div
-      className={`progress ${compact ? 'compact' : ''} ${hit ? 'hit' : ''} ${feedback?.correct ? 'gain' : ''}`}
+      className={`progress ${compact ? 'compact' : ''} ${hit ? 'hit' : ''} ${feedback?.correct ? 'gain' : ''} ${lastStand ? 'last-stand' : ''}`}
       style={{ top, bottom }}
-      role="progressbar"
-      aria-label="Battle progress"
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-valuenow={percent}
+      role="group"
+      aria-label={`Siege: ${siege.fallen} of ${siege.total} bricks down, at most ${siege.toWin} right answers to win, ${lastStand ? 'last chance' : `${spare} mistakes left`}`}
       data-testid="battle-progress"
       data-value={percent}
+      data-to-win={siege.toWin}
+      data-mistakes={spare}
       key={hit ? `hit-${seq}` : 'steady'}
     >
-      <span className="progress-title">Battle</span>
-      <span className="progress-label">{percent}%</span>
-      <div className="progress-track">
-        <div className="progress-fill" style={{ height: `${percent}%` }} />
-        {Array.from({ length: battle.maxDefenders - 1 }, (_, i) => (
-          <span key={i} className="progress-tick" style={{ bottom: `${((i + 1) / battle.maxDefenders) * 100}%` }} />
+      <span className="progress-title">Siege</span>
+      <span className="progress-label" data-testid="siege-to-win" title="At most this many right answers to win (a Hard one counts twice)">
+        <b>{siege.toWin}</b>
+        <small>to win</small>
+      </span>
+      <div className="progress-track" role="progressbar" aria-valuemin={0} aria-valuemax={siege.total} aria-valuenow={siege.fallen}>
+        {Array.from({ length: siege.total }, (_, i) => (
+          <span key={i} className={`brick ${i < siege.fallen ? 'down' : ''} ${i >= freshFrom && i < siege.fallen ? 'fresh' : ''}`} />
         ))}
       </div>
-      <span className="progress-caption">
-        {soldiersShort(eliminated)}/{soldiersShort(battle.maxDefenders)}
+      <span className={`progress-caption ${lastStand ? 'danger' : ''}`} data-testid="siege-mistakes" title="Wrong answers your army can still survive">
+        {lastStand ? (
+          <small>Last chance</small>
+        ) : (
+          <>
+            <b>{spare}</b>
+            <small>{spare === 1 ? 'mistake left' : 'mistakes left'}</small>
+          </>
+        )}
       </span>
     </div>
   );

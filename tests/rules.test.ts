@@ -15,7 +15,9 @@ import {
   startPosition,
   SEA_RANGE_KM,
   battleDefenders,
-  battleProgress,
+  isLastStand,
+  mistakesLeft,
+  siegeProgress,
   defendersFor,
   finalScore,
   getTargets,
@@ -160,14 +162,21 @@ describe('battle resolution', () => {
     expect(resolveBattleAnswer(3, 5, 'easy', false)).toMatchObject({ troops: 1, outcome: 'ongoing' });
   });
 
-  it('progress rises with kills, drops with losses, and is full on victory', () => {
-    const start = battleProgress(9, 9, 10, 10);
-    const afterKills = battleProgress(6, 9, 10, 10);
-    const afterWrong = battleProgress(6, 9, 8, 10);
-    expect(start).toBe(0);
-    expect(afterKills).toBeCloseTo(1 / 3);
-    expect(afterWrong).toBeLessThan(afterKills);
-    expect(battleProgress(0, 9, 2, 10)).toBe(1);
+  it('the siege wall has a brick per defender, and only ever fills as defenders fall', () => {
+    expect(siegeProgress(9, 9)).toEqual({ fallen: 0, total: 9, toWin: 9, share: 0 });
+    expect(siegeProgress(6, 9)).toEqual({ fallen: 3, total: 9, toWin: 6, share: 1 / 3 });
+    // A country left wounded by a retreat starts with bricks already down.
+    expect(siegeProgress(4, 9)).toMatchObject({ fallen: 5, toWin: 4 });
+    expect(siegeProgress(0, 9)).toMatchObject({ fallen: 9, toWin: 0, share: 1 });
+  });
+
+  it('counts the wrong answers an army can survive, and knows the last stand', () => {
+    expect([10, 5, 4, 3, 2.75, 2, 1, 0.5, 0].map(mistakesLeft)).toEqual([4, 2, 1, 1, 1, 0, 0, 0, 0]);
+    // The last stand is exactly when a wrong answer would end the game.
+    for (const troops of [12, 6, 3, 2.25, 2, 1.5, 1, 0.25]) {
+      expect(isLastStand(troops), String(troops)).toBe(resolveBattleAnswer(troops, 5, 'easy', false).outcome === 'lost');
+    }
+    expect(isLastStand(0)).toBe(false);
   });
 });
 

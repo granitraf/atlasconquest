@@ -7,11 +7,11 @@ import { Leaderboard } from './components/Leaderboard';
 import { Rules } from './components/Rules';
 import { StartScreen } from './components/StartScreen';
 import { WorldMap, type CountryStatus, type FocusRequest, type MapPadding, type TooltipInfo, type TooltipPart } from './components/WorldMap';
-import { loadEmpire, loadGameData, loadSave, runIdFor, saveEmpire, writeSave, type GameData } from './data';
+import { loadEmpire, loadGameData, loadMemory, loadSave, runIdFor, saveEmpire, saveMemory, writeSave, type GameData } from './data';
 import { defaultEmpireName, type Empire } from './game/flag';
 import { validateEmpireName } from './names/validateEmpireName';
 import { runRecord } from './leaderboard';
-import { CONTINENT_BONUS, SEA_TIMER_SECONDS, canRetreat, conquestTroops, escalation, getTargets, lanesNeeded, retreatCost, soldiers, startDifficulty } from './game/rules';
+import { CONTINENT_BONUS, SEA_TIMER_SECONDS, canRetreat, conquestTroops, escalation, getTargets, isLastStand, lanesNeeded, retreatCost, soldiers, startDifficulty } from './game/rules';
 import { sound, soundLog } from './sound';
 import { createGame, gameStats, reduce, targetStrength, type Action } from './game/state';
 import type { GameState, ModeId, Targets } from './game/types';
@@ -97,6 +97,10 @@ function Game({ data }: { data: GameData }) {
   const { geometry, byId } = data;
 
   useEffect(() => writeSave(game), [game]);
+  // What this device has been asked carries over to the next game.
+  useEffect(() => {
+    if (game) saveMemory({ sigs: game.recentSigs, decoys: game.recentDecoys });
+  }, [game?.recentSigs, game?.recentDecoys]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const dispatch = useCallback(
     (action: Action) => setGame((current) => (current ? reduce(data.worlds[current.mode], current, action) : current)),
@@ -279,7 +283,7 @@ function Game({ data }: { data: GameData }) {
     // the Begin button is disabled until it is changed.)
     const checked = validateEmpireName(empire.name);
     const name = checked.valid ? checked.name : defaultEmpireName(byId[id].name);
-    setGame(createGame(data.worlds[mode], id, seed, { name, flag: empire.flag }));
+    setGame(createGame(data.worlds[mode], id, seed, { name, flag: empire.flag }, loadMemory()));
   };
 
   const quit = () => {
@@ -366,6 +370,12 @@ function Game({ data }: { data: GameData }) {
 
   const answerSeq = game ? game.answersCorrect + game.answersWrong : 0;
   const ended = phase === 'gameover' || phase === 'victory';
+  // The last stand: in a battle with 2,000 troops or fewer, the next wrong answer ends the game. A heartbeat plays.
+  const lastStand = inBattle && game !== null && isLastStand(game.troops);
+  useEffect(() => {
+    sound.heartbeat(lastStand);
+  }, [lastStand]);
+  useEffect(() => () => sound.heartbeat(false), []);
   // The finished run as the leaderboard records it. Its id is made once and kept beside the save.
   const run = useMemo(
     () => (game && ended ? runRecord(game, gameStats(world, game), runIdFor(game.seed)) : null),
@@ -373,7 +383,10 @@ function Game({ data }: { data: GameData }) {
   );
 
   return (
-    <div className={`app ${game ? `phase-${game.phase}` : 'phase-start'} ${!game && panel ? `showing-${panel}` : ''}`} data-terrain={data.terrainKind}>
+    <div
+      className={`app ${game ? `phase-${game.phase}` : 'phase-start'} ${!game && panel ? `showing-${panel}` : ''} ${lastStand ? 'last-stand' : ''}`}
+      data-terrain={data.terrainKind}
+    >
       <WorldMap
         geometry={geometry}
         terrainUrl={data.terrainUrl}

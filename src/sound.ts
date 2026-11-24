@@ -98,6 +98,11 @@ function log(event: SoundEvent): void {
 
 function play(name: string, notes: Note[], bursts: Burst[] = []): void {
   log({ name, hz: notes[0]?.hz ?? bursts[0]?.from ?? 0 });
+  emit(notes, bursts);
+}
+
+/** Plays notes and bursts without recording them: for sounds that repeat on their own, like the heartbeat. */
+function emit(notes: Note[], bursts: Burst[] = []): void {
   const ctx = audio();
   if (!ctx) return;
   const now = ctx.currentTime;
@@ -151,6 +156,101 @@ const SNAP: { notes: Note[]; bursts: Burst[] } = {
 };
 /** A rush of air that rises as the camera closes in. */
 const WHOOSH: Burst = { at: 0.03, seconds: 0.42, volume: 0.085, filter: 'bandpass', from: 320, to: 2600, q: 1.4, attack: 0.16 };
+
+/**
+ * A brass note: two slightly detuned sawtooths and a square through a filter that opens bright on the
+ * attack and settles, the "blat" of a trumpet, with a little vibrato once the note is held.
+ */
+function brass(ctx: AudioContext, hz: number, at: number, seconds: number, volume: number): void {
+  const start = ctx.currentTime + at;
+  const end = start + seconds;
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.Q.value = 2;
+  filter.frequency.setValueAtTime(hz * 2, start);
+  filter.frequency.linearRampToValueAtTime(hz * 7, start + 0.04);
+  filter.frequency.exponentialRampToValueAtTime(hz * 4, start + Math.min(0.25, seconds));
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0, start);
+  gain.gain.linearRampToValueAtTime(volume, start + 0.025);
+  gain.gain.setValueAtTime(volume * 0.85, Math.max(start + 0.03, end - 0.08));
+  gain.gain.exponentialRampToValueAtTime(0.0001, end);
+  filter.connect(gain).connect(ctx.destination);
+  const vibrato = ctx.createOscillator();
+  const depth = ctx.createGain();
+  vibrato.frequency.value = 5.5;
+  depth.gain.setValueAtTime(0, start);
+  depth.gain.linearRampToValueAtTime(seconds > 0.3 ? hz * 0.012 : 0, start + Math.min(0.3, seconds));
+  vibrato.connect(depth);
+  for (const [wave, detune, level] of [['sawtooth', -6, 0.6], ['sawtooth', 6, 0.6], ['square', 0, 0.25]] as const) {
+    const osc = ctx.createOscillator();
+    const mix = ctx.createGain();
+    osc.type = wave;
+    osc.frequency.setValueAtTime(hz, start);
+    osc.detune.value = detune;
+    depth.connect(osc.frequency);
+    mix.gain.value = level;
+    osc.connect(mix).connect(filter);
+    osc.start(start);
+    osc.stop(end + 0.05);
+  }
+  vibrato.start(start);
+  vibrato.stop(end + 0.05);
+}
+
+/** The last stand: a heartbeat every HEARTBEAT_MS, over a low drone, while the next wrong answer would end the game. */
+const HEARTBEAT_MS = 760;
+let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+let drone: { stop: () => void } | null = null;
+
+/** "Lub-dub": two deep thumps, the second softer, each with a dull thud of low noise like a stadium drum. */
+function heartbeatThump(): void {
+  emit(
+    [
+      { hz: 82, seconds: 0.2, wave: 'sine', volume: 0.32, slideTo: 42 },
+      { hz: 70, at: 0.2, seconds: 0.18, wave: 'sine', volume: 0.22, slideTo: 38 },
+    ],
+    [
+      { seconds: 0.09, volume: 0.07, filter: 'lowpass', from: 260, to: 90 },
+      { at: 0.2, seconds: 0.08, volume: 0.05, filter: 'lowpass', from: 220, to: 80 },
+    ],
+  );
+}
+
+function startDrone(): void {
+  const ctx = audio();
+  if (!ctx || drone) return;
+  const now = ctx.currentTime;
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = 160;
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.03, now + 1.2);
+  filter.connect(gain).connect(ctx.destination);
+  const oscs = [55, 55.6, 82.4].map((hz) => {
+    const osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.value = hz;
+    osc.connect(filter);
+    osc.start(now);
+    return osc;
+  });
+  drone = {
+    stop: () => {
+      const t = ctx.currentTime;
+      gain.gain.cancelScheduledValues(t);
+      gain.gain.setValueAtTime(gain.gain.value, t);
+      gain.gain.linearRampToValueAtTime(0.0001, t + 0.4);
+      for (const osc of oscs) osc.stop(t + 0.45);
+    },
+  };
+}
+
+function stopDrone(): void {
+  drone?.stop();
+  drone = null;
+}
 
 /** Hover pulses closer together than this are dropped, so sweeping across the map does not machine-gun. */
 const PULSE_GAP_MS = 55;
@@ -222,15 +322,91 @@ export const sound = {
       [{ seconds: 0.02, volume: last ? 0.13 : 0.1, filter: 'bandpass', from: tock ? 1700 : 2300, q: 3 }],
     );
   },
+  /**
+   * A country falls: a wartime bugle call on brass. "Ta-ta-ta TAAA, ta-ta-TAAAA": three quick pick-ups,
+   * up a fourth, then climbing to a held C major chord, over a snare and a bass drum, with a cymbal crash
+   * on the last chord.
+   */
   conquer() {
-    play('conquer', [523.25, 659.25, 783.99, 1046.5].map((hz, i) => ({ hz, at: i * 0.09, seconds: i === 3 ? 0.4 : 0.12 })));
+    log({ name: 'conquer', hz: 392 });
+    const ctx = audio();
+    if (!ctx) return;
+    const G4 = 392;
+    const C5 = 523.25;
+    const E5 = 659.25;
+    const G5 = 783.99;
+    const call: [number, number, number][] = [
+      [G4, 0, 0.09],
+      [G4, 0.11, 0.09],
+      [G4, 0.22, 0.09],
+      [C5, 0.33, 0.3],
+      [G4, 0.68, 0.1],
+      [C5, 0.8, 0.1],
+      [E5, 0.92, 0.12],
+    ];
+    for (const [hz, at, seconds] of call) brass(ctx, hz, at, seconds, 0.07);
+    // The held final chord.
+    brass(ctx, G5, 1.06, 0.95, 0.06);
+    brass(ctx, E5, 1.06, 0.95, 0.045);
+    brass(ctx, C5, 1.06, 0.95, 0.045);
+    brass(ctx, C5 / 2, 1.06, 0.95, 0.04);
+    emit(
+      [
+        { hz: 120, at: 0.33, seconds: 0.25, wave: 'sine', volume: 0.22, slideTo: 50 },
+        { hz: 120, at: 1.06, seconds: 0.4, wave: 'sine', volume: 0.26, slideTo: 45 },
+      ],
+      [
+        // Snare under the pick-ups.
+        ...[0, 0.11, 0.22, 0.68, 0.8, 0.92].map((at): Burst => ({ at, seconds: 0.07, volume: 0.045, filter: 'bandpass', from: 2200, q: 0.8 })),
+        // Cymbal crash.
+        { at: 1.06, seconds: 1.3, volume: 0.05, filter: 'highpass', from: 5000, q: 0.5 },
+      ],
+    );
   },
+  /**
+   * Recruiting is over: a short burst of applause, under a second. Ten people clapping, each at their own
+   * steady pace and with their own hand sound; every clap is a sharp slap with a short ring, and the
+   * applause dies away after three or four claps each.
+   */
   recruited() {
-    play('recruited', [
-      { hz: 392, seconds: 0.1, wave: 'triangle', volume: 0.1 },
-      { hz: 587.33, at: 0.1, seconds: 0.22, wave: 'triangle', volume: 0.1 },
-    ]);
+    log({ name: 'recruited', hz: 0 });
+    // The same applause every time: the clappers come from a fixed sequence, not chance.
+    let seed = 11;
+    const next = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const LENGTH = 0.8;
+    const claps: Burst[] = [];
+    for (let person = 0; person < 10; person++) {
+      // Cupped hands sound lower, flat hands brighter.
+      const hand = 700 + next() * 1300;
+      const pace = 0.17 + next() * 0.07;
+      for (let at = next() * 0.12; at < LENGTH; at += pace * (0.92 + next() * 0.16)) {
+        const fade = 1 - (at / LENGTH) ** 2;
+        const volume = (0.045 + next() * 0.025) * fade;
+        claps.push({ at, seconds: 0.08, volume, filter: 'bandpass', from: hand, q: 1.4 });
+        claps.push({ at, seconds: 0.025, volume: volume * 0.6, filter: 'highpass', from: 2800 });
+      }
+    }
+    emit([], claps);
   },
+  /**
+   * The last stand, on or off: a heartbeat with a low drone under it for as long as the next wrong answer
+   * would end the game. Asking for what is already playing changes nothing.
+   */
+  heartbeat(on: boolean) {
+    if (on === (heartbeatTimer !== null)) return;
+    if (on) {
+      log({ name: 'heartbeat', hz: 82 });
+      startDrone();
+      heartbeatThump();
+      heartbeatTimer = setInterval(heartbeatThump, HEARTBEAT_MS);
+    } else {
+      log({ name: 'heartbeat-stop', hz: 0 });
+      if (heartbeatTimer !== null) clearInterval(heartbeatTimer);
+      heartbeatTimer = null;
+      stopDrone();
+    }
+  },
+  isHeartbeating: () => heartbeatTimer !== null,
   retreat() {
     play('retreat', [{ hz: 330, seconds: 0.25, wave: 'triangle', volume: 0.1, slideTo: 220 }]);
   },
@@ -331,6 +507,9 @@ export const sound = {
       // Not being able to remember the setting is fine.
     }
     if (next && context && context.state === 'running') void context.suspend();
+    // The heartbeat keeps its rhythm while muted (it is silent then); its drone stops and starts with the sound.
+    if (next) stopDrone();
+    else if (heartbeatTimer !== null) startDrone();
     try {
       if (next && typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
     } catch {

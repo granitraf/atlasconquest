@@ -1,4 +1,4 @@
-import { nextBattleQuestion, nextRecruitQuestion } from './questions';
+import { battleRhythm, nextBattleQuestion, nextRecruitQuestion } from './questions';
 import { sanitizeEmpire, type Empire } from './flag';
 import { createRng, nextSeed, type Rng } from './rng';
 import {
@@ -22,8 +22,48 @@ import type { Continent, Feedback, GameState, ModeId, Question } from './types';
 import type { World } from './world';
 
 export const SAVE_VERSION = 4;
-/** How many asked questions the game remembers, so they are not asked again while anything else fits. */
-const RECENT_SIGS_KEPT = 150;
+/**
+ * How many asked questions are remembered, across games as well as within one, so they are not asked
+ * again while anything else fits.
+ */
+export const RECENT_SIGS_KEPT = 300;
+/** How many of the wrong options shown with a question are remembered, so it rotates them next time. */
+export const DECOYS_KEPT = 6;
+
+/** What carries over from one game to the next on the same device: the questions asked, and their wrong options. */
+export interface GameMemory {
+  sigs: string[];
+  decoys: Record<string, string[]>;
+}
+
+/** Adds an asked question to the memory, keeping only the most recent questions and their wrong options. */
+export function remember(memory: GameMemory, question: Question): GameMemory {
+  const sigs = [...memory.sigs.filter((sig) => sig !== question.sig), question.sig].slice(-RECENT_SIGS_KEPT);
+  const shown = question.options.filter((_, i) => i !== question.correctIndex).map((option) => option.label);
+  const kept = new Set(sigs);
+  const decoys: Record<string, string[]> = {};
+  for (const [sig, labels] of Object.entries(memory.decoys)) if (kept.has(sig) && sig !== question.sig) decoys[sig] = labels;
+  decoys[question.sig] = [...shown, ...(memory.decoys[question.sig] ?? []).filter((label) => !shown.includes(label))].slice(0, DECOYS_KEPT);
+  return { sigs, decoys };
+}
+
+/** Reads a memory from untrusted input (stored data); anything malformed is dropped. */
+export function sanitizeMemory(raw: unknown): GameMemory {
+  const empty: GameMemory = { sigs: [], decoys: {} };
+  if (!raw || typeof raw !== 'object') return empty;
+  const { sigs, decoys } = raw as Partial<GameMemory>;
+  const cleanSigs = Array.isArray(sigs) ? sigs.filter((sig): sig is string => typeof sig === 'string').slice(-RECENT_SIGS_KEPT) : [];
+  const kept = new Set(cleanSigs);
+  const cleanDecoys: Record<string, string[]> = {};
+  if (decoys && typeof decoys === 'object') {
+    for (const [sig, labels] of Object.entries(decoys)) {
+      if (kept.has(sig) && Array.isArray(labels)) cleanDecoys[sig] = labels.filter((l): l is string => typeof l === 'string').slice(0, DECOYS_KEPT);
+    }
+  }
+  return { sigs: cleanSigs, decoys: cleanDecoys };
+}
+
+const memoryOf = (state: Pick<GameState, 'recentSigs' | 'recentDecoys'>): GameMemory => ({ sigs: state.recentSigs, decoys: state.recentDecoys });
 
 export type Action =
   /** Answer the current question; index null means the timer ran out. */
@@ -33,7 +73,8 @@ export type Action =
   | { type: 'attack'; targetId: string }
   | { type: 'retreat' };
 
-export function createGame(world: World, startId: string, seed: number, empire: Empire): GameState {
+/** A new game. `memory` is what this device remembers of earlier games: their questions wait their turn. */
+export function createGame(world: World, startId: string, seed: number, empire: Empire, memory: GameMemory = { sigs: [], decoys: {} }): GameState {
   if (!world.inPlay.has(startId)) throw new Error(`${startId} is not in play in mode ${world.mode}`);
   const rng = createRng(seed);
   const difficulty = startDifficulty(world, startId);
@@ -58,14 +99,21 @@ export function createGame(world: World, startId: string, seed: number, empire: 
     feedback: null,
     continentsCompleted: [],
     wounds: {},
-    recentSigs: [],
+    recentSigs: memory.sigs.slice(-RECENT_SIGS_KEPT),
+    recentDecoys: memory.decoys,
     lastEvent: null,
     eventSeq: 0,
     answersCorrect: 0,
     answersWrong: 0,
     seed: 0,
   };
-  state.recruit = { index: 0, earned: 0, correct: 0, asked: [], question: nextRecruitQuestion(world, startId, [], rng) };
+  state.recruit = {
+    index: 0,
+    earned: 0,
+    correct: 0,
+    asked: [],
+    question: nextRecruitQuestion(world, startId, [], rng, { recent: state.recentSigs, decoys: state.recentDecoys }),
+  };
   state.seed = nextSeed(rng);
   // A one-country mode would be won before it starts; no such mode exists, but never dead-end.
   if (world.ids.length === 1) state.phase = 'victory';
@@ -146,16 +194,19 @@ function advance(world: World, state: GameState, rng: Rng): GameState {
 
   if (state.phase === 'recruit' && state.recruit) {
     const recruit = state.recruit;
-    const recentSigs = [...state.recentSigs, recruit.question.sig].slice(-RECENT_SIGS_KEPT);
+    const memory = remember(memoryOf(state), recruit.question);
+    const recentSigs = memory.sigs;
+    const recentDecoys = memory.decoys;
     if (recruit.index + 1 < RECRUIT_QUESTIONS) {
       return {
         ...state,
         feedback: null,
         recentSigs,
+        recentDecoys,
         recruit: {
           ...recruit,
           index: recruit.index + 1,
-          question: nextRecruitQuestion(world, state.startId, recruit.asked, rng),
+          question: nextRecruitQuestion(world, state.startId, recruit.asked, rng, { recent: recentSigs, decoys: recentDecoys }),
         },
       };
     }
@@ -164,6 +215,7 @@ function advance(world: World, state: GameState, rng: Rng): GameState {
       ...state,
       feedback: null,
       recentSigs,
+      recentDecoys,
       recruit: null,
       phase: 'attack',
       lastEvent: { kind: 'recruited', earned: recruit.earned, correct: recruit.correct },
@@ -173,9 +225,10 @@ function advance(world: World, state: GameState, rng: Rng): GameState {
 
   if (state.phase === 'battle' && state.battle) {
     const battle = state.battle;
-    // Every question asked is remembered: a later battle steers clear of it.
-    const recentSigs = [...state.recentSigs, battle.question.sig].slice(-RECENT_SIGS_KEPT);
-    state = { ...state, recentSigs };
+    // Every question asked is remembered, with its wrong options: a later battle, or a later game, steers clear of it.
+    const memory = remember(memoryOf(state), battle.question);
+    const recentSigs = memory.sigs;
+    state = { ...state, recentSigs, recentDecoys: memory.decoys };
     if (feedback.outcome === 'won') {
       const owned = [...state.owned, battle.targetId];
       const ownedSet = new Set(owned);
@@ -222,7 +275,12 @@ function advance(world: World, state: GameState, rng: Rng): GameState {
       feedback: null,
       battle: {
         ...battle,
-        question: nextBattleQuestion(world, battle.targetId, battle.asked, rng, { recent: recentSigs, owned: state.owned }),
+        question: nextBattleQuestion(world, battle.targetId, battle.asked, rng, {
+          recent: recentSigs,
+          owned: state.owned,
+          decoys: state.recentDecoys,
+          rhythm: battle.rhythm,
+        }),
       },
     };
   }
@@ -249,6 +307,8 @@ function attack(world: World, state: GameState, targetId: string, rng: Rng): Gam
   const sea = targets.sea.includes(targetId);
   if (!sea && !targets.land.includes(targetId)) return state;
   const strength = targetStrength(world, state, targetId, sea);
+  // The order of difficulties for this battle is dealt now, so it holds if the page is reloaded.
+  const rhythm = battleRhythm(rng);
   return {
     ...state,
     phase: 'battle',
@@ -263,7 +323,8 @@ function attack(world: World, state: GameState, targetId: string, rng: Rng): Gam
       maxDefenders: strength.full,
       startTroops: state.troops,
       asked: [],
-      question: nextBattleQuestion(world, targetId, [], rng, { recent: state.recentSigs, owned: state.owned }),
+      rhythm,
+      question: nextBattleQuestion(world, targetId, [], rng, { recent: state.recentSigs, owned: state.owned, decoys: state.recentDecoys, rhythm }),
     },
   };
 }
@@ -368,5 +429,9 @@ export function reviveGame(raw: unknown, worldFor: (mode: ModeId) => World | nul
     default:
       return null;
   }
-  return { ...(s as GameState), empire };
+  const memory = sanitizeMemory({ sigs: s.recentSigs, decoys: s.recentDecoys });
+  const battle = s.battle
+    ? { ...s.battle, rhythm: Array.isArray(s.battle.rhythm) && s.battle.rhythm.length > 0 ? s.battle.rhythm : battleRhythm(createRng(s.seed)) }
+    : null;
+  return { ...(s as GameState), empire, battle, recentSigs: memory.sigs, recentDecoys: memory.decoys };
 }

@@ -206,7 +206,19 @@ section('germany', async (page) => {
   check(results, 'battle question: every text fits its box', (await misfits(page)).length === 0, (await misfits(page)).join(' ; '));
   check(results, 'the question card speaks in thousands', /defeats 1,000 enemies/.test(await page.getByTestId('difficulty').innerText()) && /−2,000 troops/.test(await page.getByTestId('question-card').innerText()), await page.getByTestId('difficulty').innerText());
   check(results, 'tug-of-war bar shows both army sizes', (await page.getByTestId('battle-troops').innerText()).startsWith(k(troopsBefore)) && (await page.getByTestId('battle-defenders').innerText()).startsWith('9,000'));
-  check(results, 'battle progress bar is visible and starts empty', (await page.getByTestId('battle-progress').getAttribute('data-value')) === '0');
+  const siege = page.getByTestId('battle-progress');
+  const siegeAt = async () => ({
+    value: Number(await siege.getAttribute('data-value')),
+    toWin: Number(await siege.getAttribute('data-to-win')),
+    mistakes: Number(await siege.getAttribute('data-mistakes')),
+    bricks: await siege.locator('.brick').count(),
+    down: await siege.locator('.brick.down').count(),
+    label: (await page.getByTestId('siege-to-win').innerText()).replace(/\s+/g, ' ').trim(),
+    caption: (await page.getByTestId('siege-mistakes').innerText()).replace(/\s+/g, ' ').trim(),
+  });
+  const opening = await siegeAt();
+  check(results, 'the siege bar starts empty: a wall of 9 bricks (one per 1,000 enemies), 9 right answers to win', opening.value === 0 && opening.bricks === 9 && opening.down === 0 && opening.label === '9 to win', JSON.stringify(opening));
+  check(results, 'the siege bar shows the mistakes the army can survive', opening.mistakes === Math.ceil(troopsBefore / 2) - 1 && opening.caption === `${opening.mistakes} mistakes left`, opening.caption);
 
   // Camera: the country under attack must be on screen and not under the HUD or the question card.
   await settle(page, 1500);
@@ -244,8 +256,9 @@ section('germany', async (page) => {
   check(results, `correct ${s.battle.question.difficulty} answer kills ${kills} defender(s)`, afterRight.battle.defenders === 9 - kills && afterRight.troops === troopsBefore);
   check(results, 'there is no Continue button, and no Retreat button under the pointer while feedback shows', footButtons === 0 && (await page.getByTestId('continue').count()) === 0, `${footButtons} buttons in the card footer`);
   check(results, 'green flash on a correct answer', flashed === 1);
-  const filled = Number(await page.getByTestId('battle-progress').getAttribute('data-value'));
-  check(results, 'progress bar fills as defenders are eliminated', filled > 0, `${filled}%`);
+  const afterHit = await siegeAt();
+  check(results, 'a right answer knocks down exactly one brick per 1,000 enemies beaten', afterHit.down === kills && afterHit.toWin === 9 - kills && afterHit.value === Math.round((kills / 9) * 100) && (await siege.locator('.brick.fresh').count()) === kills, JSON.stringify(afterHit));
+  const filled = afterHit.value;
   await movedOn(page, firstSig);
   const rightWait = (Date.now() - rightAt) / 1000;
   check(results, 'after a correct answer the next question arrives by itself, in about a second', rightWait > 0.7 && rightWait < 2.5 && (await page.getByTestId('retreat').count()) === 1, `${rightWait.toFixed(1)}s`);
@@ -257,8 +270,8 @@ section('germany', async (page) => {
   const afterWrong = await answer(page, false, { wait: false });
   const wrongAt = Date.now();
   check(results, 'wrong answer kills 2 of the player troops, no defenders', afterWrong.troops === troopsBefore - 2 && afterWrong.battle.defenders === 9 - kills);
-  const dropped = Number(await page.getByTestId('battle-progress').getAttribute('data-value'));
-  check(results, 'progress bar drops visibly on a wrong answer', dropped < filled && (await page.locator('.progress.hit').count()) === 1, `${filled}% -> ${dropped}%`);
+  const afterMiss = await siegeAt();
+  check(results, 'a wrong answer shakes the siege bar but takes no ground back; one mistake fewer is left', afterMiss.value === filled && afterMiss.down === kills && afterMiss.mistakes === opening.mistakes - 1 && (await page.locator('.progress.hit').count()) === 1, `${filled}% -> ${afterMiss.value}%, ${opening.mistakes} -> ${afterMiss.mistakes} mistakes`);
   const verdict = await page.getByTestId('verdict').innerText();
   check(results, 'wrong answer shows the correct answer', verdict.includes(wrongQ.options[wrongQ.correctIndex].label) && /Wrong/.test(verdict), verdict);
   check(results, 'the loss reads in thousands, on the card and on the battle bar', /You lost 2,000 troops/.test(verdict) && /−2,000/.test(await page.getByTestId('battle-troops').innerText()), `${verdict} ; ${(await page.getByTestId('battle-troops').innerText()).replace(/\n/g, ' ')}`);
@@ -377,7 +390,15 @@ section('defeat', async (page) => {
   await recruit(page, [false, false, false, false, false]);
   let h = await hud(page);
   check(results, 'an all-wrong recruit phase earns nothing: 10 troops to attack with', h.troops === 10 && h.streak === 0, JSON.stringify(h));
+  check(results, 'the end of recruiting plays a short applause', (await sounds(page)).some((x) => x.name === 'recruited'));
   await attack(page, 'LUX');
+  const lastStandOn = async () => ({
+    app: await page.locator('.app.last-stand').count(),
+    beats: (await sounds(page)).filter((x) => x.name === 'heartbeat').length,
+    stops: (await sounds(page)).filter((x) => x.name === 'heartbeat-stop').length,
+    caption: (await page.getByTestId('siege-mistakes').innerText().catch(() => '')).trim(),
+  });
+  check(results, 'with 10,000 troops there is no last stand yet', (await lastStandOn()).app === 0 && (await lastStandOn()).beats === 0);
   // Let the first question run out of time: that is a wrong answer too.
   const t0 = Date.now();
   await page.getByTestId('verdict').waitFor({ timeout: 26000 });
@@ -392,12 +413,17 @@ section('defeat', async (page) => {
   for (let i = 0; i < 3; i++) await answer(page, false);
   h = await hud(page);
   check(results, '4 wrong answers leave 2 troops, still alive', h.troops === 2 && h.lives === 1 && h.streak === 0, JSON.stringify(h));
+  let stand = await lastStandOn();
+  check(results, 'at 2,000 troops the last stand begins: a heartbeat, red pulsing edges, and "Last chance" on the siege bar', stand.app === 1 && stand.beats === 1 && /last chance/i.test(stand.caption), JSON.stringify(stand));
+  await page.screenshot({ path: SHOTS + '29-last-stand.png' });
   // With 2 troops a retreat costs 1. With the last troop there is nothing to pay with.
   check(results, 'with 2 troops a retreat costs 1', (await page.getByTestId('retreat').getAttribute('data-cost')) === '1' && (await page.getByTestId('retreat').isEnabled()));
   await page.getByTestId('retreat').click();
   await page.getByTestId('attack-panel').waitFor();
   h = await hud(page);
   check(results, 'the retreat leaves 1 troop, and attacking is still possible', h.troops === 1 && (await page.locator('.target-chip').count()) > 0, JSON.stringify(h));
+  stand = await lastStandOn();
+  check(results, 'out of battle the heartbeat stops', stand.app === 0 && stand.stops === 1, JSON.stringify(stand));
   await attack(page, 'LUX');
   const retreat = page.getByTestId('retreat');
   check(results, 'the last troop cannot retreat: the button is disabled and says so', (await retreat.isDisabled()) && /No retreat/i.test(await retreat.innerText()) && /last troop/i.test(await retreat.getAttribute('title')), await retreat.innerText());
@@ -410,6 +436,8 @@ section('defeat', async (page) => {
   const text = (await page.getByTestId('gameover-screen').innerText()).replace(/\s+/g, ' ');
   check(results, 'one life: losing a single battle ends the game, with no button pressed', s.phase === 'gameover' && s.lives === 0 && s.troops === 0 && /Game over/i.test(text));
   check(results, 'the game over sound plays', (await lastSound(page)) === 'gameOver');
+  stand = await lastStandOn();
+  check(results, 'the heartbeat came back for the last attack and stopped when it was lost', stand.app === 0 && stand.beats === 2 && stand.stops === 2, JSON.stringify(stand));
   check(results, 'game over shows the empire and its flag', (await page.getByTestId('end-empire').innerText()).toLowerCase().includes(s.empire.name.toLowerCase()) && (await page.getByTestId('end-empire').locator('canvas.empire-flag').count()) === 1, (await page.getByTestId('end-empire').innerText()).replace(/\n/g, ' '));
   check(results, 'game over shows countries conquered, best streak, battles fought, score', (await page.getByTestId('stat-conquered').innerText()).startsWith('0') && (await page.getByTestId('stat-streak').innerText()) === String(s.bestStreak) && (await page.getByTestId('stat-battles').innerText()) === '2' && s.battles === 2 && /Battles fought/i.test(text) && !/Turns/i.test(text) && (await page.getByTestId('stat-score').innerText()) === '0', text);
   check(results, 'with no continent conquered, the bonus is explained rather than awarded', (await page.getByTestId('stat-continents').getAttribute('data-value')) === '0' && /worth \+10/.test(await page.getByTestId('stat-continents').innerText()));

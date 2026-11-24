@@ -188,6 +188,8 @@ export interface BattleState {
   startTroops: number;
   asked: string[];
   question: Question;
+  /** The tiers dealt for this battle's questions after the opening flag (see battleRhythm). */
+  rhythm: Difficulty[];
 }
 
 export type BattleOutcome = 'ongoing' | 'won' | 'lost';
@@ -243,8 +245,10 @@ export interface GameState {
   continentsCompleted: Continent[];
   /** Defenders already beaten in countries the player retreated from. They recover while the player attacks elsewhere. */
   wounds: Record<string, number>;
-  /** Signatures of the questions asked most recently, so later battles ask something new. */
+  /** Signatures of the questions asked most recently, in this game and the last ones, so later battles ask something new. */
   recentSigs: string[];
+  /** The wrong options shown with each recent question, by signature, so a returning question rotates them. */
+  recentDecoys: Record<string, string[]>;
   lastEvent: GameEvent | null;
   /** Bumped on every event so the UI can key animations and toasts. */
   eventSeq: number;

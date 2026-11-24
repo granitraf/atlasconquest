@@ -156,14 +156,28 @@ export function resolveBattleAnswer(
 }
 
 /**
- * How far along a battle is, 0..1. Defenders eliminated push it up; troop
- * losses scale it back down, so a wrong answer visibly drops the bar.
+ * Wrong answers an army can still survive: each costs WRONG_ANSWER_TROOP_LOSS, and the one that takes the
+ * last troop ends the game. 10 troops survive 4; 2 survive none.
  */
-export function battleProgress(defenders: number, maxDefenders: number, troops: number, startTroops: number): number {
-  if (maxDefenders <= 0 || defenders <= 0) return 1;
-  const advance = (maxDefenders - defenders) / maxDefenders;
-  const strength = startTroops > 0 ? Math.max(0, Math.min(1, troops / startTroops)) : 0;
-  return advance * strength;
+export function mistakesLeft(troops: number): number {
+  return troops > 0 ? Math.ceil(troops / WRONG_ANSWER_TROOP_LOSS) - 1 : 0;
+}
+
+/** The last stand: 2 troops (2,000 on screen) or fewer, so the next wrong answer ends the game. */
+export function isLastStand(troops: number): boolean {
+  return troops > 0 && mistakesLeft(troops) === 0;
+}
+
+/**
+ * Where a siege stands: the enemy's wall is one brick per defender (1,000 on screen). Bricks only ever
+ * fall, one per right answer (two for a Hard one), so `fallen` of `total` is exactly how far the siege
+ * has got. `toWin` is the most right answers still needed.
+ */
+export function siegeProgress(defenders: number, maxDefenders: number): { fallen: number; total: number; toWin: number; share: number } {
+  const total = Math.max(1, Math.ceil(maxDefenders));
+  const toWin = Math.max(0, Math.ceil(defenders));
+  const fallen = Math.min(total, Math.max(0, total - toWin));
+  return { fallen, total, toWin, share: fallen / total };
 }
 
 /** Do two countries have a coast on the same sea lane? */

@@ -372,7 +372,11 @@ export function Rules({ data, onClose }: Props) {
               only opens once you hold a coast on it. Far from everything? The nearest shores open up, so there are always at least{' '}
               {MIN_TARGETS} countries to attack.
             </li>
-            <li>Every battle opens with the country's flag, then the questions get harder.</li>
+            <li>Every battle opens with the country's flag. After that the difficulty is shuffled: any question can be Easy, Medium or Hard.</li>
+            <li>
+              The siege bar on the left is the enemy's wall: a brick falls for every {soldiers(1)} enemies beaten. It shows how many right
+              answers you still need, and how many mistakes you can still survive.
+            </li>
             <li>
               Anything about the country can come up: its capital, borders and seas, and also its national sport, its biggest export, its
               famous people and the year it gained independence.

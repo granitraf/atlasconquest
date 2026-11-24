@@ -82,9 +82,6 @@ export function tierOf(score: number): Difficulty {
 /** For a close-call flag question, the wrong flags come from this many of the most similar ones (after the hand-picked lookalikes). */
 export const FLAG_NEAREST = 4;
 
-/** Chance that an opening flag question uses the closest-call options rather than any of the similar flags. */
-export const FLAG_CLOSE_CHANCE = 0.5;
-
 /** A curated fact is only asked if it is at least this well known (3 worldwide, 2 well-read player, 1 local). */
 export const FACT_MIN_RECOGNITION = 2;
 /** A person is only asked about if they are recognisable worldwide. */
@@ -347,6 +344,12 @@ function nearestFirst(world: World, c: Country, names: readonly string[], has: (
     .map((entry) => entry.name);
 }
 
+/** Wrong options a player has already been shown, by question signature (see GameState.recentDecoys). */
+export type SeenDecoys = Readonly<Record<string, readonly string[]>>;
+const NO_DECOYS: SeenDecoys = {};
+/** How many drafts of a returning question are made to find wrong options the player has not seen yet. */
+export const DECOY_DRAFTS = 4;
+
 /** Wrong options are drawn from this many of the nearest candidates: a tight handful for a close call, a wider ring otherwise. */
 const NEAREST_POOL: Record<Closeness, number> = { 0: 8, 1: 4 };
 
@@ -547,13 +550,15 @@ const GENERATORS: Record<QuestionType, Generator> = {
     const sig = `flag:${c.id}`;
     if (exclude.has(sig) || !c.cca2) return null;
     // Every option is a flag that resembles the right one in its colours and layout (`flagKin`, worked
-    // out from the flag images). Close calls lead with the hand-picked lookalikes and the nearest few
-    // of those; otherwise any three of the ten most alike. Identical flags are never offered together.
+    // out from the flag images). A close call always has one of the hand-picked lookalikes; the other
+    // options come from the remaining lookalikes and the few flags most alike, so they can rotate from one
+    // game to the next while every one stays a close call. Otherwise any three of the ten most alike.
+    // Identical flags are never offered together.
     const kin = (c.flagKin ?? []).map((id) => world.byId[id]).filter(Boolean);
-    const lookalikes = world.all.filter((o) => flagsLookAlike(o, c));
+    const lookalikes = shuffle(rng, world.all.filter((o) => flagsLookAlike(o, c) && !flagsIdentical(o, c)));
     const tiers =
       closeness === 1
-        ? [lookalikes, kin.slice(0, FLAG_NEAREST), kin.slice(FLAG_NEAREST), ...regionTiers(world, c)]
+        ? [lookalikes.slice(0, 1), [...lookalikes.slice(1), ...kin.slice(0, FLAG_NEAREST)], kin.slice(FLAG_NEAREST), ...regionTiers(world, c)]
         : [kin, lookalikes, ...continentTiers(world, c)];
     const wrong = collect(tiers, 3, rng, (o) => (flagsIdentical(o, c) ? null : o), flagIdentity, [flagIdentity(c)]);
     return {
@@ -1022,12 +1027,23 @@ export function generateQuestion(
   exclude: Exclude = NONE,
   closeness: Closeness = 1,
   known: Exclude = NONE,
+  seenDecoys: SeenDecoys = NO_DECOYS,
 ): Question | null {
   const country = world.byId[countryId];
   if (!country) return null;
   const applied: Closeness = USES_CLOSENESS[type] ? closeness : 0;
-  const draft = GENERATORS[type](world, country, applied, exclude, rng, known);
+  let draft = GENERATORS[type](world, country, applied, exclude, rng, known);
   if (!draft || draft.wrong.length !== 3) return null;
+  // A question the player has met before rotates its wrong options: a few more drafts are made from the
+  // same pools, so every one is just as tempting, and the one that repeats the fewest is kept.
+  const seen = seenDecoys[draft.sig];
+  if (seen?.length) {
+    const repeats = (d: Draft) => d.wrong.filter((option) => seen.includes(option.label)).length;
+    for (let i = 1; i < DECOY_DRAFTS && repeats(draft) > 0; i++) {
+      const other = GENERATORS[type](world, country, applied, exclude, rng, known);
+      if (other && other.sig === draft.sig && other.wrong.length === 3 && repeats(other) < repeats(draft)) draft = other;
+    }
+  }
   const options = draft.ordered ?? shuffle(rng, [draft.correct, ...draft.wrong]);
   const score = questionScore(type, country.fame, applied);
   return {
@@ -1069,6 +1085,8 @@ export interface AskContext {
   stale?: Exclude;
   /** Countries the player holds. */
   known?: Exclude;
+  /** Wrong options shown before, by signature: a returning question rotates them. */
+  decoys?: SeenDecoys;
 }
 
 /**
@@ -1093,7 +1111,7 @@ export function pickForTier(
   target: Difficulty,
   rng: Rng,
   exclude: Exclude = NONE,
-  { stale = NONE, known = NONE }: AskContext = {},
+  { stale = NONE, known = NONE, decoys = NO_DECOYS }: AskContext = {},
 ): Question | null {
   const country = world.byId[countryId];
   if (!country) return null;
@@ -1126,7 +1144,7 @@ export function pickForTier(
     for (const set of avoid) {
       for (const ordered of orderedByTier) {
         for (const combo of ordered) {
-          const question = generateQuestion(world, countryId, combo.type, rng, set, combo.closeness, known);
+          const question = generateQuestion(world, countryId, combo.type, rng, set, combo.closeness, known, decoys);
           if (question) return question;
         }
       }
@@ -1142,24 +1160,42 @@ export function pickQuestion(world: World, countryId: string, rng: Rng, exclude:
   return pickForTier(world, countryId, target, rng, exclude);
 }
 
-/** The opening question of the recruit phase and of every battle: the flag, with a coin flip for how close the options are. */
-function openingFlag(world: World, countryId: string, rng: Rng, exclude: Exclude): Question | null {
-  const closeness: Closeness = rng() < FLAG_CLOSE_CHANCE ? 1 : 0;
-  return generateQuestion(world, countryId, 'flag', rng, exclude, closeness);
+/**
+ * The opening question of the recruit phase and of every battle: the flag, always with the closest calls
+ * there are, the hand-picked lookalikes first and then the flags most alike in colour and layout.
+ */
+function openingFlag(world: World, countryId: string, rng: Rng, exclude: Exclude, decoys: SeenDecoys): Question | null {
+  return generateQuestion(world, countryId, 'flag', rng, exclude, 1, NONE, decoys);
 }
 
-/** Target tier for each question of a battle after the opening flag: Easy, Medium, Medium, then mostly Hard. */
-export function battleDifficulty(index: number, rng: Rng): Difficulty {
-  if (index <= 1) return 'easy';
-  if (index <= 3) return 'medium';
-  return rng() < 0.75 ? 'hard' : 'medium';
+/**
+ * The tiers a battle's questions are drawn from after the opening flag, as a deck: shuffled, dealt one per
+ * question, and shuffled again when it runs out. So no two battles run alike and none can be read ahead,
+ * while every six questions hold one Easy, two Medium and three Hard.
+ */
+export const RHYTHM_DECK: Difficulty[] = ['easy', 'medium', 'medium', 'hard', 'hard', 'hard'];
+/** Questions dealt in advance for a battle; a longer battle starts the deck over. */
+export const RHYTHM_LENGTH = 48;
+
+/** A battle's rhythm: the deck shuffled over and over, dealt in advance when the battle begins. */
+export function battleRhythm(rng: Rng): Difficulty[] {
+  const rhythm: Difficulty[] = [];
+  while (rhythm.length < RHYTHM_LENGTH) rhythm.push(...shuffle(rng, RHYTHM_DECK));
+  return rhythm;
+}
+
+/** Target tier for question `index` of a battle (0 is the opening flag). */
+export function battleDifficulty(index: number, rhythm: readonly Difficulty[]): Difficulty {
+  if (rhythm.length === 0) return 'medium';
+  return rhythm[(Math.max(1, index) - 1) % rhythm.length];
 }
 
 /**
  * Next question in a battle. The first is always the target's flag; after that
- * each slot asks for a tier. Never repeats a signature already asked in that
+ * each slot asks for the tier its rhythm deals. Never repeats a signature already asked in that
  * battle, rotates through the question types, steers clear of questions asked
- * earlier in the game (`recent`) and never makes a country the player holds
+ * earlier in this game or the last ones (`recent`), rotates wrong options the player has seen
+ * (`decoys`) and never makes a country the player holds
  * (`owned`) the answer to a border question.
  */
 export function nextBattleQuestion(
@@ -1167,14 +1203,19 @@ export function nextBattleQuestion(
   targetId: string,
   asked: readonly string[],
   rng: Rng,
-  { recent = [], owned = [] }: { recent?: readonly string[]; owned?: readonly string[] } = {},
+  {
+    recent = [],
+    owned = [],
+    decoys = NO_DECOYS,
+    rhythm = RHYTHM_DECK,
+  }: { recent?: readonly string[]; owned?: readonly string[]; decoys?: SeenDecoys; rhythm?: readonly Difficulty[] } = {},
 ): Question {
   const exclude = new Set(asked);
-  const context: AskContext = { stale: new Set(recent), known: new Set(owned) };
+  const context: AskContext = { stale: new Set(recent), known: new Set(owned), decoys };
   const index = asked.length;
   const question =
-    (index === 0 ? openingFlag(world, targetId, rng, exclude) : null) ??
-    pickForTier(world, targetId, battleDifficulty(index, rng), rng, exclude, context) ??
+    (index === 0 ? openingFlag(world, targetId, rng, exclude, decoys) : null) ??
+    pickForTier(world, targetId, battleDifficulty(index, rhythm), rng, exclude, context) ??
     pickForTier(world, targetId, 'medium', rng, exclude) ??
     pickForTier(world, targetId, 'medium', rng);
   if (!question) throw new Error(`No question can be generated for ${targetId}`);
@@ -1187,15 +1228,22 @@ export const RECRUIT_RAMP: Difficulty[] = ['easy', 'easy', 'medium', 'medium', '
 /**
  * Next question of the opening recruit phase, about the player's starting
  * country. Opens with its flag, then follows RECRUIT_RAMP. No question and no
- * type comes up twice.
+ * type comes up twice, and questions from earlier games (`recent`) wait while
+ * anything else fits.
  */
-export function nextRecruitQuestion(world: World, countryId: string, asked: readonly string[], rng: Rng): Question {
+export function nextRecruitQuestion(
+  world: World,
+  countryId: string,
+  asked: readonly string[],
+  rng: Rng,
+  { recent = [], decoys = NO_DECOYS }: { recent?: readonly string[]; decoys?: SeenDecoys } = {},
+): Question {
   const exclude = new Set(asked);
   const index = asked.length;
   const target = RECRUIT_RAMP[Math.min(index, RECRUIT_RAMP.length - 1)];
   const question =
-    (index === 0 ? openingFlag(world, countryId, rng, exclude) : null) ??
-    pickForTier(world, countryId, target, rng, exclude) ??
+    (index === 0 ? openingFlag(world, countryId, rng, exclude, decoys) : null) ??
+    pickForTier(world, countryId, target, rng, exclude, { stale: new Set(recent), decoys }) ??
     pickForTier(world, countryId, target, rng);
   if (!question) throw new Error(`No recruit question can be generated for ${countryId}`);
   return question;

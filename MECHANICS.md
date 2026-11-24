@@ -156,9 +156,14 @@ The other slots prefer the remaining types.
    (in the battle, or in the recruit phase). Twelve questions against a country with twelve
    types to ask are twelve different types, so the four themes of section 12 each come up
    once before anything repeats and never crowd the others out.
-2. **Nothing asked before.** The game remembers its last 150 questions, from the recruit phase
-   and battles alike. A remembered question is passed over while the types whose turn it is
-   have something new to ask.
+2. **Nothing asked before.** The game remembers the last 300 questions asked on this device
+   (`RECENT_SIGS_KEPT`), from the recruit phase and battles alike, and across games: a new game
+   starts from that memory, kept in the browser. A remembered question is passed over while the
+   types whose turn it is have something new to ask.
+   - **Rotating wrong options.** For each remembered question the game also keeps the wrong
+     options it showed (the last 6). When it is asked again, a few drafts are made from the
+     same pools (`DECOY_DRAFTS`, 4) and the one repeating the fewest of them is used. Every
+     draft is just as close a call, so the question is no easier; it just looks different.
 3. **The slot's tier,** then the nearest tier (the easier one on a tie). Within a tier, types
    that cannot be asked any harder go first, which saves the others for later, harder slots.
 
@@ -180,9 +185,11 @@ and 9). The question card shows the tier.
 
 - 5 questions about the starting country, asked once, before the first attack. It never
   comes back: not after a conquest, a retreat or anything else.
-- Slots: **flag, Easy, Medium, Medium, Hard.**
-- The first question is always the starting country's flag. Its closeness is a coin flip
-  (`FLAG_CLOSE_CHANCE`, 0.5) and its tier is whatever the score works out to.
+- Slots: **flag, Easy, Medium, Medium, Hard.** (Unlike battles, the recruit phase keeps this
+  fixed ramp, so what a start can recruit stays predictable.)
+- The first question is always the starting country's flag, always as a close call: at least
+  one hand-picked lookalike flag, the rest from the other lookalikes and the flags most alike
+  in colour. Its tier is whatever the score works out to.
 - Every other slot is filled by the rules in section 6: an unused type, then the slot's tier
   or the nearest achievable one. The five questions are five different types.
 - Reward per correct answer: Easy 1 troop, Medium 2, Hard 3. Wrong answer: 0.
@@ -190,7 +197,7 @@ and 9). The question card shows the tier.
   reaches 5).
 - **What a perfect phase is worth depends on the start.** A famous country has no Hard
   questions: 1 + 1 + 2 + 2 + (2 × 2) = 10, taking the army from 10 to 20. A mid-known country
-  that can reach Hard ends on 3 × 2, and its flag can score Medium: up to 23. An obscure country has no Easy questions:
+  that can reach Hard ends on 3 × 2, and its flag scores Medium: 2 + 1 + 2 + 2 + (3 × 2) = 13, up to 23. An obscure country has no Easy questions:
   2 + 2 + 2 + 2 + (3 × 2) = 14, up to 24. Harder starts are asked harder questions and can
   field a larger army.
 - **Streak:** consecutive correct answers across the whole game, in the recruit phase and in
@@ -252,9 +259,14 @@ The attack panel shows each target's defenders before the player commits, includ
 ## 9. Battles
 
 - Questions are about the target country.
-- Slots: **flag, Easy, Medium, Medium,** then each further question is **Hard 75% of the
-  time and Medium 25%.** Slots are filled as in the recruit phase, with the same
-  nearest-tier fallback. The opening flag's closeness is the same coin flip.
+- The first question is always the target's flag, as a close call (section 7).
+- **After the flag, a shuffled rhythm.** Each battle deals its tiers from a deck of one Easy,
+  two Medium and three Hard (`RHYTHM_DECK`), shuffled, and shuffled again whenever it runs
+  out. Any tier can come straight after the flag, no two battles run alike, and the order is
+  dealt when the battle starts, so a reload keeps it. Over every six questions the mix is the
+  same, so a battle is no harder or easier on average than before. Slots are filled as in the
+  recruit phase, with the same nearest-tier fallback: a famous country still never scores
+  Hard, an obscure one never Easy.
 - A correct answer kills 1 defender, or 2 if the question actually scored Hard. A wrong
   answer or timeout costs the player 2 troops.
 - A question is never repeated within a battle, and no type is asked twice while another is
@@ -269,6 +281,15 @@ The attack panel shows each target's defenders before the player commits, includ
   question arrives by itself. While the result is up there is no button on the card at all,
   so nothing can be clicked by accident. `Enter` or `Space` skips the wait.
 - **Lose:** troops reach 0. The game is over (one life).
+- **The siege bar** (left of the map) is the enemy's wall: one brick per 1,000 enemies. A brick
+  falls for every 1,000 beaten, so the bar fills exactly as far as the battle has got and
+  never drops back. Above it: the most right answers still needed to win (a Hard answer
+  counts twice). Below it: the wrong answers the army can still survive, which is
+  `ceil(troops / 2) - 1`. A wrong answer shakes the bar and takes one away.
+- **The last stand.** With 2,000 troops or fewer in a battle (`isLastStand`), the next wrong
+  answer ends the game. A heartbeat plays over a low drone, the edges of the screen pulse
+  red, and the siege bar reads "Last chance". It stops when the battle ends or the player
+  retreats.
 
 ## 10. Retreat and wounded countries
 

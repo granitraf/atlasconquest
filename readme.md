@@ -147,7 +147,8 @@ src/logo.json            the emblem's pixels: two crossed gold swords (drawn, wi
 src/names/               the empire name check: validateEmpireName.ts, blocked-names.json, allowed-names.json
                          (after editing a list: `npm run names`, then re-run supabase/schema.sql in Supabase)
 src/leaderboard.ts       the leaderboard client: sends a finished run, reads the top five (plain fetch, no library)
-src/sound.ts             synthesised sound effects (hover pulse, snap, whoosh, trumpet call, countdown tick) and the campaign voice
+src/sound.ts             synthesised sound effects (hover pulse, snap, whoosh, trumpet calls and fanfare, applause,
+                         countdown tick, last-stand heartbeat) and the campaign voice
 src/App.tsx              wires state to components
 tests/                   unit tests for src/game, the rasteriser and the sound pitch
 e2e/                     browser checks
