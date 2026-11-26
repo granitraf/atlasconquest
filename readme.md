@@ -124,6 +124,8 @@ scripts/derive.mjs       applies the config files to the data: fame, seas, featu
 config/fame.json         the editable fame lists: famous, familiar, obscure
 config/geography.json    which seas, rivers, deserts, ranges and rainforests each country has
 config/independence.json the year each country gained independence, with any second significant year
+config/religions.json    the religion with the most followers in each country, and where that is too close to ask
+config/driving.json      which countries drive on the left, and where the question is worth asking
 public/data/facts.json   the curated facts and hooks (hand-edited; reviewed in reports/facts-review.md)
 MECHANICS.md             the rules in full
 supabase/schema.sql      the leaderboard's database: one table, read-only to the public, and the function that records a run

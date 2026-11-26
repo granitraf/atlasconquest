@@ -380,7 +380,7 @@ export function Rules({ data, onClose }: Props) {
             </li>
             <li>
               Anything about the country can come up: its capital, borders and seas, and also its national sport, its biggest export, its
-              famous people and the year it gained independence.
+              famous people, its largest religion, the year it gained independence and even which side of the road it drives on.
             </li>
             <li className="good">
               Right answer: <b>−{soldiers(defenderKills('easy'))} enemies killed</b> (a Hard question: −{soldiers(defenderKills('hard'))}).

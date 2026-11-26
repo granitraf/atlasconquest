@@ -29,6 +29,9 @@ export const TYPE_WEIGHT: Record<QuestionType, 1 | 2 | 3> = {
   export: 2,
   history: 2,
   star: 2,
+  religion: 2,
+  // Left or right: two options, so it weighs no more than a flag.
+  drive: 1,
   // A year has to be known: there is nothing on the map to work it out from.
   independence: 3,
   population: 3,
@@ -58,6 +61,8 @@ export const USES_CLOSENESS: Record<QuestionType, boolean> = {
   // For people the "close call" is someone known only to a well-read player rather than to everyone.
   history: true,
   star: true,
+  religion: false,
+  drive: false,
   independence: false,
   population: true,
   area: true,
@@ -86,6 +91,8 @@ export const CLOSENESS_BONUS: Record<QuestionType, 0 | 1 | 2> = {
   export: 0,
   history: 2,
   star: 2,
+  religion: 0,
+  drive: 0,
   independence: 0,
   population: 2,
   area: 2,
@@ -108,6 +115,10 @@ export const QUESTION_TYPES = Object.keys(TYPE_WEIGHT) as QuestionType[];
 export type Closeness = 0 | 1;
 
 export const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard'];
+
+/** How many options a type shows: four, unless it says otherwise. */
+export const OPTION_COUNT: Partial<Record<QuestionType, number>> = { drive: 2 };
+export const optionCount = (type: QuestionType): number => OPTION_COUNT[type] ?? 4;
 
 export function questionScore(type: QuestionType, fame: 0 | 1 | 2, closeness: Closeness): number {
   return TYPE_WEIGHT[type] + fame + (USES_CLOSENESS[type] ? CLOSENESS_BONUS[type] * closeness : 0) + (EXPERT_BONUS[type] ?? 0);
@@ -138,6 +149,16 @@ export const STAR_KINDS = new Set(['musician', 'actor', 'footballer', 'athlete']
  */
 export const SHARED_TURN: Partial<Record<QuestionType, string>> = { history: 'people', star: 'people' };
 const turnOf = (type: QuestionType): string => SHARED_TURN[type] ?? type;
+
+/**
+ * The religions offered as answers: the five that are the largest in at least one country, and Sikhism,
+ * which is the largest nowhere but is a real choice around India.
+ */
+export const RELIGIONS = ['Christianity', 'Islam', 'Hinduism', 'Buddhism', 'Judaism', 'Sikhism'];
+/** Where a religion that is the largest in no country is at home, for judging how plausible it is nearby. */
+const RELIGION_HOME: Record<string, string> = { Sikhism: 'IND' };
+/** Wrong religions are drawn from this many of the most plausible ones for the region. */
+export const RELIGION_POOL = 4;
 
 /** Sports of ice and snow: never offered as a wrong option for a country closer to the equator than this. */
 export const WINTER_SPORTS = new Set(['Ice hockey', 'Bandy', 'Curling', 'Cross-country skiing', 'Alpine skiing', 'Biathlon', 'Ski jumping', 'Skiing', 'Floorball']);
@@ -925,6 +946,43 @@ const GENERATORS: Record<QuestionType, Generator> = {
   fact: (world, c, _closeness, exclude, rng) => factDraft(world, c, exclude, rng, 'fact'),
   sport: (world, c, _closeness, exclude, rng) => factDraft(world, c, exclude, rng, 'sport'),
   export: (world, c, _closeness, exclude, rng) => factDraft(world, c, exclude, rng, 'export'),
+  religion(world, c, _closeness, exclude, rng) {
+    const sig = `religion:${c.id}`;
+    if (exclude.has(sig) || !c.religion) return null;
+    // The wrong options are the religions a player might plausibly pick: first the others with a large
+    // following in the country itself (Hinduism and Islam in Suriname), then the ones that are the largest
+    // in the nearest other countries.
+    const reach = (religion: string) => {
+      if (RELIGION_HOME[religion] === c.id) return 0;
+      let best = Infinity;
+      for (const o of world.all) {
+        if (o.id !== c.id && (o.religion === religion || RELIGION_HOME[religion] === o.id)) best = Math.min(best, distanceKm(c, o));
+      }
+      return best;
+    };
+    const nearest = RELIGIONS.filter((religion) => religion !== c.religion)
+      .map((religion) => ({ religion, km: reach(religion) }))
+      .sort((a, b) => a.km - b.km || a.religion.localeCompare(b.religion))
+      .map((entry) => entry.religion);
+    // The religions with a large following in the country itself come first: they are the real temptations.
+    const rivals = shuffle(rng, c.religionRivals ?? []);
+    const tempting = [...rivals, ...nearest.filter((religion) => !rivals.includes(religion))].slice(0, RELIGION_POOL);
+    // The two most tempting are always there; the third is one of the next two.
+    const wrong = [...tempting.slice(0, 2), pick(rng, tempting.slice(2))];
+    return { sig, prompt: `Which religion has the most followers in ${countryPhrase(c)}?`, correct: { label: c.religion }, wrong: labels(wrong) };
+  },
+
+  drive(_world, c, _closeness, exclude) {
+    const sig = `drive:${c.id}`;
+    // Only where it is not obvious: see config/driving.json.
+    if (exclude.has(sig) || !c.drive?.ask) return null;
+    const left: QuestionOption = { label: 'Left' };
+    const right: QuestionOption = { label: 'Right' };
+    const correct = c.drive.side === 'left' ? left : right;
+    // Two options, always in the same order.
+    return { sig, prompt: `Which side of the road do they drive on in ${countryPhrase(c)}?`, correct, wrong: [correct === left ? right : left], ordered: [left, right] };
+  },
+
   history: (world, c, closeness, exclude, rng) => factDraft(world, c, exclude, rng, 'history', closeness),
   star: (world, c, closeness, exclude, rng) => factDraft(world, c, exclude, rng, 'star', closeness),
 
@@ -1105,7 +1163,8 @@ export function generateQuestion(
   if (!country) return null;
   const applied: Closeness = USES_CLOSENESS[type] ? closeness : 0;
   let draft = GENERATORS[type](world, country, applied, exclude, rng, known);
-  if (!draft || draft.wrong.length !== 3) return null;
+  const wrongNeeded = optionCount(type) - 1;
+  if (!draft || draft.wrong.length !== wrongNeeded) return null;
   // A question the player has met before rotates its wrong options: a few more drafts are made from the
   // same pools, so every one is just as tempting, and the one that repeats the fewest is kept.
   const seen = seenDecoys[draft.sig];
@@ -1113,7 +1172,7 @@ export function generateQuestion(
     const repeats = (d: Draft) => d.wrong.filter((option) => seen.includes(option.label)).length;
     for (let i = 1; i < DECOY_DRAFTS && repeats(draft) > 0; i++) {
       const other = GENERATORS[type](world, country, applied, exclude, rng, known);
-      if (other && other.sig === draft.sig && other.wrong.length === 3 && repeats(other) < repeats(draft)) draft = other;
+      if (other && other.sig === draft.sig && other.wrong.length === wrongNeeded && repeats(other) < repeats(draft)) draft = other;
     }
   }
   const options = draft.ordered ?? shuffle(rng, [draft.correct, ...draft.wrong]);

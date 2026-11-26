@@ -24,6 +24,12 @@ export interface Country {
   capital: string;
   /** The year the country gained independence, with other significant years to steer clear of. Null if it has no clear date. */
   independence: { year: number; also: number[] } | null;
+  /** The religion with the most followers, or null where that is contested or unknown. */
+  religion: string | null;
+  /** Other religions with a large following there: the most tempting wrong options. */
+  religionRivals: string[];
+  /** The side of the road the country drives on. `ask` is false where it is too obvious to be worth asking. */
+  drive: { side: 'left' | 'right'; ask: boolean };
   /** Well-known cities other than the capital: the tempting wrong answers to "what is the capital?". */
   cities: string[];
   /** Ids of the countries whose flags look most like this one's, most alike first. */
@@ -115,6 +121,8 @@ export type QuestionType =
   | 'export'
   | 'history'
   | 'star'
+  | 'religion'
+  | 'drive'
   | 'independence'
   | 'population'
   | 'area'

@@ -212,7 +212,8 @@ export const movedOn = (page, sig, timeout = 8000) =>
 export async function answer(page, correct, { wait = true } = {}) {
   const before = await state(page);
   const q = before.phase === 'recruit' ? before.recruit.question : before.battle.question;
-  const index = correct ? q.correctIndex : (q.correctIndex + 1) % 4;
+  // A wrong option: the next one round (most questions have four options, driving side has two).
+  const index = correct ? q.correctIndex : (q.correctIndex + 1) % q.options.length;
   await page.getByTestId(`option-${index}`).click();
   await page.getByTestId('verdict').waitFor();
   const after = await state(page);

@@ -1434,6 +1434,47 @@ section('decimate', async (page) => {
   check(results, 'it counts as a battle and spends the streak; the map is back to white targets', s.battles === before.battles + 1 && s.streak === 0 && !s.decimateReady && (await chip.getAttribute('data-charge')) === 'none' && (await page.locator('path.country.s-decimate').count()) === 0, `battles ${before.battles} -> ${s.battles}, streak ${s.streak}`);
 });
 
+// ------------------------------------------------------------ two options
+// The driving-side question has two options, not four: the card, the keys and the battle all cope.
+section('two-options', async (page) => {
+  await open(page);
+  await startGame(page, 'World', 'KOR');
+  await recruit(page);
+  await attack(page, 'JPN');
+  const ask = (side) => page.evaluate((side) => {
+    const s = window.__atlas.state;
+    const question = { sig: `drive:JPN:${Math.random()}`, type: 'drive', difficulty: 'easy', score: 1, closeness: 0, countryId: 'JPN', prompt: 'Which side of the road do they drive on in Japan?', options: [{ label: 'Left' }, { label: 'Right' }], correctIndex: side === 'Left' ? 0 : 1 };
+    window.__atlas.setState({ ...s, feedback: null, battle: { ...s.battle, question } });
+  }, side);
+  await ask('Left');
+  await page.waitForFunction(() => window.__atlas.state.battle.question.type === 'drive');
+  const card = page.getByTestId('question-card');
+  const options = await card.locator('.option').evaluateAll((els) => els.map((el) => { const r = el.getBoundingClientRect(); return { key: el.querySelector('.option-key').innerText.trim(), label: el.querySelector('.option-label').innerText.trim(), top: Math.round(r.top), width: Math.round(r.width) }; }));
+  check(results, 'the driving question shows two options, Left and Right, lettered A and B', options.map((o) => `${o.key} ${o.label}`).join(' | ') === 'A Left | B Right' && (await page.getByTestId('option-2').count()) === 0, JSON.stringify(options));
+  check(results, 'the two options sit side by side at the same size, and every text fits its box', options[0].top === options[1].top && Math.abs(options[0].width - options[1].width) <= 1 && (await misfits(page)).length === 0, (await misfits(page)).join(' ; '));
+  check(results, 'it asks which side they drive on, by name', /Which side of the road do they drive on in Japan\?/.test(await card.innerText()));
+  await page.screenshot({ path: SHOTS + '95-two-options.png' });
+  // Keys for options that are not there do nothing.
+  let before = await state(page);
+  await page.keyboard.press('3');
+  await page.keyboard.press('D');
+  check(results, 'the keys for a third and fourth option do nothing', (await state(page)).feedback === null && (await page.getByTestId('verdict').count()) === 0);
+  await page.keyboard.press('B');
+  await page.getByTestId('verdict').waitFor();
+  let after = await state(page);
+  check(results, 'B answers Right, which is wrong for Japan: the answer is shown, and it costs troops like any wrong answer', !after.feedback.correct && after.troops === before.troops - 2 && /The answer was\s+Left/.test((await page.getByTestId('verdict').innerText()).replace(/\s+/g, ' ')), (await page.getByTestId('verdict').innerText()).replace(/\s+/g, ' '));
+  await ask('Left');
+  await page.waitForFunction(() => window.__atlas.state.feedback === null && window.__atlas.state.battle.question.type === 'drive');
+  before = await state(page);
+  await page.getByTestId('option-0').click();
+  await page.getByTestId('verdict').waitFor();
+  after = await state(page);
+  check(results, 'clicking Left is right: an enemy unit falls', after.feedback.correct && after.battle.defenders === before.battle.defenders - 1, `${before.battle.defenders} -> ${after.battle.defenders}`);
+  await page.keyboard.press('Enter');
+  await page.waitForFunction(() => window.__atlas.state.feedback === null);
+  check(results, 'the battle carries on with an ordinary four-option question', (await card.locator('.option').count()) === 4);
+});
+
 // ----------------------------------------------------------------- runner
 for (const [name, fn] of Object.entries(sections)) {
   if (only && only !== name) continue;

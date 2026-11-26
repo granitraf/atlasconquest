@@ -118,8 +118,8 @@ Score 1–2 is **Easy**, 3–4 is **Medium**, 5 or more is **Hard**.
 
 | Weight | Types |
 |---|---|
-| 1 | flag, capital, water |
-| 2 | border, currency, language, domain, brand, major feature, globe line, curated fact, national sport, main export, history makers, stars |
+| 1 | flag, capital, water, driving side |
+| 2 | border, currency, language, domain, brand, major feature, globe line, curated fact, national sport, main export, history makers, stars, largest religion |
 | 3 | population, area, not-border, year of independence |
 
 National sport, main export, history makers and stars carry the weight of the curated facts they are
@@ -347,7 +347,7 @@ The attack panel shows each target's defenders before the player commits, includ
 
 ## 12. Question types
 
-Nineteen types, four options each, all generated from bundled data. In every question the
+Twenty-one types, four options each (two for the driving side), all generated from bundled data. In every question the
 country is named in the prompt and the answer is something about it, never its own name:
 an answer that would name the country ("Niger River" for Niger, "Indian Ocean" for India,
 the capital "Djibouti" for Djibouti) is never used. The one exception is the line-up
@@ -372,6 +372,8 @@ country is one of the four options, and is sometimes the answer.
 | 2 | History makers | Which of these historical leaders came from X? (and one wording per field: thinkers, religious leaders, composers, scientists, writers, artists, explorers) | 113 people in 54 countries. See "Famous figures" below. |
 | 2 | Stars | Which of these music stars is from X? (and actors, footballers, sports stars) | 214 people in 90 countries. See "Famous figures" below. |
 | 3 | Year of independence | In which year did X gain independence? | Four years in ascending order, a fixed distance apart. 150 qualify. |
+| 2 | Largest religion | Which religion has the most followers in X? | Only where that is clear. See "Religion and driving side" below. 215 qualify. |
+| 1 | Driving side | Which side of the road do they drive on in X? | **Two options:** Left, Right. Only where it is not obvious. See below. 114 qualify. |
 | 3 | Population | What is the population of X? / Which of these has the most people? / Which of these has the fewest people? | Three forms, taken in turn. The range form shows four adjacent ranges out of ten (under 10k … over 250M). The line-ups rank X against three countries from its region; the winner leads by at least 1.3×. No closeness. |
 | 3 | Area | Which of these is larger than X? / smaller than X? / Which of these is the biggest by area? / the smallest? / Which is closest in size to X? | Five forms, taken in turn. "Biggest" and "smallest" are line-ups of X and three countries from its region. Compared areas always differ by at least 1.3×. Effectively unlimited variants. No closeness. |
 | 3 | Not-border | Which of these does NOT border X? | Needs 3+ neighbours, at least two of which the player does not hold; at most one held neighbour is shown. 113 qualify. |
@@ -468,6 +470,33 @@ entry, every doubtful one and every country left out is listed in
     maker or a star, not both, until every other type has had its go. About 3% of battle
     questions are about people.
   - A country with nobody well known (Palau, Nauru) is never asked either.
+
+**Religion and driving side** come from `config/religions.json` and `config/driving.json`,
+applied by `npm run derive`. Both were written from memory; the doubtful entries are listed
+in `reports/new-questions-review.md`.
+
+- **Largest religion** (215 countries). The religion with the most followers among people who
+  have one, so a country where most people have none (Czechia, Estonia) still has an answer.
+  The answers are Christianity, Islam, Hinduism, Buddhism and Judaism. Fifteen countries are
+  never asked, because two religions are close (Nigeria, Bosnia and Herzegovina, Ivory
+  Coast, Eritrea, Chad), the figures disagree (Madagascar, Togo, Guinea-Bissau, Vietnam,
+  North Korea), religions overlap (Japan, China, Taiwan, Hong Kong), or the answer is the
+  country itself (Vatican City).
+  - **Wrong options** are the tempting ones: first the other religions with a large following
+    in the country itself (`rivals`: Hinduism and Islam in Suriname, Buddhism in South
+    Korea), then the religions that are the largest in the nearest other countries. The two
+    most tempting are always on the card; the third is one of the next two. Sikhism, the
+    largest religion nowhere, is offered around India and where it has a large community.
+- **Driving side** (114 countries). The only question with two options, always in the order
+  Left, Right. It is asked only where the answer is not obvious:
+  - every country that drives on the left (69), except the United Kingdom;
+  - a country that drives on the right only if it has a land border with a left-driving
+    country (Myanmar, Rwanda, China, Brazil…) or is listed as a surprise (`alsoAsk`: the
+    Philippines, Nigeria, the right-driving islands of the Caribbean and the Pacific…): 45.
+  - Never the United States, Canada, mainland Europe or most of Latin America.
+  - It weighs what a flag does (weight 1): Easy for famous and mid-known countries, Medium
+    for obscure ones, which have no Easy questions. Either way a right answer kills one
+    defender. The keys 1–2 and A–B answer it; 3, 4, C and D do nothing.
 
 ## 13. Information deliberately hidden
 

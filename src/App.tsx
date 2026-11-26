@@ -116,7 +116,8 @@ function Game({ data }: { data: GameData }) {
   // Development hook used by the end-to-end checks to read state; stripped from production builds.
   useEffect(() => {
     if (!import.meta.env.DEV) return;
-    (window as unknown as Record<string, unknown>).__atlas = { state: game, dispatch, data, sounds: soundLog };
+    // `setState` lets a check put a particular question on screen.
+    (window as unknown as Record<string, unknown>).__atlas = { state: game, dispatch, data, sounds: soundLog, setState: setGame };
   }, [game, dispatch, data]);
 
   const phase = game?.phase ?? null;

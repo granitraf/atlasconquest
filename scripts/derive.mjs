@@ -239,6 +239,61 @@ export function applyIndependence(countries, config) {
   return countries;
 }
 
+/**
+ * Sets `religion` from config/religions.json: the religion with the most followers, or null for a
+ * country where that is contested or unknown. Every country must be listed once.
+ */
+export function applyReligion(countries, config) {
+  const byId = new Map(countries.map((c) => [c.id, c]));
+  const seen = new Set();
+  const place = (id, religion) => {
+    const c = byId.get(id);
+    if (!c) throw new Error(`config/religions.json: unknown country "${id}"`);
+    if (seen.has(id)) throw new Error(`config/religions.json: "${id}" is listed twice`);
+    seen.add(id);
+    c.religion = religion;
+  };
+  for (const [religion, ids] of Object.entries(config.religions)) for (const id of ids) place(id, religion);
+  for (const id of Object.keys(config.skip)) place(id, null);
+  const missing = countries.filter((c) => !seen.has(c.id)).map((c) => c.id);
+  if (missing.length > 0) throw new Error(`config/religions.json: no entry for ${missing.join(', ')}`);
+  for (const id of Object.keys(config.unsure ?? {})) if (!byId.get(id)?.religion) throw new Error(`config/religions.json: unsure "${id}" has no religion`);
+  // The other religions with a large following in a country: its most tempting wrong options.
+  const known = new Set([...Object.keys(config.religions), 'Sikhism']);
+  for (const c of countries) c.religionRivals = [];
+  for (const [id, rivals] of Object.entries(config.rivals ?? {})) {
+    const c = byId.get(id);
+    if (!c?.religion) throw new Error(`config/religions.json: rivals for "${id}", which has no religion`);
+    for (const rival of rivals) {
+      if (!known.has(rival)) throw new Error(`config/religions.json: unknown religion "${rival}" for "${id}"`);
+      if (rival === c.religion) throw new Error(`config/religions.json: "${rival}" is the largest religion of "${id}", not a rival`);
+    }
+    c.religionRivals = [...rivals];
+  }
+  return countries;
+}
+
+/**
+ * Sets `drive` ({ side, ask }) from config/driving.json. `ask` is true where the side is not obvious:
+ * a left-driving country (unless listed as obvious), or a right-driving one that borders a left-driving
+ * country or is listed under `alsoAsk`.
+ */
+export function applyDriving(countries, config) {
+  const ids = new Set(countries.map((c) => c.id));
+  for (const id of [...config.left, ...config.obvious, ...Object.keys(config.alsoAsk)]) {
+    if (!ids.has(id)) throw new Error(`config/driving.json: unknown country "${id}"`);
+  }
+  const left = new Set(config.left);
+  const obvious = new Set(config.obvious);
+  for (const id of Object.keys(config.alsoAsk)) if (left.has(id)) throw new Error(`config/driving.json: "${id}" drives on the left, so it needs no alsoAsk`);
+  for (const c of countries) {
+    const side = left.has(c.id) ? 'left' : 'right';
+    const mixed = side === 'left' || c.borders.some((b) => left.has(b)) || c.id in config.alsoAsk;
+    c.drive = { side, ask: mixed && !obvious.has(c.id) };
+  }
+  return countries;
+}
+
 // ------------------------------------------------------------------ flag likeness
 //
 // Each flag is boiled down to which colours it uses and where: every pixel of a small copy is put in
@@ -334,6 +389,8 @@ export async function deriveAll(countries, topology) {
   applyLanes(countries, geography);
   applyCities(countries, await loadConfig('cities'));
   applyIndependence(countries, await loadConfig('independence'));
+  applyReligion(countries, await loadConfig('religions'));
+  applyDriving(countries, await loadConfig('driving'));
   await applyFlagKin(countries);
   applyLanguages(countries, await loadConfig('languages'));
   return countries;
@@ -347,6 +404,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   console.log(`Waters: ${count((c) => c.waters.length > 0)} countries. Features: ${count((c) => c.features.length > 0)}. Globe lines: ${count((c) => c.lines.length > 0)}.`);
   console.log(`Cities: ${count((c) => c.cities.length > 0)} countries have at least one besides the capital.`);
   console.log(`Independence: ${count((c) => c.independence)} countries have a year.`);
+  console.log(`Religion: ${count((c) => c.religion)} countries have a largest religion.`);
+  console.log(`Driving side: ${count((c) => c.drive.side === 'left')} drive on the left; the question is asked about ${count((c) => c.drive.ask)} countries (${count((c) => c.drive.ask && c.drive.side === 'left')} left, ${count((c) => c.drive.ask && c.drive.side === 'right')} right).`);
   const names = new Map(countries.map((c) => [c.id, c.name]));
   for (const id of ['AND', 'IRL', 'DEU', 'JPN', 'USA']) console.log(`Flags most like ${names.get(id)}: ${countries.find((c) => c.id === id).flagKin.map((k) => names.get(k)).join(', ')}.`);
   const lanes = [...new Set(countries.flatMap((c) => c.lanes))];

@@ -155,7 +155,7 @@ async function phone(viewport, tag) {
   check(results, `${tag}: country under attack is not covered by the card, HUD or side bar`, frame.top >= frame.tugBottom && frame.bottom <= frame.cardTop && frame.left >= frame.barRight && frame.right <= frame.w, JSON.stringify(Object.fromEntries(Object.entries(frame).map(([k, v]) => [k, Math.round(v)]))));
   await page.screenshot({ path: SHOTS + `64-${tag}-battle.png` });
   const s = await state(page);
-  await page.getByTestId(`option-${(s.battle.question.correctIndex + 1) % 4}`).tap();
+  await page.getByTestId(`option-${(s.battle.question.correctIndex + 1) % s.battle.question.options.length}`).tap();
   await page.getByTestId('verdict').waitFor();
   await page.waitForTimeout(350);
   await noOverflow(page, `${tag} battle feedback`);

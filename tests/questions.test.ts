@@ -33,6 +33,8 @@ import {
   battleRhythm,
   CLOSENESS_BONUS,
   EXPERT_BONUS,
+  RELIGIONS,
+  optionCount,
   bearing,
   bearingGap,
   combinations,
@@ -104,6 +106,10 @@ function isTrue(q: Question, optionIndex: number): boolean {
       return c.lines.includes(option.label) || c.linesAvoid.includes(option.label);
     case 'independence':
       return Number(option.label) === c.independence!.year;
+    case 'religion':
+      return option.label === c.religion;
+    case 'drive':
+      return option.label.toLowerCase() === c.drive.side;
     case 'fact':
     case 'sport':
     case 'export':
@@ -135,14 +141,16 @@ function isTrue(q: Question, optionIndex: number): boolean {
 
 function checkWellFormed(q: Question) {
   const c = world.byId[q.countryId];
-  expect(q.options).toHaveLength(4);
+  // Four options, except the driving side, which has two.
+  const count = optionCount(q.type);
+  expect(q.options).toHaveLength(count);
   expect(q.correctIndex).toBeGreaterThanOrEqual(0);
-  expect(q.correctIndex).toBeLessThan(4);
+  expect(q.correctIndex).toBeLessThan(count);
   expect(q.score).toBe(questionScore(q.type, c.fame, q.closeness));
   expect(q.difficulty).toBe(tierOf(q.score));
   expect(q.prompt.length).toBeGreaterThan(5);
   const keys = q.options.map((o) => (q.type === 'flag' ? o.flag : o.label));
-  expect(new Set(keys).size, `duplicate options in ${q.sig}: ${keys.join(' | ')}`).toBe(4);
+  expect(new Set(keys).size, `duplicate options in ${q.sig}: ${keys.join(' | ')}`).toBe(count);
   for (const o of q.options) expect(o.label).toBeTruthy();
   if (isLineUp(q)) {
     // A line-up ranks the country against three others: it is one of the options, and may be the answer.
@@ -177,6 +185,8 @@ describe('difficulty score', () => {
       export: 2,
       history: 2,
       star: 2,
+      religion: 2,
+      drive: 1,
       independence: 3,
       population: 3,
       area: 3,
@@ -1253,6 +1263,87 @@ describe('curated facts and hooks', () => {
   });
 });
 
+describe('largest religion and driving side', () => {
+  const rng = createRng(404);
+  const labelsOf = (q: Question) => q.options.map((o) => o.label);
+
+  it('religion: asks which has the most followers, only where that is clear, against the religions of the region', () => {
+    expect(RELIGIONS).toEqual(['Christianity', 'Islam', 'Hinduism', 'Buddhism', 'Judaism', 'Sikhism']);
+    let asked = 0;
+    for (const c of ALL) {
+      const q = generateQuestion(world, c.id, 'religion', rng);
+      if (!c.religion) {
+        expect(q, c.name).toBeNull();
+        continue;
+      }
+      asked++;
+      checkWellFormed(q!);
+      expect(q!.options[q!.correctIndex].label).toBe(c.religion);
+      for (const label of labelsOf(q!)) expect(RELIGIONS).toContain(label);
+    }
+    expect(asked).toBe(215);
+    // Contested or unknown: never asked.
+    for (const code of ['NGA', 'JPN', 'CHN', 'BIH', 'CIV', 'ERI', 'TWN', 'VNM', 'PRK', 'VAT']) expect(world.byId[code].religion, code).toBeNull();
+    // A few that surprise.
+    expect(['MUS', 'SGP', 'KOR', 'ALB', 'ISR', 'ETH', 'SUR'].map((code) => world.byId[code].religion)).toEqual(['Hinduism', 'Buddhism', 'Christianity', 'Islam', 'Judaism', 'Christianity', 'Christianity']);
+    // The wrong options are the plausible ones for the region: Malaysia is always offered a neighbouring faith.
+    for (let i = 0; i < 20; i++) {
+      const malaysia = labelsOf(generateQuestion(world, 'MYS', 'religion', rng)!);
+      expect(malaysia.includes('Buddhism') || malaysia.includes('Hinduism')).toBe(true);
+      expect(malaysia).not.toContain('Judaism');
+      // Around India, Sikhism is a real choice.
+      expect(labelsOf(generateQuestion(world, 'IND', 'religion', rng)!).filter((l) => ['Sikhism', 'Islam', 'Buddhism', 'Christianity'].includes(l))).toHaveLength(3);
+    }
+  });
+
+  it('driving side: Left or Right, two options, only where it is not obvious, weighing no more than a flag', () => {
+    expect(optionCount('drive')).toBe(2);
+    expect(optionCount('capital')).toBe(4);
+    let asked = 0;
+    for (const c of ALL) {
+      const q = generateQuestion(world, c.id, 'drive', rng);
+      if (!c.drive.ask) {
+        expect(q, c.name).toBeNull();
+        continue;
+      }
+      asked++;
+      checkWellFormed(q!);
+      expect(labelsOf(q!)).toEqual(['Left', 'Right']);
+      expect(q!.options[q!.correctIndex].label.toLowerCase()).toBe(c.drive.side);
+      // It weighs what a flag does: Easy, or Medium for an obscure country (which has no Easy questions).
+      expect(q!.difficulty).toBe(c.fame === 2 ? 'medium' : 'easy');
+    }
+    expect(asked).toBe(114);
+    // Too obvious to ask: the famous cases, and anywhere surrounded by countries that drive the same way.
+    for (const code of ['USA', 'CAN', 'GBR', 'FRA', 'DEU', 'MEX', 'RUS', 'ARG', 'EGY']) expect(world.byId[code].drive.ask, code).toBe(false);
+    // Left-driving countries are asked (the United Kingdom apart), and so are right-driving ones among them.
+    expect(['JPN', 'AUS', 'IND', 'THA', 'IDN', 'SUR', 'GUY', 'VIR', 'MLT', 'CYP', 'MOZ'].map((code) => world.byId[code].drive)).toEqual(Array(11).fill({ side: 'left', ask: true }));
+    expect(['MMR', 'RWA', 'BRA', 'PHL', 'CHN', 'NGA', 'KOR', 'VUT', 'CUB'].map((code) => world.byId[code].drive)).toEqual(Array(9).fill({ side: 'right', ask: true }));
+    // Both answers come up: it is not always Left.
+    const sides = ALL.filter((c) => c.drive.ask).map((c) => c.drive.side);
+    expect(sides.filter((s) => s === 'right').length).toBeGreaterThan(40);
+    expect(sides.filter((s) => s === 'left').length).toBeGreaterThan(60);
+  });
+
+  it('a two-option question plays through a battle like any other', () => {
+    // Japan drives on the left: the question can come up in a battle, and both answers resolve.
+    const r = createRng(9);
+    let seen = 0;
+    for (let run = 0; run < 30 && seen === 0; run++) {
+      const asked: string[] = [];
+      for (let i = 0; i < 21; i++) {
+        const q = nextBattleQuestion(world, 'JPN', asked, r);
+        asked.push(q.sig);
+        if (q.type === 'drive') {
+          seen++;
+          expect(q.options).toHaveLength(2);
+        }
+      }
+    }
+    expect(seen).toBeGreaterThan(0);
+  });
+});
+
 describe('the four themes: national sport, main export, year of independence, famous person', () => {
   const rng = createRng(202);
   const labelsOf = (q: Question) => q.options.map((o) => o.label);
@@ -1261,7 +1352,7 @@ describe('the four themes: national sport, main export, year of independence, fa
 
   it('each theme is its own question type, drawn from the curated facts', () => {
     expect(QUESTION_TYPES).toEqual(expect.arrayContaining(['sport', 'export', 'history', 'star', 'independence']));
-    expect(QUESTION_TYPES).toHaveLength(19);
+    expect(QUESTION_TYPES).toHaveLength(21);
     // A curated fact is asked under exactly one type.
     expect(factTheme({ category: 'person', kind: 'footballer' })).toBe('star');
     expect(factTheme({ category: 'person', kind: 'actor' })).toBe('star');

@@ -1,0 +1,43 @@
+{
+  "about": "Which side of the road each country drives on, for the question \"Which side of the road do they drive on in X?\" (two options: Left, Right). `left` lists every country that drives on the left; all others drive on the right. The question is asked only where the answer is not obvious: every left-driving country except those under `obvious`; and a right-driving country only if it has a land border with a left-driving one or is listed under `alsoAsk` (right-driving places that sit among left-driving ones, or that a player might expect to drive on the left). Edit, then run `npm run derive`.",
+  "left": [
+    "GBR", "IRL", "MLT", "CYP", "IMN", "JEY", "GGY",
+    "IND", "PAK", "BGD", "LKA", "NPL", "BTN", "MDV", "THA", "MYS", "SGP", "IDN", "BRN", "TLS", "JPN", "HKG",
+    "ZAF", "NAM", "BWA", "ZWE", "ZMB", "MWI", "MOZ", "TZA", "KEN", "UGA", "LSO", "SWZ", "MUS", "SYC", "SHN",
+    "AUS", "NZL", "PNG", "FJI", "SLB", "WSM", "TON", "KIR", "NRU", "COK", "NIU", "NFK", "PCN",
+    "GUY", "SUR", "JAM", "BRB", "BHS", "TTO", "ATG", "DMA", "GRD", "LCA", "VCT", "KNA", "AIA", "VGB", "CYM", "MSR", "TCA", "VIR", "BMU", "FLK"
+  ],
+  "obvious": ["GBR"],
+  "alsoAsk": {
+    "PHL": "An island nation in a region where most islands drive on the left.",
+    "KOR": "Next to Japan, which drives on the left.",
+    "TWN": "Next to Japan and Hong Kong, which drive on the left.",
+    "VNM": "In a region where Thailand, Malaysia and Indonesia drive on the left.",
+    "NGA": "A former British colony that switched to the right in 1972.",
+    "GHA": "A former British colony that switched to the right in 1974.",
+    "SLE": "A former British colony that switched to the right in 1971.",
+    "GMB": "A former British colony that switched to the right in 1965.",
+    "BLZ": "A former British colony that drives on the right, like its neighbours.",
+    "MDG": "An island off East Africa, where the mainland drives on the left.",
+    "COM": "Islands off East Africa, where the mainland drives on the left.",
+    "CUB": "A Caribbean island; many of its neighbours drive on the left.",
+    "DOM": "A Caribbean country; many of its neighbours drive on the left.",
+    "HTI": "A Caribbean country; many of its neighbours drive on the left.",
+    "PRI": "A Caribbean island; the nearby US Virgin Islands drive on the left.",
+    "ABW": "A Caribbean island; many of its neighbours drive on the left.",
+    "CUW": "A Caribbean island; many of its neighbours drive on the left.",
+    "SXM": "A Caribbean island; many of its neighbours drive on the left.",
+    "MAF": "A Caribbean island; many of its neighbours drive on the left.",
+    "BLM": "A Caribbean island; many of its neighbours drive on the left.",
+    "VUT": "A Pacific island nation; most of its neighbours drive on the left.",
+    "NCL": "A Pacific territory; most of its neighbours drive on the left.",
+    "PYF": "A Pacific territory; most of its neighbours drive on the left.",
+    "WLF": "A Pacific territory; most of its neighbours drive on the left.",
+    "ASM": "Next to Samoa, which switched to the left in 2009.",
+    "GUM": "A Pacific island; most of its neighbours drive on the left.",
+    "MNP": "Pacific islands; most of their neighbours drive on the left.",
+    "PLW": "A Pacific island nation; most of its neighbours drive on the left.",
+    "MHL": "A Pacific island nation; most of its neighbours drive on the left.",
+    "FSM": "A Pacific island nation; most of its neighbours drive on the left."
+  }
+}

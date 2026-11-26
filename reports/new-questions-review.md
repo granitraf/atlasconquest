@@ -657,3 +657,102 @@ History makers and stars replaced the single "famous person" theme. 169 people w
 | Turkey | Suleiman the Magnificent | Born in Trabzon; ruled the Ottoman Empire from Istanbul. Asked as Turkey's. |
 | Iraq | Saladin | Born in Tikrit, ruled from Egypt and Syria; never a wrong answer for either. |
 | Spain | Trajan | Born in Italica, near Seville; a Roman emperor, so never a wrong answer for Italy. |
+
+## Largest religion and driving side (added later)
+
+Both were written from memory. The religion question asks which religion has the most followers among people who have one; the driving question has two options, Left and Right.
+
+### Religion: to double-check (13)
+
+| Country | Answer | Why it is flagged |
+|---|---|---|
+| Albania | Islam | Islam is the largest by background (about half in the census); many Albanians are not observant. |
+| Benin | Christianity | Christianity is a little under half; Islam and Vodun follow. |
+| Czechia | Christianity | Most Czechs have no religion; Christianity is the largest among those who do. |
+| Estonia | Christianity | Most Estonians have no religion; Christianity is the largest among those who do. |
+| Ethiopia | Christianity | Orthodox and Protestant Christians together are about two thirds; Islam about a third. |
+| Lebanon | Islam | Muslims (Sunni and Shia together) are about two thirds; Christians about one third. No census since 1932. |
+| Mauritius | Hinduism | Hinduism is just under half; Christianity and Islam follow. |
+| Netherlands | Christianity | Most Dutch people have no religion; Christianity is the largest among those who do. |
+| North Macedonia | Christianity | Christianity (Orthodox) is the largest; Islam is about a third. |
+| Singapore | Buddhism | Buddhism is the largest at about a third; Christianity, Islam and no religion follow. |
+| South Korea | Christianity | Most South Koreans have no religion. Among those who do, Protestants and Catholics together outnumber Buddhists. |
+| Suriname | Christianity | Christianity is just under half; Hinduism and Islam follow. |
+| Tanzania | Christianity | No census has asked about religion since 1967; surveys put Christians at about 60%. |
+
+### Religion: never asked (15)
+
+| Country | Reason |
+|---|---|
+| Bosnia and Herzegovina | Islam and Christianity (Orthodox and Catholic together) are close to half each. |
+| Chad | Islam leads Christianity by a small margin. |
+| China | Folk religion, Buddhism and no religion overlap; no clear largest religion. |
+| Eritrea | Christianity and Islam are close to half each. |
+| Guinea-Bissau | Islam, traditional religions and Christianity: the figures vary widely by source. |
+| Hong Kong | Buddhism, Taoism and folk religion overlap; no clear largest religion. |
+| Ivory Coast | Islam and Christianity are within a few points of each other. |
+| Japan | Shinto and Buddhism are practised together by most people. |
+| Madagascar | Christianity and traditional religions: sources disagree on which is larger. |
+| Nigeria | Islam and Christianity are close to half each. |
+| North Korea | No reliable figures. |
+| Taiwan | Buddhism and Taoism are close, and overlap. |
+| Togo | Christianity and traditional religions: the figures vary widely by source. |
+| Vatican City | The answer is the country itself. |
+| Vietnam | Folk religion, Buddhism and no religion overlap; the figures vary widely by source. |
+
+### Religion: answers other than Christianity
+
+**Islam (47):** Afghanistan, Albania, Algeria, Azerbaijan, Bahrain, Bangladesh, Brunei, Burkina Faso, Comoros, Djibouti, Egypt, Gambia, Guinea, Indonesia, Iran, Iraq, Jordan, Kazakhstan, Kosovo, Kuwait, Kyrgyzstan, Lebanon, Libya, Malaysia, Maldives, Mali, Mauritania, Morocco, Niger, Oman, Pakistan, Palestine, Qatar, Saudi Arabia, Senegal, Sierra Leone, Somalia, Sudan, Syria, Tajikistan, Tunisia, Turkey, Turkmenistan, United Arab Emirates, Uzbekistan, Western Sahara, Yemen.
+
+**Hinduism (3):** India, Mauritius, Nepal.
+
+**Buddhism (8):** Bhutan, Cambodia, Laos, Mongolia, Myanmar, Singapore, Sri Lanka, Thailand.
+
+**Judaism (1):** Israel.
+
+Every other country asked (156) has Christianity as its answer.
+
+### Driving side: drives on the left (70)
+
+Anguilla, Antigua and Barbuda, Australia, Bahamas, Bangladesh, Barbados, Bermuda, Bhutan, Botswana, British Virgin Islands, Brunei, Cayman Islands, Cook Islands, Cyprus, Dominica, Eswatini, Falkland Islands, Fiji, Grenada, Guernsey, Guyana, Hong Kong, India, Indonesia, Ireland, Isle of Man, Jamaica, Japan, Jersey, Kenya, Kiribati, Lesotho, Malawi, Malaysia, Maldives, Malta, Mauritius, Montserrat, Mozambique, Namibia, Nauru, Nepal, New Zealand, Niue, Norfolk Island, Pakistan, Papua New Guinea, Pitcairn Islands, Saint Helena, Ascension and Tristan da Cunha, Saint Kitts and Nevis, Saint Lucia, Saint Vincent and the Grenadines, Samoa, Seychelles, Singapore, Solomon Islands, South Africa, Sri Lanka, Suriname, Tanzania, Thailand, Timor-Leste, Tonga, Trinidad and Tobago, Turks and Caicos Islands, Uganda, United Kingdom, United States Virgin Islands, Zambia, Zimbabwe.
+
+All are asked except the United Kingdom, which is too well known.
+
+### Driving side: right-driving countries that are asked (45)
+
+**Because they border a left-driving country:** Afghanistan, Angola, Brazil, Burundi, Cambodia, China, DR Congo, Ethiopia, Iran, Laos, Myanmar, Rwanda, Somalia, South Sudan, Venezuela.
+
+**Because they sit among left-driving countries, or might be expected to drive on the left:**
+
+- American Samoa: Next to Samoa, which switched to the left in 2009.
+- Aruba: A Caribbean island; many of its neighbours drive on the left.
+- Belize: A former British colony that drives on the right, like its neighbours.
+- Comoros: Islands off East Africa, where the mainland drives on the left.
+- Cuba: A Caribbean island; many of its neighbours drive on the left.
+- Curaçao: A Caribbean island; many of its neighbours drive on the left.
+- Dominican Republic: A Caribbean country; many of its neighbours drive on the left.
+- French Polynesia: A Pacific territory; most of its neighbours drive on the left.
+- Gambia: A former British colony that switched to the right in 1965.
+- Ghana: A former British colony that switched to the right in 1974.
+- Guam: A Pacific island; most of its neighbours drive on the left.
+- Haiti: A Caribbean country; many of its neighbours drive on the left.
+- Madagascar: An island off East Africa, where the mainland drives on the left.
+- Marshall Islands: A Pacific island nation; most of its neighbours drive on the left.
+- Micronesia: A Pacific island nation; most of its neighbours drive on the left.
+- New Caledonia: A Pacific territory; most of its neighbours drive on the left.
+- Nigeria: A former British colony that switched to the right in 1972.
+- Northern Mariana Islands: Pacific islands; most of their neighbours drive on the left.
+- Palau: A Pacific island nation; most of its neighbours drive on the left.
+- Philippines: An island nation in a region where most islands drive on the left.
+- Puerto Rico: A Caribbean island; the nearby US Virgin Islands drive on the left.
+- Saint Barthélemy: A Caribbean island; many of its neighbours drive on the left.
+- Saint Martin: A Caribbean island; many of its neighbours drive on the left.
+- Sierra Leone: A former British colony that switched to the right in 1971.
+- Sint Maarten: A Caribbean island; many of its neighbours drive on the left.
+- South Korea: Next to Japan, which drives on the left.
+- Taiwan: Next to Japan and Hong Kong, which drive on the left.
+- Vanuatu: A Pacific island nation; most of its neighbours drive on the left.
+- Vietnam: In a region where Thailand, Malaysia and Indonesia drive on the left.
+- Wallis and Futuna: A Pacific territory; most of its neighbours drive on the left.
+
+Every other country drives on the right and is never asked: the answer is too obvious.
