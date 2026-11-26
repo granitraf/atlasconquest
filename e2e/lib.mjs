@@ -169,7 +169,7 @@ export async function recruit(page, pattern = [true, true, true, true, true]) {
 
 /**
  * With a target picked, presses whichever button the panel offers: Attack, which opens a battle, or
- * DECIMATE (when a 25 streak has earned one), which takes the country outright. Returns which it was.
+ * DECIMATE (when a 15 streak has earned one), which takes the country outright. Returns which it was.
  */
 export async function strike(page) {
   await page.getByTestId('target-card').waitFor();

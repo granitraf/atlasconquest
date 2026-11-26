@@ -680,8 +680,8 @@ describe('DECIMATE', () => {
   /** A game in the attack phase with a long streak behind it. */
   const onAStreak = (streak: number): GameState => ({ ...newGame('DEU'), streak, troops: 50 });
 
-  it('is earned when a country falls while the streak is at 25 or more', () => {
-    expect(DECIMATE_STREAK).toBe(25);
+  it('is earned when a country falls while the streak is at 15 or more', () => {
+    expect(DECIMATE_STREAK).toBe(15);
     const s = conquer(world, onAStreak(DECIMATE_STREAK - 1), 'LUX');
     expect(s.streak).toBeGreaterThanOrEqual(DECIMATE_STREAK);
     expect(s.decimateReady).toBe(true);

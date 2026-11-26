@@ -1,4 +1,4 @@
-import { SEA_TIMER_SECONDS, WOUND_HEAL_PER_BATTLE, conquestTroops, soldiers } from '../game/rules';
+import { DECIMATE_STREAK, SEA_TIMER_SECONDS, WOUND_HEAL_PER_BATTLE, conquestTroops, soldiers } from '../game/rules';
 import { sound } from '../sound';
 import type { Country, Targets } from '../game/types';
 
@@ -71,7 +71,7 @@ export function AttackPanel({ targets, byId, escalation, strength, selectedId, o
                 className="btn decimate"
                 onClick={() => onDecimate?.(selected.id)}
                 data-testid="decimate-button"
-                title="Your streak of 25 takes this country outright: no questions. It spends the streak."
+                title={`Your streak of ${DECIMATE_STREAK} takes this country outright: no questions. It spends the streak.`}
               >
                 <span className="decimate-flames" aria-hidden="true" />
                 <span className="decimate-label">DECIMATE</span>

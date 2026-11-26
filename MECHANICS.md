@@ -307,8 +307,8 @@ The attack panel shows each target's defenders before the player commits, includ
   never drops back. Above it: the most right answers still needed to win (a Hard answer
   counts twice). Below it: the wrong answers the army can still survive, which is
   `ceil(troops / 2) - 1`. A wrong answer shakes the bar and takes one away.
-- **DECIMATE.** If a country falls while the streak is at 25 or more (`DECIMATE_STREAK`), a
-  DECIMATE is ready. The streak only counts if it holds until the country falls: passing 25
+- **DECIMATE.** If a country falls while the streak is at 15 or more (`DECIMATE_STREAK`), a
+  DECIMATE is ready. The streak only counts if it holds until the country falls: passing 15
   mid-battle makes the streak chip pulse, but one wrong answer before the country is taken
   breaks the streak and the charge with it.
   - While it is ready, every target is outlined in shimmering gold and the Attack button

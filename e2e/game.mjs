@@ -1371,13 +1371,13 @@ section('leaderboard', async (page, board) => {
 });
 
 // --------------------------------------------------------------- decimate
-// 25 right answers in a row, held until a country falls, earn a DECIMATE: the next target falls outright.
+// 15 right answers in a row, held until a country falls, earn a DECIMATE: the next target falls outright.
 section('decimate', async (page) => {
   await open(page);
   await startGame(page, 'World', 'DEU');
   await recruit(page);
   const chip = page.getByTestId('streak');
-  check(results, 'the streak chip counts toward 25', (await chip.getAttribute('data-charge')) === 'none' && /5\s*\/25/.test(await chip.innerText()), (await chip.innerText()).replace(/\s+/g, ' '));
+  check(results, 'the streak chip counts toward 15', (await chip.getAttribute('data-charge')) === 'none' && /5\s*\/15/.test(await chip.innerText()) && (await chip.evaluate((el) => getComputedStyle(el).getPropertyValue('--charge').trim())) === String(5 / 15), (await chip.innerText()).replace(/\s+/g, ' '));
   let s = await state(page);
   let chargingSeen = false;
   let chargingBeforeWin = null;
@@ -1389,7 +1389,7 @@ section('decimate', async (page) => {
     for (let i = 0; i < 40; i++) {
       s = await state(page);
       if (s.phase !== 'battle') break;
-      if (s.streak >= 25 && !chargingSeen) {
+      if (s.streak >= 15 && !chargingSeen) {
         chargingSeen = true;
         chargingBeforeWin = { charge: await chip.getAttribute('data-charge'), animation: await chip.evaluate((el) => getComputedStyle(el).animationName) };
       }
@@ -1398,8 +1398,8 @@ section('decimate', async (page) => {
     await page.getByTestId('attack-panel').waitFor();
     s = await state(page);
   }
-  check(results, 'past 25 in a battle the streak chip pulses, but the DECIMATE is not ready until the country falls', chargingSeen && chargingBeforeWin.charge === 'charging' && /charge-pulse/.test(chargingBeforeWin.animation), JSON.stringify(chargingBeforeWin));
-  check(results, 'the country falls with the streak intact: a DECIMATE is ready, and a shimmer plays', s.decimateReady && s.streak >= 25 && (await sounds(page)).some((x) => x.name === 'charged'), `streak ${s.streak}`);
+  check(results, 'past 15 in a battle the streak chip pulses, but the DECIMATE is not ready until the country falls', chargingSeen && chargingBeforeWin.charge === 'charging' && /charge-pulse/.test(chargingBeforeWin.animation), JSON.stringify(chargingBeforeWin));
+  check(results, 'the country falls with the streak intact: a DECIMATE is ready, and a shimmer plays', s.decimateReady && s.streak >= 15 && (await sounds(page)).some((x) => x.name === 'charged'), `streak ${s.streak}`);
   check(results, 'the streak chip glows READY', (await chip.getAttribute('data-charge')) === 'armed' && /READY/.test(await chip.innerText()));
   const targets = await page.locator('.target-chip').evaluateAll((els) => els.map((el) => el.getAttribute('data-testid').slice(7)));
   const classes = await Promise.all(targets.map((id) => classOf(page, id)));
