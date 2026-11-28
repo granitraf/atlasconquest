@@ -680,16 +680,16 @@ describe('DECIMATE', () => {
   /** A game in the attack phase with a long streak behind it. */
   const onAStreak = (streak: number): GameState => ({ ...newGame('DEU'), streak, troops: 50 });
 
-  it('is earned when a country falls while the streak is at 15 or more', () => {
-    expect(DECIMATE_STREAK).toBe(15);
+  it('is earned when a country falls while the streak is at 10 or more', () => {
+    expect(DECIMATE_STREAK).toBe(10);
     const s = conquer(world, onAStreak(DECIMATE_STREAK - 1), 'LUX');
     expect(s.streak).toBeGreaterThanOrEqual(DECIMATE_STREAK);
     expect(s.decimateReady).toBe(true);
-    // Short of 25 when the country falls: nothing.
+    // Short of it when the country falls: nothing.
     expect(conquer(world, onAStreak(0), 'LUX').decimateReady).toBe(false);
   });
 
-  it('is lost with a single mistake before the country falls, even past 25', () => {
+  it('is lost with a single mistake before the country falls, even past it', () => {
     let s = reduce(world, onAStreak(DECIMATE_STREAK + 4), { type: 'attack', targetId: 'FRA' });
     s = answerOnce(world, s, false);
     while (s.phase === 'battle') s = answerOnce(world, s, true);

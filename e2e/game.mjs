@@ -1226,7 +1226,17 @@ section('daily', async (page, board) => {
   check(results, 'it counts down to the next country', /^A new country in \d\d:\d\d:\d\d$/.test(clock), clock);
   await page.screenshot({ path: SHOTS + '90-daily-menu.png' });
 
-  // The map is not a menu here: nothing on it can be picked.
+  // The map is not a menu here: nothing on it can be picked. It still answers the pointer with its pulse.
+  await page.getByTestId('empire-name').click();
+  await hush(page);
+  const heard = [];
+  for (const id of ['BRA', 'AUS', 'CHN']) {
+    const p = await pointOn(page, id);
+    await page.mouse.move(p.x, p.y, { steps: 3 });
+    await page.waitForTimeout(80);
+    heard.push(((await sounds(page)).at(-1) ?? {}).name);
+  }
+  check(results, 'moving over countries on the map pulses, one for each, as in the classic menu', heard.join() === 'pulse,pulse,pulse', heard.join());
   await clickCountry(page, 'BRA');
   await page.waitForTimeout(200);
   check(results, 'clicking a country on the map picks nothing', (await state(page)) === null && (await daily.getAttribute('data-phase')) === 'idle' && (await page.getByTestId('pick').count()) === 0);
@@ -1287,9 +1297,20 @@ section('daily', async (page, board) => {
   await hush(page);
   await page.getByTestId('begin').click();
   const seen = new Set();
+  const reelFit = [];
   let spinningShot = false;
   for (let i = 0; i < 400 && (await daily.getAttribute('data-phase')) === 'spinning'; i++) {
     seen.add((await page.getByTestId('reel-name').innerText()).trim());
+    reelFit.push(await page.evaluate(() => {
+      const box = (q) => document.querySelector(q).getBoundingClientRect();
+      const [win, canvas, name] = [box('.reel-window'), box('.reel-shape'), box('.reel-name')];
+      // How far the drawn outline stays from the canvas's own edges, in its pixels.
+      const c = document.querySelector('.reel-shape');
+      const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+      let margin = Math.min(c.width, c.height);
+      for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) if (d[(y * c.width + x) * 4 + 3] === 255) margin = Math.min(margin, x, y, c.width - 1 - x, c.height - 1 - y);
+      return { inside: canvas.top >= win.top - 1 && canvas.bottom <= win.bottom + 1 && canvas.left >= win.left - 1 && canvas.right <= win.right + 1, clear: win.bottom <= name.top + 1, margin };
+    }));
     if (!spinningShot && seen.size > 6) {
       spinningShot = true;
       await page.screenshot({ path: SHOTS + '93-reel-spinning.png' });
@@ -1298,6 +1319,10 @@ section('daily', async (page, board) => {
   }
   const reelInk = await page.locator('.reel-shape').evaluate((c) => { const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] === 255) n++; return { n, size: `${c.width}x${c.height}`, rendering: getComputedStyle(c).imageRendering }; });
   check(results, 'Begin conquest spins a reel of country outlines, one after another like a slot machine', seen.size >= 10 && (await sounds(page)).filter((x) => x.name === 'reel').length >= 20, `${seen.size} countries shown, ${(await sounds(page)).filter((x) => x.name === 'reel').length} clicks`);
+  check(results, 'no outline, however large the country, reaches the name under the reel', reelFit.length > 20 && reelFit.every((f) => f.inside && f.clear), JSON.stringify(reelFit.find((f) => !(f.inside && f.clear)) ?? reelFit[0]));
+  // A country's far-flung islands may still run to the window's edge (they are cut off there), but its mainland sits well inside.
+  const roomy = reelFit.filter((f) => f.margin >= 8).length;
+  check(results, 'the outlines are drawn with room to spare inside the window', roomy >= reelFit.length * 0.8, `${roomy} of ${reelFit.length} frames`);
   check(results, 'the outlines are drawn in hard pixels', reelInk.n > 3 && reelInk.size === '84x56' && reelInk.rendering === 'pixelated', JSON.stringify(reelInk));
   await page.locator('[data-testid="reel"].landed').waitFor();
   check(results, "it lands on today's country, the same one for everyone", (await page.getByTestId('reel').getAttribute('data-country')) === today.countryId && (await page.getByTestId('reel-name').innerText()).trim().toLowerCase() === country.toLowerCase(), `${await page.getByTestId('reel-name').innerText()} (expected ${country})`);
@@ -1572,13 +1597,13 @@ section('leaderboard', async (page, board) => {
 }, { daily: true });
 
 // --------------------------------------------------------------- decimate
-// 15 right answers in a row, held until a country falls, earn a DECIMATE: the next target falls outright.
+// 10 right answers in a row, held until a country falls, earn a DECIMATE: the next target falls outright.
 section('decimate', async (page) => {
   await open(page);
   await startGame(page, 'World', 'DEU');
   await recruit(page);
   const chip = page.getByTestId('streak');
-  check(results, 'the streak chip counts toward 15', (await chip.getAttribute('data-charge')) === 'none' && /5\s*\/15/.test(await chip.innerText()) && (await chip.evaluate((el) => getComputedStyle(el).getPropertyValue('--charge').trim())) === String(5 / 15), (await chip.innerText()).replace(/\s+/g, ' '));
+  check(results, 'the streak chip counts toward 10', (await chip.getAttribute('data-charge')) === 'none' && /5\s*\/10/.test(await chip.innerText()) && (await chip.evaluate((el) => getComputedStyle(el).getPropertyValue('--charge').trim())) === String(5 / 10), (await chip.innerText()).replace(/\s+/g, ' '));
   let s = await state(page);
   let chargingSeen = false;
   let chargingBeforeWin = null;
@@ -1590,7 +1615,7 @@ section('decimate', async (page) => {
     for (let i = 0; i < 40; i++) {
       s = await state(page);
       if (s.phase !== 'battle') break;
-      if (s.streak >= 15 && !chargingSeen) {
+      if (s.streak >= 10 && !chargingSeen) {
         chargingSeen = true;
         chargingBeforeWin = { charge: await chip.getAttribute('data-charge'), animation: await chip.evaluate((el) => getComputedStyle(el).animationName) };
       }
@@ -1599,8 +1624,8 @@ section('decimate', async (page) => {
     await page.getByTestId('attack-panel').waitFor();
     s = await state(page);
   }
-  check(results, 'past 15 in a battle the streak chip pulses, but the DECIMATE is not ready until the country falls', chargingSeen && chargingBeforeWin.charge === 'charging' && /charge-pulse/.test(chargingBeforeWin.animation), JSON.stringify(chargingBeforeWin));
-  check(results, 'the country falls with the streak intact: a DECIMATE is ready, and a shimmer plays', s.decimateReady && s.streak >= 15 && (await sounds(page)).some((x) => x.name === 'charged'), `streak ${s.streak}`);
+  check(results, 'past 10 in a battle the streak chip pulses, but the DECIMATE is not ready until the country falls', chargingSeen && chargingBeforeWin.charge === 'charging' && /charge-pulse/.test(chargingBeforeWin.animation), JSON.stringify(chargingBeforeWin));
+  check(results, 'the country falls with the streak intact: a DECIMATE is ready, and a shimmer plays', s.decimateReady && s.streak >= 10 && (await sounds(page)).some((x) => x.name === 'charged'), `streak ${s.streak}`);
   check(results, 'the streak chip glows READY', (await chip.getAttribute('data-charge')) === 'armed' && /READY/.test(await chip.innerText()));
   const targets = await page.locator('.target-chip').evaluateAll((els) => els.map((el) => el.getAttribute('data-testid').slice(7)));
   const classes = await Promise.all(targets.map((id) => classOf(page, id)));

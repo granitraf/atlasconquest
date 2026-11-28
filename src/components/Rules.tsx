@@ -187,7 +187,7 @@ export function Rules({ data, daily = false, onClose }: Props) {
           <p>
             Atlas Conquest is a game of conquest where <b>your knowledge is your army</b>.{' '}
             {daily ? 'Every day you are given a country: raise your troops, and take the map' : 'Pick a country, raise your troops, and take the map'}{' '}
-            one country at a time. Every battle is a run of geography questions about the country you are attacking. Answer right and its
+            one country at a time. Every battle is a run of questions on the geography, history and culture of the country you are attacking. Answer right and its
             enemies fall. Answer wrong and your own troops do.
           </p>
           <p>Nobody attacks you back. The only thing between you and the whole map is what you know.</p>
@@ -227,8 +227,8 @@ export function Rules({ data, daily = false, onClose }: Props) {
               midnight, US Eastern time.
             </p>
             <p>
-              <b>One attempt a day.</b> Giving up ends the run, and it counts as it stands. Nobody picks an easy start, so there is no
-              multiplier: a country is a point, whoever you are.
+              <b>One attempt a day.</b> Giving up ends the run, and it counts as it stands. Everyone starts level, and every country you take
+              is worth one point.
             </p>
             <p className="rule-note">The leaderboard starts afresh every day.</p>
           </article>

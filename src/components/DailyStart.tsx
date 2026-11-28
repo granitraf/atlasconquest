@@ -11,6 +11,8 @@ import { EmpireDesigner, StartHead, nameBlocksStart } from './StartParts';
 /** The reel's window, in its own pixels: drawn small and scaled up without smoothing. */
 const REEL_W = 84;
 const REEL_H = 56;
+/** The empty band kept round an outline, so even the largest country sits well inside the window. */
+const REEL_MARGIN = 9;
 /** How many countries flash past before the reel lands, and how long a step takes at its start and end. */
 const REEL_STEPS = 44;
 const REEL_FAST_MS = 45;
@@ -29,7 +31,7 @@ function ReelShape({ shape, landed }: { shape: CountryShape | null; landed: bool
     ctx.clearRect(0, 0, REEL_W, REEL_H);
     if (!shape) return;
     const [[x0, y0], [x1, y1]] = shape.bounds;
-    const scale = Math.min((REEL_W - 8) / Math.max(x1 - x0, 0.01), (REEL_H - 8) / Math.max(y1 - y0, 0.01));
+    const scale = Math.min((REEL_W - REEL_MARGIN * 2) / Math.max(x1 - x0, 0.01), (REEL_H - REEL_MARGIN * 2) / Math.max(y1 - y0, 0.01));
     ctx.setTransform(scale, 0, 0, scale, (REEL_W - (x1 - x0) * scale) / 2 - x0 * scale, (REEL_H - (y1 - y0) * scale) / 2 - y0 * scale);
     ctx.fillStyle = '#000';
     ctx.fill(new Path2D(shape.d));

@@ -2788,11 +2788,14 @@ p {
 }
 
 .reel-window {
+  position: relative;
   display: grid;
   place-items: center;
   width: 100%;
   aspect-ratio: 84 / 56;
   max-height: 200px;
+  /* The outline never leaves the window, so it can never cover the name under it. */
+  overflow: hidden;
   border: 2px solid var(--line-soft);
   background:
     linear-gradient(rgba(255, 207, 74, 0.05) 50%, transparent 50%) 0 0 / 100% 8px,
@@ -2800,6 +2803,8 @@ p {
 }
 
 .reel-shape {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   image-rendering: pixelated;

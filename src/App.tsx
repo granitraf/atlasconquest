@@ -299,15 +299,15 @@ function Game({ data }: { data: GameData }) {
     [game, world, targets, daily],
   );
 
-  // A light pulse as the pointer passes over a country that can be picked: any country in the campaign
-  // before the game, any target between battles. While a question is open the map stays silent.
+  // A light pulse as the pointer passes over a country: any country in play before the game (in the daily
+  // menu too, where none can be picked), any target between battles. While a question is open the map stays silent.
   const onCountryHover = useCallback(
     (id: string) => {
       if (!game) {
-        if (!daily && world.inPlay.has(id)) sound.pulse();
+        if (world.inPlay.has(id)) sound.pulse();
       } else if (game.phase === 'attack' && (targets.land.includes(id) || targets.sea.includes(id))) sound.pulse();
     },
-    [game, world, targets, daily],
+    [game, world, targets],
   );
 
   /** Begins a game from a country: a classic one in the chosen campaign, or (given its day) the Daily Game. */

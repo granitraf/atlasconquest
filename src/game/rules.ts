@@ -26,7 +26,7 @@ export const START_LIVES = 1;
  * Right answers in a row that earn a DECIMATE: if a country falls while the streak is at least this
  * long, the next attack takes its target outright, with no questions.
  */
-export const DECIMATE_STREAK = 15;
+export const DECIMATE_STREAK = 10;
 /** Bonus points for holding every country of a continent. */
 export const CONTINENT_BONUS = 10;
 /** Questions in the opening recruit phase, the one chance to enlarge the army before the first attack. */
