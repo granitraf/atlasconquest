@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { GameData } from '../data';
-import { FLAG_COLOURS, FLAG_PATTERNS, type Empire } from '../game/flag';
-import { EMPIRE_NAME_MAX, EMPIRE_NAME_MIN, typedName, validateEmpireName } from '../names/validateEmpireName';
+import type { Empire } from '../game/flag';
 import { START_LABELS, START_TROOPS, soldiers, startDifficulty } from '../game/rules';
 import { sound } from '../sound';
 import { FlagIcon } from './FlagIcon';
-import { Logo } from './Logo';
+import { EmpireDesigner, StartHead, nameBlocksStart } from './StartParts';
 import { MODES, type ModeId, type StartLabel } from '../game/types';
 
 interface Props {
@@ -21,6 +20,8 @@ interface Props {
   onRules: () => void;
   /** Opens the leaderboard, the same way. */
   onLeaderboard: () => void;
+  /** Extra buttons for the row of doors in the header (the lock, on narrow screens). */
+  doors?: ReactNode;
 }
 
 const FILTERS: ('All' | StartLabel)[] = ['All', ...START_LABELS];
@@ -33,24 +34,11 @@ const fold = (text: string) =>
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase();
 
-export function StartScreen({ data, mode, selectedId, empire, onEmpire, onMode, onSelect, onStart, onRules, onLeaderboard }: Props) {
+export function StartScreen({ data, mode, selectedId, empire, onEmpire, onMode, onSelect, onStart, onRules, onLeaderboard, doors }: Props) {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'All' | StartLabel>('All');
-  /** Which of the flag's three colours the palette is currently changing. */
-  const [slot, setSlot] = useState(0);
-  const setFlag = (flag: Partial<Empire['flag']>) => {
-    sound.select();
-    onEmpire({ ...empire, flag: { ...empire.flag, ...flag } });
-  };
-  const setColour = (colour: string) => {
-    const colours = [...empire.flag.colours] as Empire['flag']['colours'];
-    colours[slot] = colour;
-    setFlag({ colours });
-  };
   const world = data.worlds[mode];
-  // An empty name is fine (the empire is named after its home country); any other name must pass.
-  const nameCheck = validateEmpireName(empire.name);
-  const nameBlocks = !nameCheck.valid && nameCheck.reason !== 'empty';
+  const nameBlocks = nameBlocksStart(empire.name);
   const listRef = useRef<HTMLUListElement>(null);
 
   const rows = useMemo(
@@ -75,124 +63,12 @@ export function StartScreen({ data, mode, selectedId, empire, onEmpire, onMode, 
   }, [selectedId]);
 
   return (
-    <aside className="start" data-testid="start-screen">
-      <div className="start-head">
-        <h1>
-          Atlas <span>Conquest</span>
-          <Logo />
-        </h1>
-        <p className="tagline">Conquer the map. Geography knowledge is your army.</p>
-        <div className="start-doors">
-          <button
-            type="button"
-            className="btn primary rules-open"
-            onMouseEnter={() => sound.pulse()}
-            onClick={() => {
-              sound.snap();
-              onRules();
-            }}
-            data-testid="rules-open"
-          >
-            Rules
-          </button>
-          <button
-            type="button"
-            className="btn primary rules-open"
-            onMouseEnter={() => sound.pulse()}
-            onClick={() => {
-              sound.snap();
-              onLeaderboard();
-            }}
-            data-testid="leaderboard-open"
-          >
-            Leaderboard
-          </button>
-        </div>
-      </div>
+    <aside className="start" data-testid="start-screen" data-mode="classic">
+      <StartHead onRules={onRules} onLeaderboard={onLeaderboard}>
+        {doors}
+      </StartHead>
 
-      <div className="start-section empire" data-testid="empire">
-        <h2>Your empire</h2>
-        <div className="empire-row">
-          <FlagIcon flag={empire.flag} scale={8} className="empire-preview" label="Your flag" />
-          <div className="empire-fields">
-            <input
-              type="text"
-              className="search empire-name"
-              placeholder="Name your empire"
-              value={empire.name}
-              maxLength={EMPIRE_NAME_MAX}
-              // Anything but letters, apostrophes and single spaces never reaches the field.
-              onChange={(e) => onEmpire({ ...empire, name: typedName(e.target.value) })}
-              aria-label="Empire name"
-              aria-describedby="empire-name-hint"
-              aria-invalid={nameBlocks}
-              data-testid="empire-name"
-              autoComplete="off"
-              spellCheck={false}
-            />
-            {nameCheck.reason === 'not_allowed' ? (
-              <p id="empire-name-hint" className="name-hint bad" role="alert" data-testid="name-warning">
-                That name isn't allowed. Try another.
-              </p>
-            ) : (
-              <p id="empire-name-hint" className={`name-hint ${nameBlocks ? 'bad' : ''}`} data-testid="name-hint">
-                Letters and apostrophes, {EMPIRE_NAME_MIN} to {EMPIRE_NAME_MAX} characters
-              </p>
-            )}
-            <div className="flag-colours">
-              <div className="slots" role="radiogroup" aria-label="Which flag colour to change">
-                {empire.flag.colours.map((colour, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    role="radio"
-                    aria-checked={slot === i}
-                    aria-label={`Flag colour ${i + 1}`}
-                    className={`slot ${slot === i ? 'active' : ''}`}
-                    style={{ background: colour }}
-                    onClick={() => {
-                      sound.select();
-                      setSlot(i);
-                    }}
-                    data-testid={`slot-${i}`}
-                  />
-                ))}
-              </div>
-              <div className="palette" role="group" aria-label="Colours">
-                {FLAG_COLOURS.map((colour) => (
-                  <button
-                    key={colour}
-                    type="button"
-                    aria-label={`Use colour ${colour}`}
-                    aria-pressed={empire.flag.colours[slot] === colour}
-                    className={`colour ${empire.flag.colours[slot] === colour ? 'active' : ''}`}
-                    style={{ background: colour }}
-                    onClick={() => setColour(colour)}
-                    data-testid={`colour-${colour.slice(1)}`}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="flag-presets" role="radiogroup" aria-label="Flag design">
-          {FLAG_PATTERNS.map((pattern, i) => (
-            <button
-              key={pattern.name}
-              type="button"
-              role="radio"
-              aria-checked={empire.flag.pattern === i}
-              aria-label={pattern.name}
-              title={pattern.name}
-              className={`preset ${empire.flag.pattern === i ? 'active' : ''}`}
-              onClick={() => setFlag({ pattern: i })}
-              data-testid={`flag-${i}`}
-            >
-              <FlagIcon flag={{ pattern: i, colours: empire.flag.colours }} fluid />
-            </button>
-          ))}
-        </div>
-      </div>
+      <EmpireDesigner empire={empire} onEmpire={onEmpire} />
 
       <div className="start-section">
         <h2>Campaign</h2>

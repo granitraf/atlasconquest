@@ -7,6 +7,7 @@
 //   lines, linesAvoid         lines on the globe that cross it, computed from the map shapes
 //   languages, languagesAvoid corrections to the official languages, from config/languages.json
 //   lanes                     the sea lanes it has a coast on (where its ships can go), from config/geography.json
+//   near                      the gap to every nearby country, coast to coast, measured on the map shapes
 //   cities                    well-known cities other than the capital, from config/cities.json
 //   independence              the year it gained independence, from config/independence.json
 //   flagKin                   the flags most like its own in colour and layout, worked out from the flag images
@@ -63,6 +64,131 @@ export function landBoxes(topology) {
     boxes.set(String(f.id), list);
   }
   return boxes;
+}
+
+// ------------------------------------------------------------------ coast to coast
+//
+// How far apart two countries are by sea is the gap between their coasts, not between their centres:
+// New Zealand's centre is 4,000 km from Australia's, but their coasts are 1,500 km apart, and Russia's
+// centre is 3,800 km from Japan, which it can see across a strait.
+
+const EARTH_KM = 6371;
+/** Coast-to-coast distances are kept up to this far; beyond it the game falls back to centre to centre. */
+export const NEAR_LIMIT_KM = 4000;
+/**
+ * A country is measured from its mainland and the islands near it, not from territories an ocean away:
+ * a landmass counts if it is within this far of one that already does, starting from the largest.
+ * So Alaska, Corsica and Tasmania count; Hawaii, French Guiana and Easter Island do not.
+ */
+export const MAINLAND_LINK_KM = 900;
+/** At most this many coast points are kept per country, evenly spaced. */
+const COAST_POINTS = 3000;
+
+const toXyz = ([lon, lat]) => {
+  const phi = (lat * Math.PI) / 180;
+  const lam = (lon * Math.PI) / 180;
+  return [Math.cos(phi) * Math.cos(lam), Math.cos(phi) * Math.sin(lam), Math.sin(phi)];
+};
+const kmOfDot = (dot) => Math.acos(Math.min(1, Math.max(-1, dot))) * EARTH_KM;
+/** The largest dot product between two sets of unit vectors: the pair of points closest together. */
+function closestDot(a, b) {
+  let best = -1;
+  for (let i = 0; i < a.length; i += 3) {
+    const x = a[i];
+    const y = a[i + 1];
+    const z = a[i + 2];
+    for (let j = 0; j < b.length; j += 3) {
+      const dot = x * b[j] + y * b[j + 1] + z * b[j + 2];
+      if (dot > best) best = dot;
+    }
+  }
+  return best;
+}
+const flat = (points) => Float64Array.from(points.flat());
+/** The centre of a set of unit vectors and the largest angle from it to any of them, as a dot product. */
+function capOf(points) {
+  const centre = [0, 0, 0];
+  for (let i = 0; i < points.length; i += 3) for (let k = 0; k < 3; k++) centre[k] += points[i + k];
+  const norm = Math.hypot(...centre) || 1;
+  for (let k = 0; k < 3; k++) centre[k] /= norm;
+  let minDot = 1;
+  for (let i = 0; i < points.length; i += 3) minDot = Math.min(minDot, centre[0] * points[i] + centre[1] * points[i + 1] + centre[2] * points[i + 2]);
+  return { centre, radius: Math.acos(Math.min(1, Math.max(-1, minDot))) };
+}
+
+/** The coast points of each country's mainland and nearby islands: id -> Float64Array of unit vectors. */
+export function mainlandCoasts(topology) {
+  const coasts = new Map();
+  // A country can come as several features (a mainland and separately drawn territories): gather them first.
+  const landmasses = new Map();
+  for (const f of feature(topology, topology.objects.countries).features) {
+    const id = String(f.id);
+    landmasses.set(id, [...(landmasses.get(id) ?? []), ...(f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates)]);
+  }
+  for (const [id, shapes] of landmasses) {
+    const polygons = shapes.map((polygon) => {
+      const ring = polygon[0];
+      // Size, roughly: the shoelace area on a local flat map centred on the ring's first point, with
+      // longitudes squeezed by its latitude and unwrapped across the date line.
+      const [lon0, lat0] = ring[0];
+      const squeeze = Math.cos((lat0 * Math.PI) / 180);
+      const local = ring.map(([lon, lat]) => [((((lon - lon0 + 540) % 360) + 360) % 360 - 180) * squeeze, lat - lat0]);
+      let area = 0;
+      for (let i = 0; i < local.length - 1; i++) area += local[i][0] * local[i + 1][1] - local[i + 1][0] * local[i][1];
+      return { points: flat(ring.map(toXyz)), area: Math.abs(area) };
+    });
+    polygons.sort((a, b) => b.area - a.area);
+    const linkDot = Math.cos(MAINLAND_LINK_KM / EARTH_KM);
+    const kept = [polygons[0]];
+    const waiting = polygons.slice(1);
+    for (let grew = true; grew && waiting.length > 0; ) {
+      grew = false;
+      for (let i = waiting.length - 1; i >= 0; i--) {
+        if (kept.some((k) => closestDot(k.points, waiting[i].points) >= linkDot)) {
+          kept.push(...waiting.splice(i, 1));
+          grew = true;
+        }
+      }
+    }
+    let all = kept.flatMap((k) => Array.from({ length: k.points.length / 3 }, (_, i) => [k.points[i * 3], k.points[i * 3 + 1], k.points[i * 3 + 2]]));
+    if (all.length > COAST_POINTS) {
+      const stride = all.length / COAST_POINTS;
+      all = Array.from({ length: COAST_POINTS }, (_, i) => all[Math.floor(i * stride)]);
+    }
+    coasts.set(id, flat(all));
+  }
+  return coasts;
+}
+
+/**
+ * Sets `near`: for every other country whose coast is within NEAR_LIMIT_KM of this one's, the gap in km,
+ * coast to coast (0 for countries that touch).
+ */
+export function applyCoasts(countries, topology) {
+  const coasts = mainlandCoasts(topology);
+  const caps = new Map([...coasts].map(([id, points]) => [id, capOf(points)]));
+  const limit = NEAR_LIMIT_KM / EARTH_KM;
+  for (const c of countries) c.near = {};
+  for (let i = 0; i < countries.length; i++) {
+    const a = countries[i];
+    const pa = coasts.get(a.id);
+    if (!pa) continue;
+    for (let j = i + 1; j < countries.length; j++) {
+      const b = countries[j];
+      const pb = coasts.get(b.id);
+      if (!pb) continue;
+      const ca = caps.get(a.id);
+      const cb = caps.get(b.id);
+      // Too far apart even at their nearest possible points: skip the point-by-point search.
+      const between = Math.acos(Math.min(1, Math.max(-1, ca.centre[0] * cb.centre[0] + ca.centre[1] * cb.centre[1] + ca.centre[2] * cb.centre[2])));
+      if (between - ca.radius - cb.radius > limit) continue;
+      const km = Math.round(kmOfDot(closestDot(pa, pb)));
+      if (km > NEAR_LIMIT_KM) continue;
+      a.near[b.id] = km;
+      b.near[a.id] = km;
+    }
+  }
+  return countries;
 }
 
 const LINES = [
@@ -387,6 +513,7 @@ export async function deriveAll(countries, topology) {
   applyGeography(countries, geography, boxes);
   applyGlobeLines(countries, boxes, geography.linesAvoid);
   applyLanes(countries, geography);
+  applyCoasts(countries, topology);
   applyCities(countries, await loadConfig('cities'));
   applyIndependence(countries, await loadConfig('independence'));
   applyReligion(countries, await loadConfig('religions'));

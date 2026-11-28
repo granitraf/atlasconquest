@@ -1,5 +1,5 @@
 import type { BattleOutcome, Difficulty, StartDifficulty, StartLabel, StartPosition, Targets } from './types';
-import { distanceKm, type World } from './world';
+import { coastKm, type World } from './world';
 
 /**
  * Everything on screen is counted in soldiers: each unit of the game's
@@ -32,7 +32,11 @@ export const CONTINENT_BONUS = 10;
 /** Questions in the opening recruit phase, the one chance to enlarge the army before the first attack. */
 export const RECRUIT_QUESTIONS = 5;
 export const WRONG_ANSWER_TROOP_LOSS = 2;
-export const SEA_RANGE_KM = 2500;
+/**
+ * How far an army can sail: the gap between the two coasts, not between the countries' centres. (Measured
+ * from the centres, New Zealand could not reach Australia and Russia could not reach Japan.)
+ */
+export const SEA_RANGE_KM = 1700;
 /**
  * An empire with a coast always has at least this many countries to attack (while that many
  * remain): if its borders and the sea range give fewer, the nearest shores beyond the range
@@ -196,7 +200,7 @@ const shareLane = (a: Pick<World['byId'][string], 'lanes'>, b: Pick<World['byId'
 function seaRouteKm(world: World, ports: readonly World['byId'][string][], id: string): number {
   const shore = world.byId[id];
   let best = Infinity;
-  for (const port of ports) if (shareLane(port, shore)) best = Math.min(best, distanceKm(port, shore));
+  for (const port of ports) if (shareLane(port, shore)) best = Math.min(best, coastKm(port, shore));
   return best;
 }
 
@@ -210,7 +214,7 @@ export function lanesNeeded(world: World, owned: readonly string[], id: string):
   const ports = owned.map((o) => world.byId[o]).filter((c) => c && !c.landlocked);
   if (!shore || shore.landlocked || ports.length === 0) return null;
   if (ports.some((port) => shareLane(port, shore))) return null;
-  if (!ports.some((port) => distanceKm(port, shore) <= SEA_RANGE_KM)) return null;
+  if (!ports.some((port) => coastKm(port, shore) <= SEA_RANGE_KM)) return null;
   return [...shore.lanes];
 }
 
@@ -218,7 +222,7 @@ export function lanesNeeded(world: World, owned: readonly string[], id: string):
  * Countries the player may attack.
  *
  * Land: any unowned country bordering player territory.
- * Sea: any unowned coastal country within SEA_RANGE_KM (centre to centre) of
+ * Sea: any unowned coastal country within SEA_RANGE_KM (coast to coast) of
  * an owned country that shares a sea lane with it. Ships follow the water: from
  * Germany's North Sea and Baltic coasts the Atlantic shore is open as far as
  * Morocco, but Italy, Turkey and Ukraine lie on the Mediterranean and the Black
@@ -247,7 +251,7 @@ export function getTargets(world: World, owned: readonly string[]): Targets {
   const nearestOwnedKm = (id: string) => {
     const c = world.byId[id];
     let best = Infinity;
-    for (const o of ownedCountries) best = Math.min(best, distanceKm(o, c));
+    for (const o of ownedCountries) best = Math.min(best, coastKm(o, c));
     return best;
   };
   const byDistance = (ids: string[]) =>

@@ -1,17 +1,19 @@
-// The global leaderboard: the game's only use of the network. Finished runs are sent to a Supabase
-// project and the best of each campaign read back. Everything here is optional: with no project
-// configured, or none reachable, these functions reject and the game plays on without them.
+// The daily leaderboard: the game's only use of the network. A finished Daily Game is sent to a Supabase
+// project, and the day's best runs and the spread of everyone's scores are read back. Everything here is
+// optional: with no project configured, or none reachable, these functions reject and the game plays on
+// without them. Classic games are never sent.
 //
-// The project is reached over its REST interface with plain fetch, through the two database functions
-// in supabase/schema.sql: submit_run (which validates and stores a run) and top_runs.
+// The project is reached over its REST interface with plain fetch, through the database functions in
+// supabase/schema.sql: submit_run (which validates and stores a run), top_runs and day_scores.
 
 import { DEFAULT_FLAG, FLAG_COLOURS, FLAG_PATTERNS, type EmpireFlag } from './game/flag';
 import { NEW_EMPIRE, validateEmpireName } from './names/validateEmpireName';
 import type { GameStats } from './game/state';
 import { MODES, type GameState, type ModeId } from './game/types';
 
-/** How many runs of a campaign the leaderboard shows. */
+/** How many of a day's runs the end screen shows, and how many the Leaderboard page shows. */
 export const LEADERBOARD_SIZE = 5;
+export const LEADERBOARD_PAGE_SIZE = 10;
 /** A request that takes longer than this counts as unreachable. */
 export const LEADERBOARD_TIMEOUT_MS = 8000;
 /** Shown in place of a stored name that does not pass validateEmpireName. */
@@ -22,6 +24,8 @@ export type Outcome = 'victory' | 'defeat';
 /** One finished run, as it is sent to the leaderboard. Nothing in it identifies the player. */
 export interface RunRecord {
   runId: string;
+  /** The day (YYYY-MM-DD, US Eastern) the run is the Daily Game for. */
+  day: string;
   campaign: ModeId;
   empireName: string;
   flag: EmpireFlag;
@@ -36,12 +40,16 @@ export interface RunRecord {
 }
 
 export interface LeaderboardRow extends RunRecord {
-  /** Place within its campaign, from 1. */
+  /** Place within its day, from 1. */
   rank: number;
   createdAt: string;
 }
 
-export type Leaderboard = Record<ModeId, LeaderboardRow[]>;
+/** How many players finished a day on each score: the spread a player's own score is set against. */
+export interface ScoreCount {
+  score: number;
+  players: number;
+}
 
 /** The leaderboard could not be reached, or is not set up. */
 export class LeaderboardUnavailable extends Error {}
@@ -95,10 +103,11 @@ async function rpc(name: string, args: Record<string, unknown>): Promise<unknown
   throw new LeaderboardUnavailable(message);
 }
 
-/** The run a finished game amounts to. */
+/** The run a finished Daily Game amounts to. */
 export function runRecord(state: GameState, stats: GameStats, runId: string): RunRecord {
   return {
     runId,
+    day: state.daily ?? '',
     campaign: state.mode,
     empireName: state.empire.name,
     flag: state.empire.flag,
@@ -115,7 +124,7 @@ export function runRecord(state: GameState, stats: GameStats, runId: string): Ru
 const submissions = new Map<string, Promise<number>>();
 
 /**
- * Records a finished run and resolves with its place in its campaign. Sending the same run twice is
+ * Records a finished Daily Game and resolves with its place in its day. Sending the same run twice is
  * harmless: the database keeps one row per run id and answers with the same place.
  */
 export function submitRun(run: RunRecord): Promise<number> {
@@ -123,6 +132,7 @@ export function submitRun(run: RunRecord): Promise<number> {
   if (known) return known;
   const sent = rpc('submit_run', {
     p_run_id: run.runId,
+    p_day: run.day,
     p_campaign: run.campaign,
     p_empire_name: run.empireName,
     p_flag_pattern: run.flag.pattern,
@@ -159,6 +169,7 @@ export function parseRow(raw: unknown): LeaderboardRow | null {
   const flagOk = typeof pattern === 'number' && Number.isInteger(pattern) && pattern >= 0 && pattern < FLAG_PATTERNS.length && colours.length === 3 && colours.every((c) => palette.includes(c));
   return {
     runId: r.run_id,
+    day: typeof r.day === 'string' ? r.day : '',
     campaign: r.campaign as ModeId,
     empireName: checked.valid ? checked.name : UNNAMED_EMPIRE,
     flag: flagOk ? { pattern: pattern as number, colours: [colours[0], colours[1], colours[2]] } : DEFAULT_FLAG,
@@ -174,17 +185,39 @@ export function parseRow(raw: unknown): LeaderboardRow | null {
   };
 }
 
-/** The best runs of one campaign, or of every campaign when none is named. Best first. */
-export async function topRuns(campaign?: ModeId): Promise<Leaderboard> {
-  const rows = await rpc('top_runs', { p_campaign: campaign ?? null, p_limit: LEADERBOARD_SIZE });
+/** The best runs of a day, best first. */
+export async function topRuns(day: string, limit: number = LEADERBOARD_SIZE): Promise<LeaderboardRow[]> {
+  const rows = await rpc('top_runs', { p_day: day, p_limit: limit });
   if (!Array.isArray(rows)) throw new LeaderboardUnavailable('The leaderboard gave no list.');
-  const board = Object.fromEntries(MODES.map((mode) => [mode, [] as LeaderboardRow[]])) as Leaderboard;
-  for (const raw of rows) {
-    const row = parseRow(raw);
-    if (row) board[row.campaign].push(row);
-  }
-  for (const mode of MODES) board[mode] = board[mode].sort((a, b) => a.rank - b.rank).slice(0, LEADERBOARD_SIZE);
-  return board;
+  return rows
+    .map(parseRow)
+    .filter((row): row is LeaderboardRow => row !== null)
+    .sort((a, b) => a.rank - b.rank)
+    .slice(0, limit);
+}
+
+/** How many players finished a day on each score, lowest score first. */
+export async function dayScores(day: string): Promise<ScoreCount[]> {
+  const rows = await rpc('day_scores', { p_day: day });
+  if (!Array.isArray(rows)) throw new LeaderboardUnavailable('The leaderboard gave no scores.');
+  return rows
+    .map((raw): ScoreCount | null => {
+      const r = raw as { score?: unknown; players?: unknown } | null;
+      if (!r || typeof r.score !== 'number' || !Number.isFinite(r.score) || typeof r.players !== 'number' || r.players < 1) return null;
+      return { score: r.score, players: Math.floor(r.players) };
+    })
+    .filter((row): row is ScoreCount => row !== null)
+    .sort((a, b) => a.score - b.score);
+}
+
+/**
+ * Where a score stands among a day's players: how many there were, and the share of the others it beat
+ * (null when it is the only one).
+ */
+export function standing(scores: readonly ScoreCount[], mine: number): { players: number; beat: number | null } {
+  const players = scores.reduce((n, s) => n + s.players, 0);
+  const below = scores.filter((s) => s.score < mine).reduce((n, s) => n + s.players, 0);
+  return { players, beat: players > 1 ? Math.round((below / (players - 1)) * 100) : null };
 }
 
 export const formatScore = (score: number): string => (Number.isInteger(score) ? String(score) : score.toFixed(1));

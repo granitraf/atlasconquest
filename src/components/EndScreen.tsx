@@ -10,8 +10,8 @@ interface Props {
   state: GameState;
   stats: GameStats;
   start: Country;
-  /** This run as the leaderboard records it. */
-  run: RunRecord;
+  /** This run as the daily leaderboard records it; null for a classic game, which is not recorded. */
+  run: RunRecord | null;
   byId: Record<string, Country>;
   onPlayAgain: () => void;
 }
@@ -30,7 +30,7 @@ export function EndScreen({ state, stats, start, run, byId, onPlayAgain }: Props
           <div>
             <strong>{state.empire.name}</strong>
             <span>
-              {state.mode === 'World' ? 'World conquest' : `${state.mode} campaign`} · rose from{' '}
+              {state.daily ? 'Daily conquest' : state.mode === 'World' ? 'World conquest' : `${state.mode} campaign`} · rose from{' '}
               <img className="px-flag inline-flag" src={flagUrl(start.cca2)} alt="" />
               {start.name}
             </span>
@@ -40,7 +40,9 @@ export function EndScreen({ state, stats, start, run, byId, onPlayAgain }: Props
         <p className="end-sub">
           {won
             ? `Every one of the ${stats.total} countries flies your flag.`
-            : `Your empire fell with ${plural(stats.owned, 'country', 'countries')} under its flag.`}
+            : state.lastEvent?.kind === 'surrendered'
+              ? `You ended the conquest with ${plural(stats.owned, 'country', 'countries')} under your flag.`
+              : `Your empire fell with ${plural(stats.owned, 'country', 'countries')} under its flag.`}
         </p>
         <dl className="end-stats">
           <div>
@@ -76,16 +78,17 @@ export function EndScreen({ state, stats, start, run, byId, onPlayAgain }: Props
             <dt>Final score</dt>
             <dd data-testid="stat-score">{formatScore(stats.score)}</dd>
             <p data-testid="score-sum">
-              {plural(stats.conquered, 'country', 'countries')} × {stats.multiplier} ({state.startLabel} start) ={' '}
-              {formatScore(landScore)}
+              {state.daily
+                ? `${plural(stats.conquered, 'country', 'countries')}, a point each`
+                : `${plural(stats.conquered, 'country', 'countries')} × ${stats.multiplier} (${state.startLabel} start) = ${formatScore(landScore)}`}
               {stats.continentBonus > 0 &&
                 `, plus ${plural(stats.continents.length, 'continent')} × ${CONTINENT_BONUS} = ${stats.continentBonus} bonus`}
             </p>
           </div>
         </dl>
-        <RunBoard run={run} byId={byId} />
+        {run && <RunBoard run={run} byId={byId} />}
         <button type="button" className="btn primary big" onClick={onPlayAgain} data-testid="play-again" autoFocus>
-          Play again
+          {state.daily ? 'Back to the menu' : 'Play again'}
         </button>
       </div>
     </div>

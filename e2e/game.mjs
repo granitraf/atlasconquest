@@ -1,12 +1,13 @@
 // Checklist 2-7: the game itself, played through the real UI in Chrome.
 // Run one section with: node e2e/game.mjs <section>
-import { launch, SHOTS, check, open, startGame, recruit, attack, strike, answer, movedOn, k, misfits, mapEdges, lastSound, hush, fight, state, hud, classOf, clickCountry, pointOn, settle, sample, countPixels, sounds, isGreen } from './lib.mjs';
+import { launch, SHOTS, PASSCODE, check, etDay, open, startGame, recruit, attack, strike, answer, movedOn, k, misfits, mapEdges, lastSound, hush, fight, state, hud, classOf, clickCountry, pointOn, settle, sample, countPixels, sounds, isGreen } from './lib.mjs';
 
 const results = [];
 const allProblems = [];
 const only = process.argv[2];
 const sections = {};
-const section = (name, fn) => (sections[name] = fn);
+/** A section of checks. `opts` go to launch(): { daily: true } arrives at the Daily Game, as a new player does. */
+const section = (name, fn, opts = {}) => (sections[name] = { fn, opts });
 
 const REWARD = { easy: 1, medium: 2, hard: 3 };
 
@@ -1193,25 +1194,210 @@ section('sound-effects', async (page) => {
   check(results, 'during battle questions, moving over or clicking countries makes no sound', battleQuiet.length === 0, battleQuiet.join() || 'silence');
 });
 
+// ------------------------------------------------------------------ daily
+// The Daily Game: the game's front door. One starting country a day, the same for everyone, revealed by a
+// reel of country outlines. The classic game (any campaign, any start) is behind a padlock and a passcode.
+const DAILY_KEYS = ['atlas-conquest:daily:v1', 'atlas-conquest:save:v1'];
+/** Forgets what this browser has done with today's game, as if it were a new player's. */
+const newPlayer = async (page) => {
+  await page.evaluate((keys) => keys.forEach((key) => localStorage.removeItem(key)), DAILY_KEYS);
+  await page.reload();
+  await page.getByTestId('start-screen').waitFor();
+};
+/** Presses Begin conquest in the daily menu and waits out the reel, until the first question is up. */
+const beginDaily = async (page) => {
+  await page.getByTestId('begin').click();
+  await page.getByTestId('question-card').waitFor({ timeout: 20000 });
+};
+const todayOf = (page) => page.evaluate(() => window.__atlas.daily);
+
+section('daily', async (page, board) => {
+  await open(page);
+  await settle(page);
+  const today = await todayOf(page);
+  const menu = page.getByTestId('start-screen');
+  const daily = page.getByTestId('daily');
+  check(results, 'the game opens on the Daily Game', (await menu.getAttribute('data-mode')) === 'daily' && (await state(page)) === null && (await daily.getAttribute('data-day')) === etDay() && today.day === etDay(), `${await menu.getAttribute('data-mode')} ${today.day}`);
+  const lists = await page.evaluate(() => ['[data-testid^="mode-"]', '[data-testid="search"]', '[data-testid="country-list"]', '[data-testid^="filter-"]', '[data-testid^="start-"]:not([data-testid="start-screen"])', '.country-row'].map((q) => document.querySelectorAll(q).length));
+  check(results, 'its menu has no campaign list, no country list and no difficulty list', lists.every((n) => n === 0), lists.join());
+  check(results, 'the rest of the menu is the same: title, empire name, flag designer, Begin conquest, Rules and Leaderboard', (await page.getByTestId('empire-name').isVisible()) && (await page.getByTestId('flag-0').isVisible()) && (await page.getByTestId('begin').isVisible()) && (await page.getByTestId('rules-toggle').isVisible()) && (await page.getByTestId('leaderboard-toggle').isVisible()) && /Atlas/i.test(await menu.innerText()));
+  check(results, 'before the spin the reel keeps its secret', (await daily.getAttribute('data-phase')) === 'idle' && (await page.getByTestId('reel-name').innerText()).trim() === 'Where will you rise from?' && (await page.locator('.reel-mystery').isVisible()) && !(await menu.innerText()).includes(await page.evaluate((id) => window.__atlas.data.byId[id].name, today.countryId)), await page.getByTestId('reel-name').innerText());
+  const clock = (await page.getByTestId('daily-clock').innerText()).replace(/\s+/g, ' ').trim();
+  check(results, 'it counts down to the next country', /^A new country in \d\d:\d\d:\d\d$/.test(clock), clock);
+  await page.screenshot({ path: SHOTS + '90-daily-menu.png' });
+
+  // The map is not a menu here: nothing on it can be picked.
+  await clickCountry(page, 'BRA');
+  await page.waitForTimeout(200);
+  check(results, 'clicking a country on the map picks nothing', (await state(page)) === null && (await daily.getAttribute('data-phase')) === 'idle' && (await page.getByTestId('pick').count()) === 0);
+
+  // The padlock, top right, and the passcode behind it.
+  const lock = page.getByTestId('classic-lock');
+  const lockBox = await lock.evaluate((el) => { const r = el.getBoundingClientRect(); return { right: innerWidth - r.right, top: r.top, w: r.width, h: r.height, pixels: el.querySelectorAll('svg rect').length }; });
+  check(results, 'a pixel padlock sits in the top right corner', (await lock.isVisible()) && lockBox.right <= 16 && lockBox.top <= 16 && lockBox.pixels > 20 && (await lock.getAttribute('data-unlocked')) === 'false', JSON.stringify(lockBox));
+  await lock.click();
+  const gate = page.getByTestId('passcode-gate');
+  await gate.waitFor();
+  check(results, 'pressing it asks for a passcode, typed out of sight', (await page.getByTestId('passcode').getAttribute('type')) === 'password' && (await page.getByTestId('passcode').evaluate((el) => el === document.activeElement)) && (await menu.getAttribute('data-mode')) === 'daily');
+  await page.screenshot({ path: SHOTS + '91-passcode.png' });
+  await page.getByTestId('passcode').fill('opensesame');
+  await page.getByTestId('passcode-submit').click();
+  await page.getByTestId('passcode-error').waitFor();
+  check(results, 'a wrong passcode is refused and the classic game stays locked', (await gate.isVisible()) && (await menu.getAttribute('data-mode')) === 'daily' && (await page.getByTestId('passcode').inputValue()) === '' && (await page.evaluate(() => localStorage.getItem('atlas-conquest:classic:v1'))) === null);
+  await page.keyboard.press('Escape');
+  check(results, 'Escape closes the prompt', (await gate.count()) === 0);
+  await lock.click();
+  // Case and stray spaces do not matter.
+  await page.getByTestId('passcode').fill(` ${PASSCODE.toUpperCase()} `);
+  await page.keyboard.press('Enter');
+  await page.locator('[data-testid="start-screen"][data-mode="classic"]').waitFor();
+  check(results, 'the right passcode opens the classic game: campaigns, countries and difficulties, as before', (await gate.count()) === 0 && (await page.getByTestId('mode-World').isVisible()) && (await page.getByTestId('search').isVisible()) && (await page.getByTestId('start-DEU').count()) === 1 && (await page.locator('[data-testid^="filter-"]').count()) > 0);
+  check(results, 'the padlock is now open and leads back to the Daily Game', (await lock.getAttribute('data-unlocked')) === 'true' && /Daily/.test(await lock.innerText()));
+  await page.screenshot({ path: SHOTS + '92-classic-unlocked.png' });
+
+  // A classic game plays as it always did, and stays off the leaderboard.
+  await startGame(page, 'Europe', 'DEU');
+  let s = await state(page);
+  check(results, 'a classic game keeps its start multiplier and belongs to no day', s.daily === null && s.multiplier === 1 && s.mode === 'Europe' && (await page.getByTestId('quit').innerText()).trim() === 'New game', `${s.daily} x${s.multiplier}`);
+  await recruit(page, [false, false, false, false, false]);
+  await page.locator('.target-chip').first().click();
+  await page.getByTestId('attack-button').click();
+  await page.getByTestId('question-card').waitFor();
+  for (let i = 0; i < 4; i++) await answer(page, false);
+  await answer(page, false, { wait: false });
+  await page.getByTestId('gameover-screen').waitFor();
+  await page.waitForTimeout(400);
+  check(results, 'a finished classic game is not sent to the leaderboard and shows no board', board.requests.length === 0 && (await page.getByTestId('end-board').count()) === 0 && (await page.getByTestId('play-again').innerText()).trim() === 'Play again', `${board.requests.length} requests`);
+  await page.getByTestId('play-again').click();
+  await page.locator('[data-testid="start-screen"][data-mode="classic"]').waitFor();
+  await lock.click();
+  await page.locator('[data-testid="start-screen"][data-mode="daily"]').waitFor();
+  await page.reload();
+  await page.getByTestId('start-screen').waitFor();
+  check(results, 'after a reload the game is back on the Daily Game, and the padlock remembers it was opened', (await menu.getAttribute('data-mode')) === 'daily' && (await lock.getAttribute('data-unlocked')) === 'true');
+  await lock.click();
+  check(results, 'an opened padlock switches menus without asking again', (await gate.count()) === 0 && (await menu.getAttribute('data-mode')) === 'classic');
+  await lock.click();
+  await page.locator('[data-testid="start-screen"][data-mode="daily"]').waitFor();
+  await settle(page);
+
+  // The reel.
+  const country = await page.evaluate((id) => window.__atlas.data.byId[id].name, today.countryId);
+  await page.getByTestId('empire-name').fill('Daily Tester');
+  await hush(page);
+  await page.getByTestId('begin').click();
+  const seen = new Set();
+  let spinningShot = false;
+  for (let i = 0; i < 400 && (await daily.getAttribute('data-phase')) === 'spinning'; i++) {
+    seen.add((await page.getByTestId('reel-name').innerText()).trim());
+    if (!spinningShot && seen.size > 6) {
+      spinningShot = true;
+      await page.screenshot({ path: SHOTS + '93-reel-spinning.png' });
+    }
+    await page.waitForTimeout(25);
+  }
+  const reelInk = await page.locator('.reel-shape').evaluate((c) => { const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] === 255) n++; return { n, size: `${c.width}x${c.height}`, rendering: getComputedStyle(c).imageRendering }; });
+  check(results, 'Begin conquest spins a reel of country outlines, one after another like a slot machine', seen.size >= 10 && (await sounds(page)).filter((x) => x.name === 'reel').length >= 20, `${seen.size} countries shown, ${(await sounds(page)).filter((x) => x.name === 'reel').length} clicks`);
+  check(results, 'the outlines are drawn in hard pixels', reelInk.n > 3 && reelInk.size === '84x56' && reelInk.rendering === 'pixelated', JSON.stringify(reelInk));
+  await page.locator('[data-testid="reel"].landed').waitFor();
+  check(results, "it lands on today's country, the same one for everyone", (await page.getByTestId('reel').getAttribute('data-country')) === today.countryId && (await page.getByTestId('reel-name').innerText()).trim().toLowerCase() === country.toLowerCase(), `${await page.getByTestId('reel-name').innerText()} (expected ${country})`);
+  await page.screenshot({ path: SHOTS + '94-reel-landed.png' });
+  await page.getByTestId('question-card').waitFor({ timeout: 8000 });
+  s = await state(page);
+  check(results, "then the conquest begins from it: a World game, today's, with no start multiplier", s.startId === today.countryId && s.daily === today.day && s.mode === 'World' && s.multiplier === 1 && s.phase === 'recruit' && s.empire.name === 'Daily Tester', `${s.startId} ${s.daily} ${s.mode} x${s.multiplier}`);
+  check(results, 'in a daily game the way out is Give up, not New game', (await page.getByTestId('quit').innerText()).trim() === 'Give up');
+  await page.reload();
+  await page.getByTestId('question-card').waitFor();
+  check(results, 'a reload picks the daily game up where it was', (await state(page)).daily === today.day && (await state(page)).startId === today.countryId);
+
+  // The rules of the game itself are the classic ones: recruit, attack, conquer.
+  await recruit(page);
+  await page.locator('.target-chip').first().click();
+  await strike(page);
+  s = await fight(page, true);
+  check(results, 'recruiting, attacking and conquering work as in the classic game', s.phase === 'attack' && s.owned.length === 2 && s.troops > 0, `${s.phase}, ${s.owned.length} owned`);
+
+  // Giving up ends the day's attempt and counts what was conquered.
+  await page.getByTestId('quit').click();
+  check(results, 'Give up asks first', /End today's conquest here\?/.test(await page.locator('.quit-confirm').innerText()) && (await state(page)).phase === 'attack', await page.locator('.quit-confirm').innerText());
+  await page.getByTestId('quit-confirm').click();
+  await page.getByTestId('gameover-screen').waitFor();
+  await page.locator('[data-testid="end-board"][data-status="ready"]').waitFor();
+  s = await state(page);
+  const sent = board.requests.filter((r) => r.name === 'submit_run');
+  const run = sent[0]?.args ?? {};
+  check(results, 'giving up ends the run and sends it as it stands: one country, one point, no multiplier', s.phase === 'gameover' && sent.length === 1 && run.p_day === today.day && run.p_start_country === today.countryId && run.p_campaign === 'World' && run.p_conquered === 1 && run.p_score === 1 && run.p_battles === 1 && run.p_outcome === 'defeat', JSON.stringify(run));
+  const endText = (await page.getByTestId('gameover-screen').innerText()).replace(/\s+/g, ' ');
+  check(results, 'giving up is not called a failed attack: the end screen says the player ended it', /You ended the conquest with 2 countries under your flag\./.test(endText) && !/fell/.test(endText), endText.slice(60, 160));
+  check(results, 'the end screen is the daily one: the day\'s board, the curve, and Back to the menu', /Daily conquest/i.test(endText) && /Today's top 5/i.test(endText) && (await page.getByTestId('score-curve').isVisible()) && (await page.getByTestId('curve-caption').innerText()).trim() === 'You are the first to finish today.' && (await page.getByTestId('play-again').innerText()).trim() === 'Back to the menu', endText.slice(0, 200));
+  await page.waitForTimeout(1500);
+  await page.screenshot({ path: SHOTS + '95-daily-end.png' });
+
+  // One attempt a day.
+  await page.getByTestId('play-again').click();
+  await page.locator('[data-testid="start-screen"][data-mode="daily"]').waitFor();
+  const result = (await page.getByTestId('daily-result').innerText()).replace(/\s+/g, ' ').trim();
+  check(results, "back at the menu today's conquest is over: its country and score are shown, and there is no second attempt", (await daily.getAttribute('data-phase')) === 'finished' && (await page.getByTestId('begin').count()) === 0 && /Score 1 · 1 country conquered/.test(result) && (await page.getByTestId('reel-name').innerText()).trim().toLowerCase() === country.toLowerCase() && /^Next conquest in \d\d:\d\d:\d\d$/.test((await page.getByTestId('daily-clock').innerText()).replace(/\s+/g, ' ').trim()), result);
+  await page.screenshot({ path: SHOTS + '96-daily-finished.png' });
+  await page.reload();
+  await page.getByTestId('start-screen').waitFor();
+  check(results, 'a reload does not hand out another attempt', (await daily.getAttribute('data-phase')) === 'finished' && (await page.getByTestId('begin').count()) === 0 && (await state(page)) === null);
+  await page.getByTestId('daily-leaderboard').click();
+  await page.locator('[data-testid="leaderboard"][data-status="ready"]').waitFor();
+  const mine = await page.getByTestId('board-today').locator('.board-row.mine').evaluateAll((els) => els.map((el) => el.querySelector('.board-name').innerText.trim()));
+  check(results, "Today's leaderboard opens with the run picked out and marked on the curve", mine.join() === 'Daily Tester' && (await page.getByTestId('board-curve').locator('.you').count()) === 1);
+  await page.getByTestId('leaderboard-close').click();
+  check(results, 'the unlocked classic game is still one press away', (await lock.isVisible()) && (await lock.getAttribute('data-unlocked')) === 'true');
+
+  // Midnight, US Eastern: a new day, a new country, a new attempt. The browser's clock is set to twenty
+  // seconds before it, in a browser that has already finished the day.
+  const late = await launch({ daily: true, time: '2026-11-28T04:59:40Z' });
+  try {
+    await late.context.addInitScript(() => {
+      if (localStorage.getItem('atlas-conquest:daily:v1') === null) localStorage.setItem('atlas-conquest:daily:v1', JSON.stringify({ day: '2026-11-27', finished: { score: 7, conquered: 7, outcome: 'defeat', runId: '00000000-0000-4000-8000-0000000000aa' } }));
+    });
+    await open(late.page);
+    const before = { day: await late.page.getByTestId('daily').getAttribute('data-day'), phase: await late.page.getByTestId('daily').getAttribute('data-phase'), atlas: await todayOf(late.page), clock: (await late.page.getByTestId('daily-clock').innerText()).replace(/\s+/g, ' ').trim() };
+    check(results, 'at 11:59pm Eastern it is still the same day, with seconds left on the clock', before.day === '2026-11-27' && before.phase === 'finished' && before.atlas.countryId === 'KAZ' && /^Next conquest in 00:00:[012]\d$/.test(before.clock), JSON.stringify(before));
+    await late.page.clock.fastForward(30_000);
+    await late.page.locator('[data-testid="daily"][data-day="2026-11-28"]').waitFor();
+    const after = { phase: await late.page.getByTestId('daily').getAttribute('data-phase'), atlas: await todayOf(late.page), begin: await late.page.getByTestId('begin').isEnabled(), clock: (await late.page.getByTestId('daily-clock').innerText()).replace(/\s+/g, ' ').trim(), name: (await late.page.getByTestId('reel-name').innerText()).trim() };
+    check(results, 'at 12:00am Eastern the day turns over: a different country, a fresh attempt, a full clock', after.phase === 'idle' && after.atlas.day === '2026-11-28' && after.atlas.countryId === 'KIR' && after.begin && /^A new country in 23:59:\d\d$/.test(after.clock) && after.name === 'Where will you rise from?', JSON.stringify(after));
+    late.board.add('Yesterday', 30, { day: '2026-11-27' });
+    late.board.add('Early bird', 3, { day: '2026-11-28' });
+    await late.page.getByTestId('leaderboard-toggle').click();
+    await late.page.locator('[data-testid="leaderboard"][data-status="ready"]').waitFor();
+    const fresh = await late.page.getByTestId('board-today').locator('.board-name').evaluateAll((els) => els.map((el) => el.innerText.trim()));
+    check(results, "and the leaderboard starts afresh: yesterday's runs are gone from it", fresh.join() === 'Early bird' && late.board.requests.filter((r) => r.name === 'top_runs').at(-1).args.p_day === '2026-11-28', fresh.join());
+    check(results, 'midnight: no console errors, warnings or failed requests', late.problems.length === 0, late.problems.slice(0, 3).join(' ; '));
+  } finally {
+    await late.browser.close();
+  }
+}, { daily: true });
+
 // ------------------------------------------------------------ leaderboard
-// The global leaderboard. A stand-in answers for the Supabase project (see fakeLeaderboard in lib.mjs),
+// The daily leaderboard. A stand-in answers for the Supabase project (see fakeLeaderboard in lib.mjs),
 // so these checks cover everything the game does with it without touching a real database.
 section('leaderboard', async (page, board) => {
-  // Runs other players have already finished.
-  for (const [name, score] of [['Alpha', 40], ['Bravo', 36], ['Charlie', 30], ['Delta', 24], ['Echo', 12], ['Foxtrot', 6]]) board.add('World', name, score);
-  board.add('Europe', 'More battles', 20, { battles: 40 });
-  board.add('Europe', 'Fewer battles', 20, { battles: 25 });
-  for (const [name, score] of [['Third', 10], ['Fourth', 8], ['Fifth', 6]]) board.add('Europe', name, score);
+  // Runs other players have already finished today, and one from yesterday.
+  for (const [name, score] of [['Alpha', 40], ['Bravo', 36], ['Charlie', 30], ['Delta', 24]]) board.add(name, score);
+  board.add('More battles', 20, { battles: 40 });
+  board.add('Fewer battles', 20, { battles: 25 });
+  for (const [name, score] of [['Golf', 12], ['Hotel', 9], ['India', 6], ['Juliet', 4], ['Kilo', 2], ['Lima', 2]]) board.add(name, score);
+  const yesterday = new Date(Date.parse(`${board.day}T00:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
+  board.add('Old glory', 200, { day: yesterday });
 
   await open(page);
   await settle(page);
+  const today = await todayOf(page);
   const rect = (testid) => page.getByTestId(testid).evaluate((el) => { const r = el.getBoundingClientRect(); return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, centre: (r.left + r.right) / 2 }; });
   const look = (testid) => page.getByTestId(testid).evaluate((el) => { const cs = getComputedStyle(el); return [cs.backgroundColor, cs.borderTopColor, cs.color, cs.fontFamily, cs.fontSize, cs.fontWeight, cs.boxShadow].join(' | '); });
   const view = await page.evaluate(() => ({ w: innerWidth, h: innerHeight }));
   const rulesBox = await rect('rules-toggle');
   const boardBox = await rect('leaderboard-toggle');
+  const lockBox = await rect('classic-lock');
   check(results, 'a Leaderboard button sits to the right of the Rules button, on the same line', (await page.getByTestId('leaderboard-toggle').innerText()).trim() === 'Leaderboard' && boardBox.left >= rulesBox.right && boardBox.left - rulesBox.right <= 16 && boardBox.top === rulesBox.top && boardBox.bottom === rulesBox.bottom && boardBox.right <= view.w, JSON.stringify({ rulesBox, boardBox }));
-  check(results, 'the Rules button is still centred above the map', Math.abs(rulesBox.centre - (440 + view.w) / 2) <= 2, `centre ${Math.round(rulesBox.centre)}`);
+  check(results, 'the Rules button is still centred above the map, and the padlock is clear of both buttons', Math.abs(rulesBox.centre - (440 + view.w) / 2) <= 2 && lockBox.left > boardBox.right + 8, `centre ${Math.round(rulesBox.centre)}, lock at ${Math.round(lockBox.left)}`);
   await page.mouse.move(5, 5);
   check(results, 'it has the same gold, border, font and size as the Rules button', (await look('leaderboard-toggle')) === (await look('rules-toggle')), await look('leaderboard-toggle'));
   check(results, 'the start screen asks the leaderboard nothing until it is opened', board.requests.length === 0, `${board.requests.length} requests`);
@@ -1232,19 +1418,23 @@ section('leaderboard', async (page, board) => {
   const cover = await rect('leaderboard');
   const under = await page.evaluate(() => { const el = document.elementFromPoint((440 + innerWidth) / 2, innerHeight / 2); return { inBoard: Boolean(el?.closest('.leaderboard')), onMap: Boolean(el?.closest('.map')) }; });
   check(results, 'pressing it replaces the map with the leaderboard, beside a start menu that still works', cover.left === 440 && cover.right === view.w && cover.top === 0 && cover.bottom === view.h && under.inBoard && !under.onMap && (await page.getByTestId('begin').isVisible()), JSON.stringify({ cover, under }));
-  const cards = await hall.locator('.board-card').evaluateAll((els) => els.map((el) => el.getAttribute('data-campaign')));
-  check(results, 'it has a card for each of the seven campaigns', cards.join() === 'World,Africa,Asia,Europe,North America,South America,Oceania', cards.join());
-  const rowsOf = (campaign) => page.getByTestId(`board-${campaign}`).locator('.board-row').evaluateAll((els) => els.map((el) => ({ rank: el.querySelector('.board-rank').innerText.trim(), name: el.querySelector('.board-name').innerText.trim(), score: el.querySelector('.board-score').innerText.trim(), flag: (() => { const c = el.querySelector('canvas.empire-flag'); return c ? `${c.width}x${c.height}` : null; })(), detail: el.querySelector('.board-detail')?.innerText.replace(/\s+/g, ' ').trim() })));
-  const world = await rowsOf('World');
-  check(results, 'World shows its top five in order, with rank, pixel flag, empire name and score', world.map((r) => `${r.rank} ${r.name} ${r.score}`).join(', ') === '1 Alpha 40, 2 Bravo 36, 3 Charlie 30, 4 Delta 24, 5 Echo 12' && world.every((r) => r.flag === '12x8'), JSON.stringify(world));
-  check(results, 'a sixth run is not shown', !(await hall.innerText()).includes('Foxtrot'));
-  check(results, 'each row says where the empire started and how far it got', world.every((r) => /France · \d+ countries/.test(r.detail)), world[0].detail);
-  const europe = await rowsOf('Europe');
-  check(results, 'a tie on score goes to the empire that fought fewer battles', europe.map((r) => r.name).join(' > ') === 'Fewer battles > More battles > Third > Fourth > Fifth', europe.map((r) => r.name).join(' > '));
-  check(results, 'a campaign nobody has finished says so', /No empire has finished this campaign yet/.test(await page.getByTestId('board-Africa').innerText()) && (await page.getByTestId('board-Africa').locator('.board-row').count()) === 0);
+  const cards = await hall.locator('.board-card').evaluateAll((els) => els.map((el) => el.getAttribute('data-testid')));
+  check(results, 'it is about today alone: one board and one curve, no campaigns', cards.join() === 'board-today,board-curve' && (await hall.getAttribute('data-day')) === today.day && (await hall.locator('[data-campaign]').count()) === 0, cards.join());
+  const rowsOf = () => page.getByTestId('board-today').locator('.board-row').evaluateAll((els) => els.map((el) => ({ rank: el.querySelector('.board-rank').innerText.trim(), name: el.querySelector('.board-name').innerText.trim(), score: el.querySelector('.board-score').innerText.trim(), flag: (() => { const c = el.querySelector('canvas.empire-flag'); return c ? `${c.width}x${c.height}` : null; })(), detail: el.querySelector('.board-detail')?.innerText.replace(/\s+/g, ' ').trim() })));
+  const top = await rowsOf();
+  check(results, "it shows today's top ten in order, with rank, pixel flag, empire name and score", top.map((r) => `${r.rank} ${r.name} ${r.score}`).join(', ') === '1 Alpha 40, 2 Bravo 36, 3 Charlie 30, 4 Delta 24, 5 Fewer battles 20, 6 More battles 20, 7 Golf 12, 8 Hotel 9, 9 India 6, 10 Juliet 4' && top.every((r) => r.flag === '12x8'), JSON.stringify(top));
+  check(results, 'an eleventh run is not shown, and neither is anything from yesterday', !(await hall.innerText()).includes('Kilo') && !(await hall.innerText()).includes('Old glory'));
+  check(results, 'a tie on score goes to the empire that fought fewer battles', top[4].name === 'Fewer battles' && top[5].name === 'More battles');
+  check(results, 'each row says how far the empire got', top.every((r) => /\d+ countries/.test(r.detail)), top[0].detail);
+  const heading = (await page.getByTestId('board-today').locator('h2').innerText()).replace(/\s+/g, ' ').trim();
+  check(results, 'the board says when it resets', /^Today's top 10 resets in \d\d:\d\d:\d\d$/i.test(heading), heading);
   const asked = board.requests.filter((r) => r.name === 'top_runs');
-  check(results, 'it reads every campaign in one call, with the public key, from the configured project', asked.length >= 1 && asked.every((r) => r.args.p_campaign === null && r.args.p_limit === 5 && r.headers.apikey === 'test-public-key' && r.url === 'https://leaderboard.invalid/rest/v1/rpc/top_runs'), JSON.stringify(asked.map((r) => [r.url, r.args])));
-  const fit = await hall.evaluate((el) => ({ sideways: el.scrollWidth > el.clientWidth + 1, wide: [...el.querySelectorAll('.board-row, .board-card, .board-card h2')].filter((x) => x.scrollWidth > x.clientWidth + 1).map((x) => x.className) }));
+  const spread = board.requests.filter((r) => r.name === 'day_scores');
+  check(results, "it asks for today's runs and today's scores, with the public key, from the configured project", asked.length >= 1 && spread.length >= 1 && asked.every((r) => r.args.p_day === today.day && r.args.p_limit === 10 && r.headers.apikey === 'test-public-key' && r.url === 'https://leaderboard.invalid/rest/v1/rpc/top_runs') && spread.every((r) => r.args.p_day === today.day && r.url === 'https://leaderboard.invalid/rest/v1/rpc/day_scores'), JSON.stringify(asked.map((r) => [r.url, r.args])));
+  const curve = page.getByTestId('board-curve').getByTestId('score-curve');
+  const drawn = await curve.evaluate((el) => ({ players: el.getAttribute('data-players'), bars: el.querySelectorAll('.bar').length, bell: el.querySelector('.bell')?.getAttribute('d')?.length ?? 0, you: el.querySelectorAll('.you').length, caption: el.querySelector('figcaption').innerText.trim() }));
+  check(results, "a curve shows how everyone did today: bars for the scores and a bell curve over them", drawn.players === '12' && drawn.bars >= 6 && drawn.bell > 100 && drawn.you === 0 && drawn.caption === '12 players have finished today.', JSON.stringify(drawn));
+  const fit = await hall.evaluate((el) => ({ sideways: el.scrollWidth > el.clientWidth + 1, wide: [...el.querySelectorAll('.board-row, .board-card, .board-card h2, .score-curve')].filter((x) => x.scrollWidth > x.clientWidth + 1).map((x) => x.className) }));
   check(results, 'leaderboard: every row fits its card', !fit.sideways && fit.wide.length === 0 && (await misfits(page)).length === 0, JSON.stringify(fit) + (await misfits(page)).join(' ; '));
   await page.screenshot({ path: SHOTS + '85-leaderboard.png' });
 
@@ -1260,8 +1450,6 @@ section('leaderboard', async (page, board) => {
   check(results, 'Escape returns to the map', (await hall.count()) === 0 && (await page.getByTestId('leaderboard-toggle').innerText()).trim() === 'Leaderboard');
 
   // Names: letters, apostrophes and single spaces, 3 to 24 characters, and nothing offensive.
-  await page.getByTestId('mode-Europe').click();
-  await page.getByTestId('start-DEU').click();
   const field = page.getByTestId('empire-name');
   const begin = page.getByTestId('begin');
   const hint = page.getByTestId('name-hint');
@@ -1280,15 +1468,13 @@ section('leaderboard', async (page, board) => {
   check(results, 'an innocent name that contains a blocked word is accepted', (await page.getByTestId('name-warning').count()) === 0 && (await begin.isEnabled()));
   await field.fill('Kikeland');
   const warning = (await page.getByTestId('name-warning').innerText()).trim();
-  check(results, 'an offensive name gets a neutral message that never repeats the word, and Begin conquest is disabled', warning === "That name isn't allowed. Try another." && (await begin.isDisabled()), warning);
-  await page.getByTestId('start-DEU').dblclick();
-  check(results, 'double-clicking a country does not start a game under it either', (await page.getByTestId('start-screen').isVisible()) && (await state(page)) === null);
+  check(results, 'an offensive name gets a neutral message that never repeats the word, and Begin conquest is disabled', warning === "That name isn't allowed. Try another." && (await begin.isDisabled()) && (await page.getByTestId('daily').getAttribute('data-phase')) === 'idle', warning);
   await field.fill('');
   check(results, 'an empty name is fine: the empire is named after its home country', await begin.isEnabled());
 
-  /** Starts a game and loses it at once: every recruit question wrong, then every answer of the first battle. */
-  const lose = async (mode, id) => {
-    await startGame(page, mode, id);
+  /** Plays today's game and loses it at once: every recruit question wrong, then every answer of the first battle. */
+  const lose = async () => {
+    await beginDaily(page);
     await recruit(page, [false, false, false, false, false]);
     await page.locator('.target-chip').first().click();
     await page.getByTestId('attack-button').click();
@@ -1301,21 +1487,24 @@ section('leaderboard', async (page, board) => {
   const endBoard = page.getByTestId('end-board');
   const ready = () => page.locator('[data-testid="end-board"][data-status="ready"]').waitFor();
   const endRows = () => endBoard.locator('.board-row').evaluateAll((els) => els.map((el) => ({ rank: el.querySelector('.board-rank').innerText.trim(), name: el.querySelector('.board-name').innerText.trim(), score: el.querySelector('.board-score').innerText.trim(), mine: el.classList.contains('mine'), flag: Boolean(el.querySelector('canvas.empire-flag')) })));
+  const home = await page.evaluate((id) => window.__atlas.data.byId[id].name, today.countryId);
 
   // A run that ends outside the top five.
-  let s = await lose('Europe', 'DEU');
-  check(results, 'a run started with no name is named after its home country, in a name that passes', s.empire.name === 'Empire of Germany', s.empire.name);
+  let s = await lose();
+  check(results, 'a run started with no name is named after its home country, in a name that passes', s.empire.name.length >= 3 && s.empire.name !== 'New Empire' && s.empire.name.includes(home.split(/[^A-Za-z']/)[0]), `${s.empire.name} (${home})`);
   await ready();
   const sent = board.requests.filter((r) => r.name === 'submit_run');
   const run = sent[0]?.args ?? {};
-  const fields = ['p_battles', 'p_best_streak', 'p_campaign', 'p_conquered', 'p_continents', 'p_empire_name', 'p_flag_colours', 'p_flag_pattern', 'p_outcome', 'p_run_id', 'p_score', 'p_start_country'];
+  const fields = ['p_battles', 'p_best_streak', 'p_campaign', 'p_conquered', 'p_continents', 'p_day', 'p_empire_name', 'p_flag_colours', 'p_flag_pattern', 'p_outcome', 'p_run_id', 'p_score', 'p_start_country'];
   check(results, 'the finished run is sent once, with exactly the agreed fields and nothing personal', sent.length === 1 && Object.keys(run).sort().join() === fields.join() && sent[0].url === 'https://leaderboard.invalid/rest/v1/rpc/submit_run', `${sent.length} sent: ${Object.keys(run).sort().join()}`);
-  check(results, 'it carries the campaign, empire name, flag, start, score, conquests, continents, battles, streak and outcome', run.p_campaign === 'Europe' && run.p_empire_name === 'Empire of Germany' && run.p_flag_pattern === s.empire.flag.pattern && run.p_flag_colours.join() === s.empire.flag.colours.join() && run.p_start_country === 'DEU' && run.p_score === 0 && run.p_conquered === 0 && run.p_continents === 0 && run.p_battles === 1 && run.p_best_streak === s.bestStreak && run.p_outcome === 'defeat' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(run.p_run_id), JSON.stringify(run));
+  check(results, "it carries the day, the day's country, empire name, flag, score, conquests, continents, battles, streak and outcome", run.p_day === today.day && run.p_campaign === 'World' && run.p_empire_name === s.empire.name && run.p_flag_pattern === s.empire.flag.pattern && run.p_flag_colours.join() === s.empire.flag.colours.join() && run.p_start_country === today.countryId && run.p_score === 0 && run.p_conquered === 0 && run.p_continents === 0 && run.p_battles === 1 && run.p_best_streak === s.bestStreak && run.p_outcome === 'defeat' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(run.p_run_id), JSON.stringify(run));
   let rows = await endRows();
-  check(results, 'the end screen shows the global top five for that campaign', /Global top 5\s+Europe/i.test((await endBoard.innerText()).replace(/\s+/g, ' ')) && rows.slice(0, 5).map((r) => r.name).join(' > ') === 'Fewer battles > More battles > Third > Fourth > Fifth' && rows.every((r) => r.flag), JSON.stringify(rows));
-  check(results, 'a run outside the top five is added below it, highlighted, with its rank', rows.length === 6 && rows[5].mine && rows[5].rank === '6' && rows[5].name === 'Empire of Germany' && rows.filter((r) => r.mine).length === 1 && /ranks #6/.test(await page.getByTestId('board-standing').innerText()), JSON.stringify(rows[5]) + ' ' + (await page.getByTestId('board-standing').innerText()));
-  const endFit = await page.evaluate(() => { const end = document.querySelector('.end').getBoundingClientRect(); return [...document.querySelectorAll('.end-board, .end-board .board-row')].filter((el) => { const r = el.getBoundingClientRect(); return r.left < end.left || r.right > end.right || el.scrollWidth > el.clientWidth + 1; }).length; });
-  check(results, 'end screen: the leaderboard fits inside the panel, and Play again is still there', endFit === 0 && (await misfits(page)).length === 0 && (await page.getByTestId('play-again').isVisible()), `${endFit} outside; ${(await misfits(page)).join(' ; ')}`);
+  check(results, "the end screen shows today's top five", /Today's top 5/i.test((await endBoard.innerText()).replace(/\s+/g, ' ')) && rows.slice(0, 5).map((r) => r.name).join(' > ') === 'Alpha > Bravo > Charlie > Delta > Fewer battles' && rows.every((r) => r.flag), JSON.stringify(rows));
+  check(results, 'a run outside the top five is added below it, highlighted, with its rank', rows.length === 6 && rows[5].mine && rows[5].rank === '13' && rows[5].name === s.empire.name && rows.filter((r) => r.mine).length === 1 && /ranks #13 today/.test(await page.getByTestId('board-standing').innerText()), JSON.stringify(rows[5]) + ' ' + (await page.getByTestId('board-standing').innerText()));
+  const mark = await endBoard.getByTestId('score-curve').evaluate((el) => ({ players: el.getAttribute('data-players'), beat: el.getAttribute('data-beat'), you: el.querySelectorAll('.you').length, mine: el.querySelectorAll('.bar.mine').length, bell: Boolean(el.querySelector('.bell')), caption: el.querySelector('figcaption').innerText.trim() }));
+  check(results, 'below it a bell curve marks the score among everyone today: last of thirteen beats nobody', mark.players === '13' && mark.beat === '0' && mark.you === 1 && mark.mine === 1 && mark.bell && mark.caption === 'You beat 0% of the other 12 players today.', JSON.stringify(mark));
+  const endFit = await page.evaluate(() => { const end = document.querySelector('.end').getBoundingClientRect(); return [...document.querySelectorAll('.end-board, .end-board .board-row, .end-board .score-curve')].filter((el) => { const r = el.getBoundingClientRect(); return r.left < end.left || r.right > end.right || el.scrollWidth > el.clientWidth + 1; }).length; });
+  check(results, 'end screen: the leaderboard and curve fit inside the panel, and the way back is still there', endFit === 0 && (await misfits(page)).length === 0 && (await page.getByTestId('play-again').isVisible()), `${endFit} outside; ${(await misfits(page)).join(' ; ')}`);
   await page.screenshot({ path: SHOTS + '86-end-leaderboard.png' });
 
   // Looking at the same finished run again does not count it twice.
@@ -1323,25 +1512,33 @@ section('leaderboard', async (page, board) => {
   await page.getByTestId('gameover-screen').waitFor();
   await ready();
   const again = board.requests.filter((r) => r.name === 'submit_run');
-  check(results, 'after a refresh the same run id is sent again, and the board still holds it once', again.length === 2 && again[1].args.p_run_id === run.p_run_id && board.rows.filter((r) => r.run_id === run.p_run_id).length === 1 && (await endRows())[5]?.rank === '6', `${again.length} sent, ${board.rows.filter((r) => r.run_id === run.p_run_id).length} stored`);
+  check(results, 'after a refresh the same run id is sent again, and the board still holds it once', again.length === 2 && again[1].args.p_run_id === run.p_run_id && board.rows.filter((r) => r.run_id === run.p_run_id).length === 1 && (await endRows())[5]?.rank === '13', `${again.length} sent, ${board.rows.filter((r) => r.run_id === run.p_run_id).length} stored`);
   await page.getByTestId('play-again').click();
   await page.getByTestId('start-screen').waitFor();
 
-  // A run that makes the top five: nobody has finished Oceania yet.
+  // Another player (a browser with nothing stored) on an emptier day: a run that leads it.
+  board.rows.length = 0;
+  board.add('Runner up', 0, { battles: 5 });
+  board.add('Third place', 0, { battles: 9 });
+  await newPlayer(page);
   await page.getByTestId('empire-name').fill('Southern Cross');
-  s = await lose('Oceania', 'AUS');
+  s = await lose();
   await ready();
   rows = await endRows();
   const second = board.requests.filter((r) => r.name === 'submit_run').at(-1).args;
-  check(results, 'a new game is a new run, under the name it was given', second.p_run_id !== run.p_run_id && second.p_empire_name === 'Southern Cross' && second.p_campaign === 'Oceania');
-  check(results, 'a run inside the top five is highlighted where it stands', rows.length === 1 && rows[0].mine && rows[0].rank === '1' && rows[0].name === 'Southern Cross' && /greatest/i.test(await page.getByTestId('board-standing').innerText()), JSON.stringify(rows));
+  check(results, 'a new game is a new run, under the name it was given', second.p_run_id !== run.p_run_id && second.p_empire_name === 'Southern Cross' && second.p_day === today.day);
+  check(results, 'a run inside the top five is highlighted where it stands', rows.length === 3 && rows[0].mine && rows[0].rank === '1' && rows[0].name === 'Southern Cross' && /leads the day/i.test(await page.getByTestId('board-standing').innerText()), JSON.stringify(rows));
+  const tied = (await endBoard.getByTestId('curve-caption').innerText()).trim();
+  check(results, 'the curve counts only players who scored less: tied on score with both, it beat neither', tied === 'You beat 0% of the other 2 players today.', tied);
+  // Someone the run did beat... nobody can score below zero, so add higher scores and look from the menu.
+  for (const [name, score] of [['Higher', 8], ['Highest', 18]]) board.add(name, score);
 
   // The leaderboard refuses the run: the board is still shown, and the game says the run was not recorded.
   board.mode = 'reject';
   await page.reload();
   await page.getByTestId('gameover-screen').waitFor();
   await ready();
-  check(results, 'a run the leaderboard refuses is reported as not recorded, beside the top five', /could not be recorded/i.test(await page.getByTestId('board-standing').innerText()) && (await endRows()).length === 1);
+  check(results, 'a run the leaderboard refuses is reported as not recorded, beside the top five, with no curve of its own', /could not be recorded/i.test(await page.getByTestId('board-standing').innerText()) && (await endRows()).length === 5 && (await endBoard.getByTestId('score-curve').count()) === 0);
 
   // The leaderboard is unreachable: the end screen says so, and everything else carries on.
   board.mode = 'down';
@@ -1353,22 +1550,26 @@ section('leaderboard', async (page, board) => {
   await page.getByTestId('start-screen').waitFor();
   await page.getByTestId('leaderboard-toggle').click();
   await page.getByTestId('leaderboard-unavailable').waitFor();
-  check(results, 'the Leaderboard page says it is unavailable, and the start menu still works beside it', /unavailable/i.test(await hall.innerText()) && (await hall.locator('.board-card').count()) === 0 && (await page.getByTestId('begin').isVisible()));
+  check(results, 'the Leaderboard page says it is unavailable, and the start menu still works beside it', /unavailable/i.test(await hall.innerText()) && (await hall.locator('.board-card').count()) === 0 && (await page.getByTestId('daily-result').isVisible()));
   board.mode = 'ok';
   await page.getByTestId('leaderboard-retry').click();
   await page.locator('[data-testid="leaderboard"][data-status="ready"]').waitFor();
-  check(results, 'Try again loads it once the leaderboard is back', (await rowsOf('Oceania')).map((r) => r.name).join() === 'Southern Cross' && (await rowsOf('Europe')).length === 5);
+  const back = await rowsOf();
+  const own = await page.getByTestId('board-curve').getByTestId('score-curve').evaluate((el) => ({ you: el.querySelectorAll('.you').length, caption: el.querySelector('figcaption').innerText.trim() }));
+  check(results, 'Try again loads it once the leaderboard is back, with this device\'s own run marked', back.map((r) => r.name).join() === 'Highest,Higher,Southern Cross,Runner up,Third place' && (await page.getByTestId('board-today').locator('.board-row.mine .board-name').innerText()).trim() === 'Southern Cross' && own.you === 1 && own.caption === 'You beat 0% of the other 4 players today.', JSON.stringify({ back: back.map((r) => r.name), own }));
   await page.getByTestId('leaderboard-close').click();
 
   // And a whole game still plays with the leaderboard gone.
   board.mode = 'down';
-  await startGame(page, 'Europe', 'DEU');
+  await newPlayer(page);
+  await beginDaily(page);
   await recruit(page);
-  await attack(page, 'LUX');
+  await page.locator('.target-chip').first().click();
+  await strike(page);
   const after = await fight(page, true);
-  check(results, 'with the leaderboard unreachable a game still starts, recruits, attacks and conquers', after.phase === 'attack' && after.owned.includes('LUX'), after.phase);
+  check(results, 'with the leaderboard unreachable a daily game still starts, recruits, attacks and conquers', after.phase === 'attack' && after.owned.length === 2, after.phase);
   board.mode = 'ok';
-});
+}, { daily: true });
 
 // --------------------------------------------------------------- decimate
 // 15 right answers in a row, held until a country falls, earn a DECIMATE: the next target falls outright.
@@ -1476,10 +1677,10 @@ section('two-options', async (page) => {
 });
 
 // ----------------------------------------------------------------- runner
-for (const [name, fn] of Object.entries(sections)) {
+for (const [name, { fn, opts }] of Object.entries(sections)) {
   if (only && only !== name) continue;
   console.log(`\n=== ${name} ===`);
-  const { browser, page, problems, board } = await launch();
+  const { browser, page, problems, board } = await launch(opts);
   try {
     await fn(page, board);
   } catch (err) {

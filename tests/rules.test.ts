@@ -32,7 +32,7 @@ import {
   startDifficulty,
 } from '../src/game/rules';
 import { MODES } from '../src/game/types';
-import { buildWorld, distanceKm } from '../src/game/world';
+import { buildWorld, coastKm, distanceKm } from '../src/game/world';
 import { ALL, FACTS, fake } from './helpers';
 
 describe('defenders', () => {
@@ -204,7 +204,7 @@ describe('attackable countries', () => {
         expect(world.byId[id].landlocked).toBe(false);
         expect(id).not.toBe(start);
         expect(targets.land).not.toContain(id);
-        expect(distanceKm(world.byId[start], world.byId[id])).toBeLessThanOrEqual(SEA_RANGE_KM);
+        expect(coastKm(world.byId[start], world.byId[id])).toBeLessThanOrEqual(SEA_RANGE_KM);
         // …and on a sea the start has a coast on.
         expect(world.byId[id].lanes.some((lane) => world.byId[start].lanes.includes(lane)), `${start} -> ${id}`).toBe(true);
       }
@@ -226,7 +226,7 @@ describe('attackable countries', () => {
     // Not the Mediterranean or the Black Sea, however near they are as the crow flies.
     for (const id of ['ITA', 'GRC', 'TUR', 'UKR', 'ROU', 'BGR', 'HRV', 'TUN', 'MLT', 'ALB']) {
       expect(germany, id).not.toContain(id);
-      expect(distanceKm(world.byId.DEU, world.byId[id]), id).toBeLessThanOrEqual(SEA_RANGE_KM);
+      expect(coastKm(world.byId.DEU, world.byId[id]), id).toBeLessThanOrEqual(SEA_RANGE_KM);
     }
     expect(getTargets(world, ['DEU']).seaFallback).toBe(false);
 
@@ -234,7 +234,7 @@ describe('attackable countries', () => {
     for (const key of ['ESP', 'FRA', 'MAR']) {
       const opened = getTargets(world, ['DEU', key]);
       const all = [...opened.land, ...opened.sea];
-      for (const id of ['TUN', 'MLT', 'HRV']) expect(all, `${key} -> ${id}`).toContain(id);
+      for (const id of ['TUN', 'MLT', 'ITA']) expect(all, `${key} -> ${id}`).toContain(id);
       // …but not the Black Sea beyond it.
       for (const id of ['UKR', 'ROU', 'BGR']) expect(all, `${key} -> ${id}`).not.toContain(id);
     }
@@ -265,19 +265,15 @@ describe('attackable countries', () => {
   });
 
   it('an isolated start is topped up to three targets with the nearest shores beyond the range', () => {
-    expect(SEA_RANGE_KM).toBe(2500);
+    expect(SEA_RANGE_KM).toBe(1700);
     expect(MIN_TARGETS).toBe(3);
-    // Pitcairn: only French Polynesia is within 2,500 km. The next two nearest shores open up as well.
+    // Pitcairn: only French Polynesia is within range. The next two nearest shores open up as well.
     const pitcairn = getTargets(world, ['PCN']);
-    expect(pitcairn).toEqual({ land: [], sea: ['PYF', 'COK', 'NIU'], seaFallback: true });
-    const km = (id: string) => distanceKm(world.byId.PCN, world.byId[id]);
+    expect(pitcairn).toEqual({ land: [], sea: ['PYF', 'KIR', 'COK'], seaFallback: true });
+    const km = (id: string) => coastKm(world.byId.PCN, world.byId[id]);
     expect(km('PYF')).toBeLessThanOrEqual(SEA_RANGE_KM);
-    expect(km('COK')).toBeGreaterThan(SEA_RANGE_KM);
-    expect(km('NIU')).toBeGreaterThan(km('COK'));
-    // Australia's centre is far from every shore but one: it gets three as well.
-    const australia = getTargets(world, ['AUS']);
-    expect(australia.sea).toHaveLength(3);
-    expect(australia.seaFallback).toBe(true);
+    expect(km('KIR')).toBeGreaterThan(SEA_RANGE_KM);
+    expect(km('COK')).toBeGreaterThan(km('KIR'));
     // Taking French Polynesia from Pitcairn brings more shores into range: no top-up needed any more.
     const grown = getTargets(world, ['PCN', 'PYF']);
     expect(grown.sea.length).toBeGreaterThanOrEqual(3);
@@ -289,7 +285,7 @@ describe('attackable countries', () => {
       for (const id of w.ids) {
         const t = getTargets(w, [id]);
         const total = t.land.length + t.sea.length;
-        const inRange = t.sea.filter((s) => distanceKm(w.byId[id], w.byId[s]) <= SEA_RANGE_KM);
+        const inRange = t.sea.filter((s) => coastKm(w.byId[id], w.byId[s]) <= SEA_RANGE_KM);
         expect(total, `${w.byId[id].name} in ${mode}`).toBeGreaterThan(0);
         if (!w.byId[id].landlocked) {
           const coastalLeft = w.ids.filter((o) => o !== id && !w.byId[o].landlocked && !t.land.includes(o)).length;
@@ -324,15 +320,39 @@ describe('attackable countries', () => {
     expect(targets.sea).toEqual([]);
   });
 
+  it('measures the sea from coast to coast, not from centre to centre', () => {
+    // The pairs that centre-to-centre distances got wrong: big countries whose centres are far from their shores.
+    const km = (a: string, b: string) => coastKm(world.byId[a], world.byId[b]);
+    expect(distanceKm(world.byId.NZL, world.byId.AUS)).toBeGreaterThan(4000);
+    expect(km('NZL', 'AUS')).toBeLessThan(SEA_RANGE_KM);
+    expect(km('AUS', 'NZL')).toBe(km('NZL', 'AUS'));
+    expect(km('AUS', 'PNG')).toBeLessThan(200);
+    expect(km('RUS', 'JPN')).toBeLessThan(100);
+    expect(km('USA', 'RUS')).toBeLessThan(150);
+    expect(km('USA', 'MEX')).toBe(0);
+    // A country is measured from its mainland and nearby islands, not from territories an ocean away:
+    // France is not next door to Brazil, though French Guiana is.
+    expect(km('FRA', 'BRA')).toBeGreaterThan(4000);
+    expect(km('FRA', 'GBR')).toBeLessThan(100);
+    // So New Zealand and Australia can attack each other, and Russia can cross to Japan.
+    expect(getTargets(world, ['NZL']).sea).toContain('AUS');
+    expect(getTargets(world, ['AUS']).sea).toEqual(expect.arrayContaining(['NZL', 'PNG', 'IDN']));
+    expect(getTargets(world, ['AUS']).seaFallback).toBe(false);
+    expect(getTargets(world, ['RUS']).sea).toEqual(expect.arrayContaining(['JPN', 'USA']));
+    // Countries too far apart for the data fall back to their centres.
+    expect(world.byId.NZL.near.ISL).toBeUndefined();
+    expect(km('NZL', 'ISL')).toBe(distanceKm(world.byId.NZL, world.byId.ISL));
+  });
+
   it('measures sea range from any owned country', () => {
     const a = fake('AAA', { lat: 0, lng: 0, borders: ['BBB'] });
     const b = fake('BBB', { lat: 0, lng: 20, borders: ['AAA'] });
-    const far = fake('FAR', { lat: 0, lng: 40 });
+    const far = fake('FAR', { lat: 0, lng: 30 });
     const mini = buildWorld([a, b, far], 'World');
-    // 40 degrees of longitude on the equator is ~4450 km: out of range from AAA alone…
+    // 30 degrees of longitude on the equator is ~3340 km: out of range from AAA alone…
     expect(getTargets(mini, ['AAA']).sea).toEqual(['FAR']);
     expect(getTargets(mini, ['AAA']).seaFallback).toBe(true);
-    // …but ~2220 km from BBB once it is owned.
+    // …but ~1110 km from BBB once it is owned.
     expect(getTargets(mini, ['AAA', 'BBB'])).toEqual({ land: [], sea: ['FAR'], seaFallback: false });
   });
 

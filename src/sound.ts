@@ -434,6 +434,10 @@ export const sound = {
   gameOver() {
     play('gameOver', [330, 294, 262, 220, 165].map((hz, i) => ({ hz, at: i * 0.2, seconds: i === 4 ? 0.8 : 0.24, wave: 'triangle' as const, volume: 0.12 })));
   },
+  /** One step of the daily reel as it spins: a short wooden click. */
+  reel() {
+    play('reel', [{ hz: 900, seconds: 0.03, wave: 'triangle', volume: 0.05 }], [{ seconds: 0.012, volume: 0.05, filter: 'bandpass', from: 2000, q: 3 }]);
+  },
   /** Small click for picking things: flags, colours, difficulty filters. */
   select() {
     play('select', [{ hz: 660, seconds: 0.04, volume: 0.04 }]);

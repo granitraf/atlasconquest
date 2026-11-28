@@ -2,35 +2,33 @@ import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_FLAG, EMPIRE_NAME_MAX, FLAG_COLOURS, FLAG_PATTERNS } from '../src/game/flag';
 import { ALLOWED_PATTERN, BLOCKED_PATTERN } from '../src/names/validateEmpireName';
-import { CONTINENT_BONUS, START_MULTIPLIER, finalScore } from '../src/game/rules';
+import { CONTINENT_BONUS, finalScore } from '../src/game/rules';
 import { createGame, gameStats } from '../src/game/state';
 import { CONTINENTS, MODES, type Country } from '../src/game/types';
 import { buildWorld } from '../src/game/world';
-import { LEADERBOARD_SIZE, LeaderboardUnavailable, RunRejected, UNNAMED_EMPIRE, campaignTitle, formatScore, leaderboardConfigured, parseRow, runRecord, submitRun, topRuns, type RunRecord } from '../src/leaderboard';
+import { LEADERBOARD_PAGE_SIZE, LEADERBOARD_SIZE, LeaderboardUnavailable, RunRejected, UNNAMED_EMPIRE, campaignTitle, dayScores, formatScore, leaderboardConfigured, parseRow, runRecord, standing, submitRun, topRuns, type RunRecord } from '../src/leaderboard';
 
 const ALL: Country[] = JSON.parse(readFileSync(new URL('../public/data/countries.json', import.meta.url), 'utf8'));
 const SQL = readFileSync(new URL('../supabase/schema.sql', import.meta.url), 'utf8');
 
 describe('supabase/schema.sql mirrors the game', () => {
-  it('knows the seven campaigns, how many countries each has and how many continents can be held', () => {
-    const rows = [...SQL.matchAll(/^\s*\('([^']+)', (\d+), (\d+)\),?$/gm)].map((m) => ({ name: m[1], countries: Number(m[2]), continents: Number(m[3]) }));
-    expect(rows.map((r) => r.name).sort()).toEqual([...MODES].sort());
-    for (const row of rows) {
-      const world = buildWorld(ALL, row.name as (typeof MODES)[number]);
-      expect(row.countries, row.name).toBe(world.ids.length);
-      expect(row.continents, row.name).toBe(row.name === 'World' ? CONTINENTS.length : 1);
-    }
-    // The table's own check lists the same campaigns.
+  it('knows the daily game is a World conquest: every country, and every continent to hold', () => {
+    const world = buildWorld(ALL, 'World');
+    expect(SQL).toContain(`v_countries  constant integer := ${world.ids.length};`);
+    expect(SQL).toContain(`v_continents constant integer := ${CONTINENTS.length};`);
+    expect(SQL).toContain("if p_campaign <> 'World' then");
+    // The table still lists every campaign the game has.
     const listed = /campaign in \(([^)]+)\)/.exec(SQL)![1].split(',').map((x) => x.trim().replace(/'/g, ''));
     expect(listed.sort()).toEqual([...MODES].sort());
   });
 
-  it('accepts exactly the scores the game can produce', () => {
-    const multipliers = /unnest\(array\[([^\]]+)\]\) as m/.exec(SQL)![1].split(',').map(Number);
-    expect(multipliers).toEqual(Object.values(START_MULTIPLIER));
-    expect(SQL).toContain(`round(p_conquered * m + p_continents * ${CONTINENT_BONUS}, 1) = p_score`);
-    // The game's own formula, for every multiplier: a multiple of a half, so rounding to one decimal loses nothing.
-    for (const m of multipliers) expect(finalScore(7, m, 2)).toBe(7 * m + 2 * CONTINENT_BONUS);
+  it('accepts exactly the scores the daily game can produce: a point a country, no multiplier', () => {
+    expect(SQL).toContain(`if p_score <> p_conquered + p_continents * ${CONTINENT_BONUS} then`);
+    expect(SQL).not.toMatch(/unnest\(array\[[\d., ]+\]\) as m/);
+    const world = buildWorld(ALL, 'World');
+    const game = createGame(world, 'DEU', 7, { name: 'Daily Empire', flag: DEFAULT_FLAG }, undefined, '2026-11-27');
+    expect(game.multiplier).toBe(1);
+    expect(finalScore(7, game.multiplier, 2)).toBe(7 + 2 * CONTINENT_BONUS);
   });
 
   it('accepts exactly the flags the game can draw', () => {
@@ -54,13 +52,15 @@ describe('supabase/schema.sql mirrors the game', () => {
     expect(SQL).not.toMatch(/grant (insert|update|delete|all)[^;]*on table public\.runs/i);
     expect(SQL).toMatch(/on conflict \(run_id\) do nothing/);
     expect(SQL).toMatch(/created_at\s+timestamptz\s+not null default now\(\)/);
-    // The ranking: score, then fewer battles, then the earlier run.
+    // The ranking, within a day: score, then fewer battles, then the earlier run.
     expect(SQL).toContain('order by r.score desc, r.battles asc, r.created_at asc');
+    expect(SQL).toContain('where r.day = coalesce(p_day, public.atlas_today())');
   });
 });
 
-const run: RunRecord = { runId: '1b663b9a-0bcf-461d-bbc7-7dde5db0f976', campaign: 'Europe', empireName: 'Empire of Germany', flag: DEFAULT_FLAG, startCountry: 'DEU', score: 37.5, conquered: 15, continents: 0, battles: 19, bestStreak: 11, outcome: 'defeat' };
-const stored = { rank: 2, run_id: run.runId, campaign: 'Europe', empire_name: 'Empire of Germany', flag_pattern: 4, flag_colours: ['#d8343c', '#f4f4ec', '#2b4fc4'], start_country: 'DEU', score: 37.5, conquered: 15, continents: 0, battles: 19, best_streak: 11, outcome: 'defeat', created_at: '2026-01-01T00:00:00Z' };
+const DAY = '2026-11-27';
+const run: RunRecord = { runId: '1b663b9a-0bcf-461d-bbc7-7dde5db0f976', day: DAY, campaign: 'World', empireName: 'Empire of Germany', flag: DEFAULT_FLAG, startCountry: 'KAZ', score: 15, conquered: 15, continents: 0, battles: 19, bestStreak: 11, outcome: 'defeat' };
+const stored = { rank: 2, run_id: run.runId, day: DAY, campaign: 'World', empire_name: 'Empire of Germany', flag_pattern: 4, flag_colours: ['#d8343c', '#f4f4ec', '#2b4fc4'], start_country: 'KAZ', score: 15, conquered: 15, continents: 0, battles: 19, best_streak: 11, outcome: 'defeat', created_at: '2026-11-27T12:00:00Z' };
 const answer = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 const configure = () => {
   vi.stubEnv('VITE_SUPABASE_URL', 'https://example.supabase.co/');
@@ -79,7 +79,8 @@ describe('the leaderboard client', () => {
     vi.stubEnv('VITE_SUPABASE_URL', '');
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', '');
     expect(leaderboardConfigured()).toBe(false);
-    await expect(topRuns()).rejects.toBeInstanceOf(LeaderboardUnavailable);
+    await expect(topRuns(DAY)).rejects.toBeInstanceOf(LeaderboardUnavailable);
+    await expect(dayScores(DAY)).rejects.toBeInstanceOf(LeaderboardUnavailable);
     await expect(submitRun({ ...run, runId: 'unconfigured' })).rejects.toBeInstanceOf(LeaderboardUnavailable);
     // Half a configuration is no configuration.
     vi.stubEnv('VITE_SUPABASE_URL', 'https://example.supabase.co');
@@ -90,11 +91,12 @@ describe('the leaderboard client', () => {
   it('is unavailable when the project cannot be reached or answers with a server error', async () => {
     configure();
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
-    await expect(topRuns('World')).rejects.toBeInstanceOf(LeaderboardUnavailable);
+    await expect(topRuns(DAY)).rejects.toBeInstanceOf(LeaderboardUnavailable);
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(answer(503, { message: 'down' })));
-    await expect(topRuns('World')).rejects.toBeInstanceOf(LeaderboardUnavailable);
+    await expect(topRuns(DAY)).rejects.toBeInstanceOf(LeaderboardUnavailable);
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(answer(200, { not: 'a list' })));
-    await expect(topRuns('World')).rejects.toBeInstanceOf(LeaderboardUnavailable);
+    await expect(topRuns(DAY)).rejects.toBeInstanceOf(LeaderboardUnavailable);
+    await expect(dayScores(DAY)).rejects.toBeInstanceOf(LeaderboardUnavailable);
   });
 
   it('sends a run to submit_run with the public key and returns its rank', async () => {
@@ -108,8 +110,8 @@ describe('the leaderboard client', () => {
     expect(init.method).toBe('POST');
     expect(init.headers).toMatchObject({ apikey: 'public-key', Authorization: 'Bearer public-key' });
     expect(JSON.parse(init.body)).toEqual({
-      p_run_id: run.runId, p_campaign: 'Europe', p_empire_name: 'Empire of Germany', p_flag_pattern: 0, p_flag_colours: DEFAULT_FLAG.colours,
-      p_start_country: 'DEU', p_score: 37.5, p_conquered: 15, p_continents: 0, p_battles: 19, p_best_streak: 11, p_outcome: 'defeat',
+      p_run_id: run.runId, p_day: DAY, p_campaign: 'World', p_empire_name: 'Empire of Germany', p_flag_pattern: 0, p_flag_colours: DEFAULT_FLAG.colours,
+      p_start_country: 'KAZ', p_score: 15, p_conquered: 15, p_continents: 0, p_battles: 19, p_best_streak: 11, p_outcome: 'defeat',
     });
     // The same run asked about again is not sent twice.
     await expect(submitRun(run)).resolves.toBe(7);
@@ -127,29 +129,44 @@ describe('the leaderboard client', () => {
     await expect(submitRun({ ...run, runId: 'refused' })).rejects.toBeInstanceOf(RunRejected);
   });
 
-  it('reads the top runs of every campaign, best first, five at most', async () => {
+  it("reads a day's top runs, best first, five by default and ten for the leaderboard page", async () => {
     configure();
-    const rows = [
-      ...[3, 1, 2, 4, 5, 6].map((rank) => ({ ...stored, run_id: `w${rank}`, campaign: 'World', rank, score: 100 - rank })),
-      { ...stored, rank: 1 },
-      { ...stored, run_id: 'x', campaign: 'Atlantis' },
-      null,
-    ];
+    const rows = [...[3, 1, 2, 4, 5, 6, 7].map((rank) => ({ ...stored, run_id: `w${rank}`, rank, score: 100 - rank })), { ...stored, run_id: 'x', campaign: 'Atlantis' }, null];
     // A fresh answer each time: a response can only be read once.
     const fetch = vi.fn().mockImplementation(async () => answer(200, rows));
     vi.stubGlobal('fetch', fetch);
-    const board = await topRuns();
-    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ p_campaign: null, p_limit: LEADERBOARD_SIZE });
-    expect(Object.keys(board)).toEqual(MODES);
-    expect(board.World.map((r) => r.rank)).toEqual([1, 2, 3, 4, 5]);
-    expect(board.Europe).toHaveLength(1);
-    expect(board.Africa).toEqual([]);
-    await topRuns('Asia');
-    expect(JSON.parse(fetch.mock.calls[1][1].body).p_campaign).toBe('Asia');
+    const board = await topRuns(DAY);
+    expect(fetch.mock.calls[0][0]).toBe('https://example.supabase.co/rest/v1/rpc/top_runs');
+    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ p_day: DAY, p_limit: LEADERBOARD_SIZE });
+    expect(board.map((r) => r.rank)).toEqual([1, 2, 3, 4, 5]);
+    expect(board.every((r) => r.day === DAY)).toBe(true);
+    expect((await topRuns(DAY, LEADERBOARD_PAGE_SIZE)).map((r) => r.rank)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    expect(JSON.parse(fetch.mock.calls[1][1].body)).toEqual({ p_day: DAY, p_limit: LEADERBOARD_PAGE_SIZE });
+  });
+
+  it("reads the spread of a day's scores, lowest first, dropping anything that is not a count", async () => {
+    configure();
+    const fetch = vi.fn().mockImplementation(async () => answer(200, [{ score: 9, players: 2 }, { score: 0, players: 5 }, { score: 'x', players: 1 }, { score: 4, players: 0 }, null, { score: 3, players: 1.9 }]));
+    vi.stubGlobal('fetch', fetch);
+    await expect(dayScores(DAY)).resolves.toEqual([{ score: 0, players: 5 }, { score: 3, players: 1 }, { score: 9, players: 2 }]);
+    expect(fetch.mock.calls[0][0]).toBe('https://example.supabase.co/rest/v1/rpc/day_scores');
+    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ p_day: DAY });
+  });
+
+  it('works out where a score stands among the day: the share of the other players it beat', () => {
+    const scores = [{ score: 0, players: 5 }, { score: 3, players: 1 }, { score: 9, players: 2 }, { score: 20, players: 1 }];
+    expect(standing(scores, 20)).toEqual({ players: 9, beat: 100 });
+    expect(standing(scores, 9)).toEqual({ players: 9, beat: 75 });
+    expect(standing(scores, 3)).toEqual({ players: 9, beat: 63 });
+    expect(standing(scores, 0)).toEqual({ players: 9, beat: 0 });
+    // Alone, there is nobody to beat.
+    expect(standing([{ score: 4, players: 1 }], 4)).toEqual({ players: 1, beat: null });
+    expect(standing([], 4)).toEqual({ players: 0, beat: null });
   });
 
   it('never trusts what comes back: bad rows are dropped, bad flags and names replaced', () => {
-    expect(parseRow(stored)).toEqual({ ...run, flag: { pattern: 4, colours: ['#d8343c', '#f4f4ec', '#2b4fc4'] }, rank: 2, createdAt: '2026-01-01T00:00:00Z' });
+    expect(parseRow(stored)).toEqual({ ...run, flag: { pattern: 4, colours: ['#d8343c', '#f4f4ec', '#2b4fc4'] }, rank: 2, createdAt: '2026-11-27T12:00:00Z' });
+    expect(parseRow({ ...stored, day: undefined })!.day).toBe('');
     expect(parseRow({ ...stored, flag_pattern: 99 })!.flag).toEqual(DEFAULT_FLAG);
     expect(parseRow({ ...stored, flag_colours: ['#d8343c', 'url(evil)', '#2b4fc4'] })!.flag).toEqual(DEFAULT_FLAG);
     expect(parseRow({ ...stored, empire_name: 'Fuck Empire' })!.empireName).toBe(UNNAMED_EMPIRE);
@@ -160,13 +177,13 @@ describe('the leaderboard client', () => {
     for (const bad of [null, 'row', {}, { ...stored, campaign: 'Atlantis' }, { ...stored, score: 'lots' }, { ...stored, rank: 0 }, { ...stored, run_id: 7 }]) expect(parseRow(bad)).toBeNull();
   });
 
-  it('turns a finished game into a run with no personal data in it', () => {
-    const world = buildWorld(ALL, 'Europe');
-    const game = { ...createGame(world, 'DEU', 7, { name: 'Empire of Germany', flag: DEFAULT_FLAG }), phase: 'gameover' as const, owned: ['DEU', 'LUX', 'BEL'], battles: 4, bestStreak: 6 };
+  it('turns a finished daily game into a run with no personal data in it', () => {
+    const world = buildWorld(ALL, 'World');
+    const game = { ...createGame(world, 'KAZ', 7, { name: 'Empire of Germany', flag: DEFAULT_FLAG }, undefined, DAY), phase: 'gameover' as const, owned: ['KAZ', 'KGZ', 'UZB'], battles: 4, bestStreak: 6 };
     const record = runRecord(game, gameStats(world, game), 'some-id');
-    expect(record).toEqual({ runId: 'some-id', campaign: 'Europe', empireName: 'Empire of Germany', flag: DEFAULT_FLAG, startCountry: 'DEU', score: 2 * game.multiplier, conquered: 2, continents: 0, battles: 4, bestStreak: 6, outcome: 'defeat' });
+    expect(record).toEqual({ runId: 'some-id', day: DAY, campaign: 'World', empireName: 'Empire of Germany', flag: DEFAULT_FLAG, startCountry: 'KAZ', score: 2, conquered: 2, continents: 0, battles: 4, bestStreak: 6, outcome: 'defeat' });
     expect(runRecord({ ...game, phase: 'victory' }, gameStats(world, game), 'x').outcome).toBe('victory');
-    expect(Object.keys(record).sort()).toEqual(['battles', 'bestStreak', 'campaign', 'conquered', 'continents', 'empireName', 'flag', 'outcome', 'runId', 'score', 'startCountry']);
+    expect(Object.keys(record).sort()).toEqual(['battles', 'bestStreak', 'campaign', 'conquered', 'continents', 'day', 'empireName', 'flag', 'outcome', 'runId', 'score', 'startCountry']);
   });
 
   it('formats scores and campaign titles', () => {

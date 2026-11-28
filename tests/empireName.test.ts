@@ -149,8 +149,12 @@ describe('the database applies the same name rules', () => {
   });
 
   it('refuses a run under a name that fails, and stores one that passes', async () => {
+    // A run of today's Daily Game, from the country the database says the day starts in.
     const submit = (name: string) =>
-      db.query("select public.submit_run('00000000-0000-4000-8000-000000000001', 'Europe', $1, 0, array['#d8343c','#f4f4ec','#2b4fc4'], 'DEU', 0, 0, 0, 1, 0, 'defeat') as rank", [name]);
+      db.query(
+        "select public.submit_run('00000000-0000-4000-8000-000000000001', public.atlas_today(), 'World', $1, 0, array['#d8343c','#f4f4ec','#2b4fc4'], public.atlas_daily_country(public.atlas_today()), 0, 0, 0, 1, 0, 'defeat') as rank",
+        [name],
+      );
     for (const name of ['N I G G A', 'Kikeland', "N'igger Land", 'N1gga', 'Ro', 'The Greatest Empire Ever Built', "'Tis Rome"]) await expect(submit(name), name).rejects.toThrow('That empire name is not allowed.');
     expect((await submit('  King’s   Realm ')).rows).toEqual([{ rank: 1 }]);
     expect((await db.query('select empire_name from public.runs')).rows).toEqual([{ empire_name: "King's Realm" }]);

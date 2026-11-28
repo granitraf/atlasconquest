@@ -2764,6 +2764,314 @@ p {
   }
 }
 
+/* ------------------------------------------------------------ daily game */
+
+.daily-section h2 small {
+  margin-left: 8px;
+  color: var(--muted);
+  font-size: 19px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+/* The reel: a slot-machine window that country outlines flash through before it lands on the day's start. */
+.reel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border: 3px solid var(--gold-deep);
+  border-radius: 2px;
+  background: var(--panel-inset);
+  box-shadow: inset 0 0 0 2px #120a05;
+}
+
+.reel-window {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 84 / 56;
+  max-height: 200px;
+  border: 2px solid var(--line-soft);
+  background:
+    linear-gradient(rgba(255, 207, 74, 0.05) 50%, transparent 50%) 0 0 / 100% 8px,
+    #0f0804;
+}
+
+.reel-shape {
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  object-fit: contain;
+}
+
+.reel.spinning .reel-shape {
+  filter: blur(0.4px);
+}
+
+.reel.landed .reel-window {
+  border-color: var(--green);
+  box-shadow: 0 0 18px rgba(61, 220, 132, 0.5);
+  animation: reel-land 0.5s steps(4);
+}
+
+@keyframes reel-land {
+  0% {
+    transform: scale(1.03);
+  }
+}
+
+.reel-mystery {
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 64px;
+  text-shadow: 4px 4px 0 #5b3a08;
+  animation: reel-wait 1.4s steps(2) infinite;
+}
+
+@keyframes reel-wait {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.reel-name {
+  display: grid;
+  place-items: center;
+  /* A fixed height: the name changes font when the reel lands, and nothing below it may jump. */
+  height: 32px;
+  color: var(--text);
+  font-size: 27px;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.reel.landed .reel-name {
+  color: var(--green);
+  font-family: var(--font-display);
+  font-size: 15px;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.daily-result {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 2px solid var(--gold);
+  background: #3a2a0c;
+  text-align: center;
+}
+
+.daily-result strong {
+  color: var(--gold);
+  font-size: 27px;
+}
+
+.daily-result span {
+  color: var(--text);
+  font-size: 23px;
+}
+
+.daily-result b {
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 15px;
+}
+
+.daily-clock {
+  color: var(--muted);
+  font-size: 23px;
+  text-align: center;
+}
+
+.daily-clock b {
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+/* The padlock: the door to the classic game. Top right of the screen; in the menu's header on a narrow one. */
+.lock-toggle {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 10px;
+  border: 2px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 23px;
+}
+
+.lock-toggle:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.lock-toggle.unlocked {
+  color: var(--gold);
+}
+
+.lock-toggle.corner {
+  position: absolute;
+  top: calc(10px + env(safe-area-inset-top));
+  right: 10px;
+  z-index: 32;
+}
+
+.lock-toggle.menu {
+  display: none;
+  height: 34px;
+  margin-left: auto;
+}
+
+/* In the menu the padlock has the corner, so the zoom buttons sit below it. */
+.phase-start .zoom-controls {
+  margin-top: 52px;
+}
+
+.lock-icon {
+  width: 20px;
+  height: 22.5px;
+  flex: none;
+  image-rendering: pixelated;
+}
+
+.lock-icon .shackle {
+  fill: currentColor;
+  opacity: 0.75;
+}
+
+.lock-icon .body {
+  fill: currentColor;
+}
+
+.lock-icon .keyhole {
+  fill: #1d1305;
+}
+
+/* The passcode prompt. */
+.gate-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(12, 7, 3, 0.8);
+}
+
+.gate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(380px, 100%);
+  padding: 22px;
+  border: 3px solid var(--gold-deep);
+  border-radius: 2px;
+  background: var(--panel);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  color: var(--gold);
+  text-align: center;
+}
+
+.gate.wrong {
+  animation: shake 0.45s;
+}
+
+.gate .lock-icon {
+  width: 40px;
+  height: 45px;
+}
+
+.gate h2 {
+  font-family: var(--font-display);
+  font-size: 17px;
+  text-transform: uppercase;
+}
+
+.gate p {
+  color: var(--text);
+  font-size: 23px;
+  line-height: 1.15;
+}
+
+.gate .search {
+  width: 100%;
+  text-align: center;
+}
+
+.gate .gate-error {
+  color: var(--red);
+}
+
+.gate-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* The day's scores as a curve. */
+.score-curve {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+}
+
+.score-curve svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.score-curve .bar {
+  fill: var(--gold-deep);
+}
+
+.score-curve .bar.mine {
+  fill: var(--green);
+}
+
+.score-curve .bell {
+  fill: none;
+  stroke: #fff0b8;
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+  opacity: 0.8;
+}
+
+.score-curve .axis {
+  fill: var(--line);
+}
+
+.score-curve .you rect,
+.score-curve .you path {
+  fill: var(--green);
+}
+
+.score-curve .tick {
+  fill: var(--muted);
+  font-family: var(--font);
+  font-size: 13px;
+}
+
+.score-curve figcaption {
+  color: var(--text);
+  font-size: 23px;
+  text-align: center;
+}
+
+.end-board .score-curve figcaption {
+  font-size: 21px;
+}
+
 /* ---------------------------------------------------------- leaderboard */
 
 /* Runs of one campaign, best first: place, flag, empire, score. */
@@ -2911,7 +3219,9 @@ p {
 
 /* The hall of empires, which borrows the rule book's page. */
 .board-card h2 {
+  flex-wrap: wrap;
   justify-content: space-between;
+  gap: 4px 12px;
 }
 
 .board-card h2 small {
@@ -2977,6 +3287,19 @@ p {
   /* The start panel covers the map here, so the way in to the rules is the button in its header. */
   .start-doors {
     display: flex;
+  }
+
+  /* The padlock moves into the menu's header: the corner is under the menu here. */
+  .lock-toggle.corner {
+    display: none;
+  }
+
+  .lock-toggle.menu {
+    display: inline-flex;
+  }
+
+  .phase-start .zoom-controls {
+    margin-top: 0;
   }
 
   /* Only the way back is shown above an open page. */

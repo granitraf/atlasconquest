@@ -26,6 +26,7 @@ export function fake(id: string, over: Partial<Country> = {}): Country {
     capital: `${id} City`,
     cities: [],
     independence: null,
+    near: {},
     religion: null,
     religionRivals: [],
     drive: { side: 'right', ask: false },

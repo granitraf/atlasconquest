@@ -74,10 +74,23 @@ export type Action =
   | { type: 'attack'; targetId: string }
   /** Take a target outright with a ready DECIMATE: no battle questions. */
   | { type: 'decimate'; targetId: string }
+  /** Give up: the run ends where it stands. (How a Daily Game is abandoned: it counts, and cannot be restarted.) */
+  | { type: 'forfeit' }
   | { type: 'retreat' };
 
-/** A new game. `memory` is what this device remembers of earlier games: their questions wait their turn. */
-export function createGame(world: World, startId: string, seed: number, empire: Empire, memory: GameMemory = { sigs: [], decoys: {} }): GameState {
+/**
+ * A new game. `memory` is what this device remembers of earlier games: their questions wait their turn.
+ * `daily` is the day a Daily Game is for: everyone starts from the same country that day, so the start
+ * carries no score multiplier.
+ */
+export function createGame(
+  world: World,
+  startId: string,
+  seed: number,
+  empire: Empire,
+  memory: GameMemory = { sigs: [], decoys: {} },
+  daily: string | null = null,
+): GameState {
   if (!world.inPlay.has(startId)) throw new Error(`${startId} is not in play in mode ${world.mode}`);
   const rng = createRng(seed);
   const difficulty = startDifficulty(world, startId);
@@ -87,7 +100,8 @@ export function createGame(world: World, startId: string, seed: number, empire: 
     mode: world.mode,
     startId,
     startLabel: difficulty.label,
-    multiplier: difficulty.multiplier,
+    multiplier: daily ? 1 : difficulty.multiplier,
+    daily,
     owned: [startId],
     troops: START_TROOPS,
     lives: START_LIVES,
@@ -375,6 +389,22 @@ export function reduce(world: World, state: GameState, action: Action): GameStat
     case 'decimate':
       next = decimate(world, state, action.targetId);
       break;
+    case 'forfeit':
+      // The run ends as it stands: what was conquered is kept, and nothing more can be.
+      if (state.phase === 'recruit' || state.phase === 'attack' || state.phase === 'battle') {
+        next = {
+          ...state,
+          phase: 'gameover',
+          lives: 0,
+          recruit: null,
+          battle: null,
+          feedback: null,
+          decimateReady: false,
+          lastEvent: { kind: 'surrendered' },
+          eventSeq: state.eventSeq + 1,
+        };
+      }
+      break;
     case 'retreat':
       // Retreating saves your life but costs troops and the streak. Not available once the battle is
       // decided, or when it would take the last troop.
@@ -472,5 +502,6 @@ export function reviveGame(raw: unknown, worldFor: (mode: ModeId) => World | nul
     recentSigs: memory.sigs,
     recentDecoys: memory.decoys,
     decimateReady: s.phase === 'attack' && s.decimateReady === true,
+    daily: typeof s.daily === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s.daily) ? s.daily : null,
   };
 }

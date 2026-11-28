@@ -12,6 +12,9 @@ const SAVE_KEY = 'atlas-conquest:save:v1';
 const EMPIRE_KEY = 'atlas-conquest:empire:v1';
 const RUN_KEY = 'atlas-conquest:run:v1';
 const MEMORY_KEY = 'atlas-conquest:memory:v1';
+const DAILY_KEY = 'atlas-conquest:daily:v1';
+const CLASSIC_KEY = 'atlas-conquest:classic:v1';
+const MENU_KEY = 'atlas-conquest:menu:v1';
 
 export interface Manifest {
   countryCount: number;
@@ -172,3 +175,70 @@ export function saveMemory(memory: GameMemory): void {
     // Without storage every game starts fresh; it still plays.
   }
 }
+
+/** What this device has done with a day's Daily Game: begun it, and how it ended. */
+export interface DailyRecord {
+  /** The day (YYYY-MM-DD, US Eastern). */
+  day: string;
+  /** Set once the run is over: its result, and the id it went onto the leaderboard under. */
+  finished?: { score: number; conquered: number; outcome: 'victory' | 'defeat'; runId: string };
+}
+
+/** The latest Daily Game this device began, or null. One attempt a day: a finished day cannot be played again. */
+export function loadDaily(): DailyRecord | null {
+  try {
+    const raw = JSON.parse(localStorage.getItem(DAILY_KEY) ?? 'null') as Partial<DailyRecord> | null;
+    if (!raw || typeof raw.day !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(raw.day)) return null;
+    const f = raw.finished;
+    const finished =
+      f && typeof f.score === 'number' && typeof f.conquered === 'number' && typeof f.runId === 'string'
+        ? { score: f.score, conquered: f.conquered, outcome: f.outcome === 'victory' ? ('victory' as const) : ('defeat' as const), runId: f.runId }
+        : undefined;
+    return { day: raw.day, ...(finished ? { finished } : {}) };
+  } catch {
+    return null;
+  }
+}
+
+export function saveDaily(record: DailyRecord): void {
+  try {
+    localStorage.setItem(DAILY_KEY, JSON.stringify(record));
+  } catch {
+    // Without storage the day cannot be remembered; the game still plays.
+  }
+}
+
+/** Has the classic game been unlocked on this device? */
+export function classicUnlocked(): boolean {
+  try {
+    return localStorage.getItem(CLASSIC_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function unlockClassic(): void {
+  try {
+    localStorage.setItem(CLASSIC_KEY, '1');
+  } catch {
+    // It stays unlocked for this visit only.
+  }
+}
+
+/** Which start menu was last showing: the Daily Game, or (once unlocked) the classic game. */
+export function loadMenu(): 'daily' | 'classic' {
+  try {
+    return classicUnlocked() && localStorage.getItem(MENU_KEY) === 'classic' ? 'classic' : 'daily';
+  } catch {
+    return 'daily';
+  }
+}
+
+export function saveMenu(menu: 'daily' | 'classic'): void {
+  try {
+    localStorage.setItem(MENU_KEY, menu);
+  } catch {
+    // Not being able to remember it is fine.
+  }
+}
+

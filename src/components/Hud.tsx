@@ -103,17 +103,23 @@ export function TopBar({ state, total, onQuit, charge = 'none' }: TopBarProps) {
         )}
         {confirming ? (
           <span className="quit-confirm">
-            Abandon game?
-            <button type="button" className="link danger" onClick={onQuit}>
-              Yes, quit
+            {state.daily ? "End today's conquest here?" : 'Abandon game?'}
+            <button type="button" className="link danger" onClick={onQuit} data-testid="quit-confirm">
+              {state.daily ? 'Yes, give up' : 'Yes, quit'}
             </button>
             <button type="button" className="link" onClick={() => setConfirming(false)}>
               No
             </button>
           </span>
         ) : (
-          <button type="button" className="link quit" onClick={() => setConfirming(true)}>
-            New game
+          <button
+            type="button"
+            className="link quit"
+            onClick={() => setConfirming(true)}
+            title={state.daily ? 'Giving up ends today\'s conquest: your score so far is your result.' : undefined}
+            data-testid="quit"
+          >
+            {state.daily ? 'Give up' : 'New game'}
           </button>
         )}
       </div>

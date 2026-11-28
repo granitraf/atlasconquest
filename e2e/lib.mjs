@@ -3,6 +3,7 @@
 // to know the right answer, but every action goes through the real UI: clicks, taps, wheel, keys.
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright-core';
+import { hashCode } from '../scripts/passcode.mjs';
 
 export const BASE = process.env.ATLAS_URL ?? 'http://localhost:5173/';
 export const SHOTS = decodeURIComponent(new URL('./screenshots/', import.meta.url).pathname);
@@ -17,18 +18,33 @@ export const SUPABASE_KEY = 'test-public-key';
 const LEADERBOARD_CALL = /\/rest\/v1\/rpc\//;
 
 /**
- * A stand-in for the Supabase project: it keeps runs in memory and answers the two calls the game makes
- * (submit_run and top_runs) with the ranking rules of supabase/schema.sql.
+ * The passcode to the classic game in these checks. The servers they run against are started with its
+ * hash (see run.mjs), so the checks never need the real passcode and do not break when it is changed.
+ */
+export const PASSCODE = 'checks-only-passcode';
+export const PASSCODE_HASH = hashCode(PASSCODE);
+
+/** The day the Daily Game is on at a moment: the date in US Eastern time, as YYYY-MM-DD. */
+export const etDay = (now = new Date()) => {
+  const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(now);
+  const get = (type) => parts.find((p) => p.type === type).value;
+  return `${get('year')}-${get('month')}-${get('day')}`;
+};
+
+/**
+ * A stand-in for the Supabase project: it keeps runs in memory and answers the three calls the game makes
+ * (submit_run, top_runs and day_scores) with the ranking rules of supabase/schema.sql.
  *   board.mode = 'ok' | 'down' (unreachable) | 'reject' (refuses every run)
+ *   board.day  = the day runs added by hand belong to (today, unless a check moves the clock)
  */
 export function fakeLeaderboard() {
-  const board = { rows: [], requests: [], mode: 'ok', clock: 0 };
+  const board = { rows: [], requests: [], mode: 'ok', clock: 0, day: etDay() };
   const order = (a, b) => b.score - a.score || a.battles - b.battles || a.created_at.localeCompare(b.created_at) || a.run_id.localeCompare(b.run_id);
-  board.ranked = (campaign) => board.rows.filter((r) => r.campaign === campaign).sort(order).map((r, i) => ({ ...r, rank: i + 1 }));
+  board.ranked = (day) => board.rows.filter((r) => r.day === day).sort(order).map((r, i) => ({ ...r, rank: i + 1 }));
   const stamp = () => new Date(Date.UTC(2026, 0, 1, 0, 0, board.clock++)).toISOString();
-  /** Puts a run on the board directly, as if someone else had played it. */
-  board.add = (campaign, empire_name, score, extra = {}) => {
-    const row = { run_id: `00000000-0000-4000-8000-${String(board.rows.length + 1).padStart(12, '0')}`, campaign, empire_name, flag_pattern: board.rows.length % 16, flag_colours: ['#d8343c', '#f4f4ec', '#2b4fc4'], start_country: 'FRA', score, conquered: Math.round(score), continents: 0, battles: Math.round(score) + 1, best_streak: 3, outcome: 'defeat', created_at: stamp(), ...extra };
+  /** Puts a run on the day's board directly, as if someone else had played it. */
+  board.add = (empire_name, score, extra = {}) => {
+    const row = { run_id: `00000000-0000-4000-8000-${String(board.rows.length + 1).padStart(12, '0')}`, day: board.day, campaign: 'World', empire_name, flag_pattern: board.rows.length % 16, flag_colours: ['#d8343c', '#f4f4ec', '#2b4fc4'], start_country: 'FRA', score, conquered: Math.round(score), continents: 0, battles: Math.round(score) + 1, best_streak: 3, outcome: 'defeat', created_at: stamp(), ...extra };
     board.rows.push(row);
     return row;
   };
@@ -44,20 +60,28 @@ export function fakeLeaderboard() {
     if (name === 'submit_run') {
       if (board.mode === 'reject') return json(route, 400, { code: 'P0001', message: 'The score does not add up.' });
       if (!board.rows.some((r) => r.run_id === args.p_run_id)) {
-        board.rows.push({ run_id: args.p_run_id, campaign: args.p_campaign, empire_name: args.p_empire_name, flag_pattern: args.p_flag_pattern, flag_colours: args.p_flag_colours, start_country: args.p_start_country, score: args.p_score, conquered: args.p_conquered, continents: args.p_continents, battles: args.p_battles, best_streak: args.p_best_streak, outcome: args.p_outcome, created_at: stamp() });
+        board.rows.push({ run_id: args.p_run_id, day: args.p_day, campaign: args.p_campaign, empire_name: args.p_empire_name, flag_pattern: args.p_flag_pattern, flag_colours: args.p_flag_colours, start_country: args.p_start_country, score: args.p_score, conquered: args.p_conquered, continents: args.p_continents, battles: args.p_battles, best_streak: args.p_best_streak, outcome: args.p_outcome, created_at: stamp() });
       }
       const run = board.rows.find((r) => r.run_id === args.p_run_id);
-      return json(route, 200, board.ranked(run.campaign).find((r) => r.run_id === run.run_id).rank);
+      return json(route, 200, board.ranked(run.day).find((r) => r.run_id === run.run_id).rank);
     }
-    if (name === 'top_runs') {
-      const campaigns = args.p_campaign ? [args.p_campaign] : [...new Set(board.rows.map((r) => r.campaign))];
-      return json(route, 200, campaigns.flatMap((c) => board.ranked(c).slice(0, args.p_limit ?? 5)));
+    if (name === 'top_runs') return json(route, 200, board.ranked(args.p_day ?? board.day).slice(0, args.p_limit ?? 5));
+    if (name === 'day_scores') {
+      const counts = new Map();
+      for (const r of board.rows) if (r.day === (args.p_day ?? board.day)) counts.set(r.score, (counts.get(r.score) ?? 0) + 1);
+      return json(route, 200, [...counts].sort((a, b) => a[0] - b[0]).map(([score, players]) => ({ score, players })));
     }
     return json(route, 404, { message: 'no such function' });
   };
   return board;
 }
 
+/**
+ * Opens a browser on the game. The Daily Game is the game's front door, and the classic game (any campaign,
+ * any start) sits behind a passcode; most checks are about the classic game, so by default the browser
+ * arrives with it already unlocked and its menu showing. Pass { daily: true } to arrive as a new player does.
+ * Pass { time } to set the browser's clock (it then runs on from there).
+ */
 export async function launch(opts = {}) {
   const browser = await chromium.launch({ channel: 'chrome', headless: true });
   const context = await browser.newContext({
@@ -68,7 +92,22 @@ export async function launch(opts = {}) {
   });
   const board = fakeLeaderboard();
   await context.route(LEADERBOARD_CALL, board.handle);
+  if (!opts.daily) {
+    // Only where nothing is stored yet, so a check that locks or switches menus itself is left alone.
+    await context.addInitScript(() => {
+      try {
+        if (localStorage.getItem('atlas-conquest:classic:v1') === null) {
+          localStorage.setItem('atlas-conquest:classic:v1', '1');
+          localStorage.setItem('atlas-conquest:menu:v1', 'classic');
+        }
+      } catch {}
+    });
+  }
   const page = await context.newPage();
+  if (opts.time) {
+    await page.clock.install({ time: new Date(opts.time) });
+    board.day = etDay(new Date(opts.time));
+  }
   const problems = [];
   // When a check takes the leaderboard down on purpose, the browser's complaints about it are expected.
   const expected = (url) => board.mode !== 'ok' && LEADERBOARD_CALL.test(url ?? '');

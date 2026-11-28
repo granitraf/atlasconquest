@@ -61,3 +61,13 @@ export function distanceKm(a: Pick<Country, 'lat' | 'lng'>, b: Pick<Country, 'la
     Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
   return 2 * EARTH_RADIUS_KM * Math.asin(Math.min(1, Math.sqrt(h)));
 }
+
+/**
+ * How far apart two countries are by sea, in km: the gap between their coasts where it is known (see
+ * Country.near), otherwise the distance between their centres. New Zealand's centre is 4,000 km from
+ * Australia's, but their coasts are 1,500 km apart.
+ */
+export function coastKm(a: Pick<Country, 'id' | 'lat' | 'lng' | 'near'>, b: Pick<Country, 'id' | 'lat' | 'lng' | 'near'>): number {
+  return a.near?.[b.id] ?? b.near?.[a.id] ?? distanceKm(a, b);
+}
+

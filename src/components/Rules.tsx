@@ -33,6 +33,8 @@ import type { CountryShape } from '../map/geo';
 interface Props {
   data: GameData;
   onClose: () => void;
+  /** The rule book of the Daily Game (one country a day, no start ratings) rather than of the classic game. */
+  daily?: boolean;
 }
 
 const slug = (label: string) => label.toLowerCase().replace(/\s+/g, '-');
@@ -126,7 +128,10 @@ const Badge = ({ label }: { label: StartLabel }) => (
 );
 
 /** The rule book. Takes the place of the map on the start screen. Every number comes from the rules themselves. */
-export function Rules({ data, onClose }: Props) {
+export function Rules({ data, daily = false, onClose }: Props) {
+  // Chapters are numbered as they come: the Daily Game has one fewer than the classic game.
+  let chapter = 0;
+  const next = () => ++chapter;
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
@@ -177,10 +182,11 @@ export function Rules({ data, onClose }: Props) {
 
         <article className="rule wide" data-rule="game">
           <h2>
-            <i>1</i> The game
+            <i>{next()}</i> The game
           </h2>
           <p>
-            Atlas Conquest is a game of conquest where <b>your knowledge is your army</b>. Pick a country, raise your troops, and take the map
+            Atlas Conquest is a game of conquest where <b>your knowledge is your army</b>.{' '}
+            {daily ? 'Every day you are given a country: raise your troops, and take the map' : 'Pick a country, raise your troops, and take the map'}{' '}
             one country at a time. Every battle is a run of geography questions about the country you are attacking. Answer right and its
             enemies fall. Answer wrong and your own troops do.
           </p>
@@ -189,93 +195,120 @@ export function Rules({ data, onClose }: Props) {
 
         <article className="rule" data-rule="goal">
           <h2>
-            <i>2</i> The goal
+            <i>{next()}</i> The goal
           </h2>
           <p>
-            <b>Fly your flag over every country in your campaign.</b> You have a single heart: run out of troops in a battle and your empire
-            falls.
+            <b>{daily ? 'Fly your flag over every country in the world.' : 'Fly your flag over every country in your campaign.'}</b> You have a
+            single heart: run out of troops in a battle and your empire falls.
           </p>
-          <p className="rule-formula">
-            Score = countries conquered <em>×</em> your start's multiplier <em>+</em> {CONTINENT_BONUS} for every continent you hold in full
-          </p>
+          {daily ? (
+            <p className="rule-formula">
+              Score = countries conquered <em>+</em> {CONTINENT_BONUS} for every continent you hold in full
+            </p>
+          ) : (
+            <p className="rule-formula">
+              Score = countries conquered <em>×</em> your start's multiplier <em>+</em> {CONTINENT_BONUS} for every continent you hold in full
+            </p>
+          )}
           <p className="rule-note">
-            Every finished run goes on the global leaderboard under your empire's name and flag: the top five of each campaign.
+            {daily
+              ? "Every finished Daily Game goes on today's leaderboard under your empire's name and flag, and shows where you stand among everyone who played."
+              : 'The classic game is for practice: only the Daily Game goes on the leaderboard.'}
           </p>
         </article>
 
-        <article className="rule" data-rule="campaigns">
-          <h2>
-            <i>3</i> {MODES.length} campaigns
-          </h2>
-          <p>Take on the whole world, or keep it to one continent.</p>
-          <ul className="rule-chips" data-testid="rules-campaigns">
-            {MODES.map((mode) => (
-              <li key={mode}>
-                {mode} <b>{data.worlds[mode].ids.length}</b>
-              </li>
-            ))}
-          </ul>
-        </article>
-
-        <article className="rule wide" data-rule="start">
-          <h2>
-            <i>4</i> Where you start
-          </h2>
-          <p>
-            Every start gets the same {soldiers(START_TROOPS)} troops. What changes is how hard the road is, and each country is graded for it
-            by two things: <b>how well known it is</b>, and <b>where it sits</b>.
-          </p>
-          <div className="rule-scroll">
-            <table className="rule-grid" data-testid="rules-grades">
-              <thead>
-                <tr>
-                  <th />
-                  {POSITIONS.map((p) => (
-                    <th key={p.key}>
-                      {p.title}
-                      <small>{p.detail}</small>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {FAME.map((row) => (
-                  <tr key={row.fame}>
-                    <th>
-                      {row.title}
-                      <small>{row.detail}</small>
-                    </th>
-                    {POSITIONS.map((p) => (
-                      <td key={p.key}>
-                        <Badge label={START_RATING[row.fame][p.key]} />
-                      </td>
-                    ))}
-                  </tr>
+        {daily ? (
+          <article className="rule" data-rule="daily">
+            <h2>
+              <i>{next()}</i> The daily conquest
+            </h2>
+            <p>
+              <b>One country a day, the same for every player.</b> The reel spins through the world and lands on it. A new country arrives at
+              midnight, US Eastern time.
+            </p>
+            <p>
+              <b>One attempt a day.</b> Giving up ends the run, and it counts as it stands. Nobody picks an easy start, so there is no
+              multiplier: a country is a point, whoever you are.
+            </p>
+            <p className="rule-note">The leaderboard starts afresh every day.</p>
+          </article>
+        ) : (
+          <>
+            <article className="rule" data-rule="campaigns">
+              <h2>
+                <i>{next()}</i> {MODES.length} campaigns
+              </h2>
+              <p>Take on the whole world, or keep it to one continent.</p>
+              <ul className="rule-chips" data-testid="rules-campaigns">
+                {MODES.map((mode) => (
+                  <li key={mode}>
+                    {mode} <b>{data.worlds[mode].ids.length}</b>
+                  </li>
                 ))}
-              </tbody>
-            </table>
-          </div>
-          <p>
-            <b>Why?</b> The less famous a country, the harder its questions: fewer people know its flag, its capital or its neighbours. And an
-            island has no border to walk across, so every step is a sea crossing against extra enemies and half the time. The grade is the
-            multiplier on your score, from ×{START_MULTIPLIER.Easy} to ×{START_MULTIPLIER.Extreme}: the harder the start, the more every
-            conquest counts.
-          </p>
-          <p className="rule-note" data-testid="rules-rating-counts">
-            In the World campaign:{' '}
-            {START_LABELS.map((label, i) => (
-              <span key={label}>
-                {i > 0 && ' · '}
-                {ratings[label]} {label}
-              </span>
-            ))}
-            .
-          </p>
-        </article>
+              </ul>
+            </article>
+
+            <article className="rule wide" data-rule="start">
+              <h2>
+                <i>{next()}</i> Where you start
+              </h2>
+              <p>
+                Every start gets the same {soldiers(START_TROOPS)} troops. What changes is how hard the road is, and each country is graded for it
+                by two things: <b>how well known it is</b>, and <b>where it sits</b>.
+              </p>
+              <div className="rule-scroll">
+                <table className="rule-grid" data-testid="rules-grades">
+                  <thead>
+                    <tr>
+                      <th />
+                      {POSITIONS.map((p) => (
+                        <th key={p.key}>
+                          {p.title}
+                          <small>{p.detail}</small>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {FAME.map((row) => (
+                      <tr key={row.fame}>
+                        <th>
+                          {row.title}
+                          <small>{row.detail}</small>
+                        </th>
+                        {POSITIONS.map((p) => (
+                          <td key={p.key}>
+                            <Badge label={START_RATING[row.fame][p.key]} />
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p>
+                <b>Why?</b> The less famous a country, the harder its questions: fewer people know its flag, its capital or its neighbours. And an
+                island has no border to walk across, so every step is a sea crossing against extra enemies and half the time. The grade is the
+                multiplier on your score, from ×{START_MULTIPLIER.Easy} to ×{START_MULTIPLIER.Extreme}: the harder the start, the more every
+                conquest counts.
+              </p>
+              <p className="rule-note" data-testid="rules-rating-counts">
+                In the World campaign:{' '}
+                {START_LABELS.map((label, i) => (
+                  <span key={label}>
+                    {i > 0 && ' · '}
+                    {ratings[label]} {label}
+                  </span>
+                ))}
+                .
+              </p>
+            </article>
+          </>
+        )}
 
         <article className="rule wide" data-rule="recruit">
           <h2>
-            <i>5</i> Recruitment
+            <i>{next()}</i> Recruitment
           </h2>
           <p>
             Before the first battle comes your <b>one round of recruitment</b>: {RECRUIT_QUESTIONS} questions about your own country. It opens
@@ -321,7 +354,7 @@ export function Rules({ data, onClose }: Props) {
 
         <article className="rule wide" data-rule="defenders">
           <h2>
-            <i>6</i> Enemies
+            <i>{next()}</i> Enemies
           </h2>
           <p>
             Every country is held by enemies, from {soldiers(MIN_DEFENDERS)} for the smallest to {soldiers(defendersFor(1.4e9))} for the
@@ -353,7 +386,7 @@ export function Rules({ data, onClose }: Props) {
 
         <article className="rule" data-rule="battle">
           <h2>
-            <i>7</i> In battle
+            <i>{next()}</i> In battle
           </h2>
           <div className="rule-versus" aria-hidden="true">
             <span className="you">
@@ -368,7 +401,7 @@ export function Rules({ data, onClose }: Props) {
           </div>
           <ul className="rule-list">
             <li>
-              You can attack any neighbour over a land border, and by sea any shore within {SEA_RANGE_KM.toLocaleString('en-US')} km that lies
+              You can attack any neighbour over a land border, and by sea any shore within {SEA_RANGE_KM.toLocaleString('en-US')} km of your own coast that lies
               on a sea you already have a coast on. Ships follow the water: from the North Sea you can reach Morocco, but the Mediterranean
               only opens once you hold a coast on it. Far from everything? The nearest shores open up, so there are always at least{' '}
               {MIN_TARGETS} countries to attack.
@@ -398,7 +431,7 @@ export function Rules({ data, onClose }: Props) {
 
         <article className="rule" data-rule="spoils">
           <h2>
-            <i>8</i> The spoils
+            <i>{next()}</i> The spoils
           </h2>
           <p>
             A conquered country joins your empire and sends you troops:{' '}
@@ -427,7 +460,7 @@ export function Rules({ data, onClose }: Props) {
 
         <article className="rule" data-rule="retreat">
           <h2>
-            <i>9</i> Retreat
+            <i>{next()}</i> Retreat
           </h2>
           <p>
             Stuck on a question? <b>Retreat</b>. It costs a {RETREAT_SHARE * 100 === 25 ? 'quarter' : `${RETREAT_SHARE * 100}%`} of your army
@@ -439,7 +472,7 @@ export function Rules({ data, onClose }: Props) {
 
         <article className="rule" data-rule="empire">
           <h2>
-            <i>10</i> A growing empire
+            <i>{next()}</i> A growing empire
           </h2>
           <p>
             The world notices. For every {ESCALATION_EVERY} countries you hold, <b>every country gains {soldiers(1)} enemies</b>. The last
@@ -452,7 +485,7 @@ export function Rules({ data, onClose }: Props) {
 
         <article className="rule" data-rule="streak">
           <h2>
-            <i>11</i> On a streak
+            <i>{next()}</i> On a streak
           </h2>
           <p>
             Every right answer in a row adds to your <b>streak</b>. A wrong answer, running out of time or retreating sets it back to 0.

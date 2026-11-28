@@ -4,9 +4,14 @@ A single-player, Risk-style world conquest game for the browser where geography 
 Answer questions about your starting country to recruit an army, once, then answer questions about
 your neighbours to conquer them. After that, new troops come only from conquests.
 
+**The Daily Game** is the game: every day at 12:00am US Eastern, one starting country for everyone,
+revealed by a slot-machine reel of country outlines, one attempt each, and a leaderboard that starts
+afresh. The original game, where you pick any campaign and any starting country, is still here as the
+**classic game**, behind the padlock in the top right corner and a passcode.
+
 Vite + React + TypeScript, with D3 (`d3-geo`, `d3-zoom`) and `topojson-client` for the map. The game
 itself has no backend: it saves to `localStorage`, and all data, fonts and flags are bundled, so no question
-ever comes from a live API. The one optional network feature is the [global leaderboard](#the-global-leaderboard). Sound effects are synthesised in the browser; there are no audio files. The campaign
+ever comes from a live API. The one optional network feature is the [daily leaderboard](#the-daily-leaderboard). Sound effects are synthesised in the browser; there are no audio files. The campaign
 names are spoken by the browser's own speech synthesis, using a British English voice when the device has one.
 
 The whole game is pixel art. The map is drawn on a single pixel grid (terrain, territory tints, borders,
@@ -34,6 +39,8 @@ Other scripts:
 | `npm test` | Unit tests for the game logic (Vitest) |
 | `npm run verify` | Plays the game in headless Google Chrome and checks it end to end |
 | `npm run names` | Copies the empire name blocklist and allowlist into `supabase/schema.sql` |
+| `npm run daily` | Copies the Daily Game's order of countries (`config/daily-order.json`) into `supabase/schema.sql` |
+| `npm run passcode -- NEWCODE` | Changes the passcode to the classic game |
 | `npm run build` | Type-checks and builds to `dist/` |
 | `npm run preview` | Serves the production build |
 
@@ -41,16 +48,35 @@ Other scripts:
 `npm run verify -- game` (`map`, `game`, `mobile`, `production`), or one section of the game suite with
 `npm run verify -- game iceland`. Screenshots land in `e2e/screenshots/`.
 
-## The global leaderboard
+## The Daily Game and the classic game
 
-Finished runs can be recorded on a global leaderboard: the top five of each campaign, shown on the end
-screen and behind the Leaderboard button on the start screen. It lives in a [Supabase](https://supabase.com)
+- **The day** runs on US Eastern time (`src/daily/daily.ts`). The country of each day comes from the fixed,
+  shuffled order in `config/daily-order.json`: day 0 is its `epoch`, and the 230 countries are taken in turn
+  before any comes round again. The database holds a copy of the order so it can check a run's starting
+  country; after editing the file run `npm run daily` and re-run `supabase/schema.sql` in Supabase.
+- **One attempt a day** is remembered in the browser's `localStorage`. Clearing it, or another browser,
+  gives another attempt: without player accounts nothing stronger is possible.
+- **The classic game's passcode** is set with `npm run passcode -- NEWCODE`, which rewrites the hash in
+  `src/daily/daily.ts`; the next build uses it. Case and surrounding spaces do not matter. Only the hash is
+  in the code, never the passcode itself (the command also prints the hash, which can be given to a build as
+  `VITE_CLASSIC_PASSCODE_HASH` instead, to keep even that out of the repository). This is a soft lock, not
+  security: the whole game runs in the browser, and anyone who reads the code can get past it. A device
+  that has entered it stays unlocked.
+- Classic games work exactly as before, and are never sent to the leaderboard.
+
+## The daily leaderboard
+
+Finished Daily Games are recorded on a leaderboard that starts afresh every day: the day's top five and a
+bell curve of everyone's scores on the end screen (with the share of the other players you beat), and the
+day's top ten behind the Leaderboard button on the start screen. It lives in a [Supabase](https://supabase.com)
 project and is optional: without it the game plays exactly the same and the leaderboard shows as unavailable.
 
 To set it up:
 
 1. Create a Supabase project.
-2. In its SQL editor, run the whole of `supabase/schema.sql` once.
+2. In its SQL editor, run the whole of `supabase/schema.sql` once. (Run it again whenever the file changes:
+   it is safe to repeat. A project set up before the Daily Game must run it again, which replaces the old
+   per-campaign functions; runs stored before then stay in the table but appear on no board.)
 3. Copy `.env.example` to `.env.local` and fill in the project URL and its **public** key (called "anon" or
    "publishable", under Project Settings > API). Restart `npm run dev`.
 4. Wherever the game is hosted, set the same two variables for the build (`npm run build` bakes them in).
@@ -59,18 +85,20 @@ To set it up:
 is shipped to every player. The public key is meant to be public; the database is what guards the table.
 
 **What the database allows.** Anyone may read the leaderboard. Nobody may insert, update or delete rows
-directly. A run is recorded only through the function `submit_run`, which checks the campaign, the name
-(letters, apostrophes and single spaces, 3 to 24 characters, and the custom blocklist and allowlist), the flag (one of the game's patterns and palette colours), that the
-score is one the game can produce for that campaign, that a victory really is every country, and that
-there are at least as many battles as conquests. It keeps one row per run id and stamps the time itself.
+directly. A run is recorded only through the function `submit_run`, which checks that the day is today
+(or yesterday, for a game still being played at midnight) on the Eastern clock, that the run started from
+that day's country, the name (letters, apostrophes and single spaces, 3 to 24 characters, and the custom
+blocklist and allowlist), the flag (one of the game's patterns and palette colours), that the score is
+countries conquered plus 10 per continent, that a victory really is every country, and that there are at
+least as many battles as conquests. It keeps one row per run id and stamps the time itself.
 
 **What cheating it does not prevent.** The game runs entirely in the player's browser, so the database
 only ever hears what a browser tells it.
 
 - Anyone can call `submit_run` by hand with a made-up run. As long as the numbers are ones the game could
-  produce, it is accepted: a perfect World victory at the highest multiplier can be claimed without playing.
-- The multiplier is not checked against the starting country, so an easy start can be reported as an
-  Extreme one.
+  produce, it is accepted: a perfect World victory can be claimed without playing.
+- The one attempt a day is kept by the browser, not the database: clearing the browser's storage gives
+  another attempt, and each attempt is a new row.
 - Looking up answers, or reading the game's state in the browser's developer tools, cannot be detected.
 - One person can submit any number of runs under any number of names; nothing ties a run to a player, by
   design, so there is no per-player limit and no rate limit.
@@ -88,9 +116,11 @@ The game explains itself: the **Rules** button above the map on the start screen
 (`src/components/Rules.tsx`), whose numbers are read from the rules code. The full rules, with every number, are
 in [MECHANICS.md](MECHANICS.md). In short:
 
-1. Name your empire and design its flag, then pick a mode (the whole world, or one continent) and a
-   starting country. Every start gets 10,000 troops and a single life. Starts are rated Easy, Medium, Hard,
-   Very Hard or Extreme (score ×1 to ×3) from how well known the country is and where it sits.
+1. Name your empire and design its flag, then press Begin conquest: the reel spins and lands on the
+   day's country, the same for everyone. Every start gets 10,000 troops and a single life. (In the classic
+   game you pick a mode, the whole world or one continent, and a starting country yourself; starts are
+   rated Easy, Medium, Hard, Very Hard or Extreme, score ×1 to ×3, from how well known the country is and
+   where it sits.)
 2. **Recruit phase, once:** 5 questions about your starting country, opening with its flag and getting
    harder. Easy pays 1,000 troops, Medium 2,000, Hard 3,000, and the fifth correct answer in a row is
    doubled: a perfect phase takes a famous start from 10,000 troops to 20,000, and a harder start up
@@ -105,13 +135,15 @@ in [MECHANICS.md](MECHANICS.md). In short:
 5. **Retreat** gets you out alive for a quarter of your army and your streak, but never with your last
    thousand. The country stays wounded and wins back 2,000 defenders each time you attack somewhere else.
 6. **Defenders** scale with population (3,000 to 13,000), and every country gains 1,000 more for each 15
-   countries you hold. Sea crossings face a third more, with half the time per question.
+   countries you hold. Sea crossings reach any shore within 1,700 km of yours, coast to coast, on a sea you
+   have a coast on; they face a third more defenders, with half the time per question.
 7. **Question difficulty** is a score: the kind of question, plus how obscure the country is, plus how
    close the wrong options are. Eighteen question types, from flags and seas to national sports, main exports,
    years of independence, famous people and a memorable hook for every country. No option is far-fetched: wrong answers come from the same
    continent, flag options all resemble the right flag, and a capital question always includes another
    city of the same country.
-8. **Score** is countries conquered × your start's multiplier, plus 10 for every continent held in full.
+8. **Score** is a point for every country conquered, plus 10 for every continent held in full. (The classic
+   game multiplies the countries by its start's rating.)
 
 Controls: mouse wheel, drag, pinch, `+` / `-` keys or buttons to move the map. `1`–`4` or `A`–`D`
 answer a question; `Enter` skips the short wait after an answer. The speaker button in the top bar mutes the sound.
@@ -126,9 +158,12 @@ config/geography.json    which seas, rivers, deserts, ranges and rainforests eac
 config/independence.json the year each country gained independence, with any second significant year
 config/religions.json    the religion with the most followers in each country, and where that is too close to ask
 config/driving.json      which countries drive on the left, and where the question is worth asking
+config/daily-order.json  the Daily Game: its first day and the order countries are taken in
+scripts/daily-sql.mjs    copies that order into supabase/schema.sql (`npm run daily`)
+scripts/passcode.mjs     changes the passcode to the classic game (`npm run passcode -- NEWCODE`)
 public/data/facts.json   the curated facts and hooks (hand-edited; reviewed in reports/facts-review.md)
 MECHANICS.md             the rules in full
-supabase/schema.sql      the leaderboard's database: one table, read-only to the public, and the function that records a run
+supabase/schema.sql      the daily leaderboard's database: one table, read-only to the public, and the function that records a run
 .env.example             the two settings the leaderboard needs (copy to .env.local)
 reports/                 review files: difficulty (fame, start ratings), every curated fact, and the four newer themes
                          (national sport, main export, year of independence, famous figures) with every doubtful entry
@@ -145,10 +180,14 @@ src/map/
   raster.ts              the pixel rasteriser: grid sizing, hard-edged lines, dashes, marker sprites
   terrain.ts             procedural terrain fallback
 src/components/          rendering only: map, HUD, question card, attack panel, start and end screens
+                         (DailyStart.tsx is the daily menu and its reel, StartScreen.tsx the classic menu,
+                         ClassicLock.tsx the padlock and passcode prompt, ScoreCurve.tsx the bell curve)
 src/logo.json            the emblem's pixels: two crossed gold swords (drawn, with the favicon, by `npm run logo`)
 src/names/               the empire name check: validateEmpireName.ts, blocked-names.json, allowed-names.json
                          (after editing a list: `npm run names`, then re-run supabase/schema.sql in Supabase)
-src/leaderboard.ts       the leaderboard client: sends a finished run, reads the top five (plain fetch, no library)
+src/daily/daily.ts       the Daily Game's clock and country of the day, and the classic game's passcode check
+src/leaderboard.ts       the leaderboard client: sends a finished Daily Game, reads the day's best runs and the
+                         spread of its scores (plain fetch, no library)
 src/sound.ts             synthesised sound effects (hover pulse, snap, whoosh, trumpet calls and fanfare, applause,
                          countdown tick, last-stand heartbeat) and the campaign voice
 src/App.tsx              wires state to components
@@ -183,6 +222,10 @@ hit-testing.
   India, nor a capital that shares the country's name.
 - **Curated facts are only asked if well known** (recognition 2 or 3), and a wrong option is never
   something that is also true for the country.
+- **Sea distances are coast to coast,** from the map's own shapes (`npm run derive` stores them with each
+  country). Measured between centres, as they once were, New Zealand could not reach Australia.
+- **The daily country is a fixed order, not a roll of the dice,** so every browser and the database agree
+  on it without a server deciding. It is shuffled once, so it is unpredictable to play but the same for all.
 - **Attacking** takes two clicks (select, then Attack) so a stray tap on a phone cannot start a battle.
 - **The map hides country names while a question is open,** and country flags are not shown in menus,
   because either would answer questions for you.

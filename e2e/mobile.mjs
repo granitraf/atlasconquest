@@ -1,5 +1,5 @@
 // Responsiveness: phone-sized, touch-only runs (portrait, landscape, small), plus the terrain fallback.
-import { launch, BASE, SHOTS, check, open, state, pointOn, settle, movedOn, misfits, mapEdges } from './lib.mjs';
+import { launch, BASE, SHOTS, PASSCODE, check, open, state, pointOn, settle, movedOn, misfits, mapEdges } from './lib.mjs';
 const results = [];
 
 async function noOverflow(page, label) {
@@ -23,8 +23,7 @@ async function noOverflow(page, label) {
 async function phone(viewport, tag) {
   const { browser, context, page, problems, board } = await launch({ viewport, touch: true, mobile: true, dpr: 2 });
   // Runs already on the leaderboard, one of them under the longest name the game allows.
-  for (const [name, score] of [['Greatest Kingdom', 687], ['Bravo', 36.5], ['Charlie', 30], ['Delta', 24], ['Echo', 12]]) board.add('World', name, score);
-  board.add('Europe', 'Solo', 3);
+  for (const [name, score] of [["Greatest Kingdom's Crown", 239], ['Bravo', 36], ['Charlie', 30], ['Delta', 24], ['Echo', 12], ['Solo', 3]]) board.add(name, score);
   await open(page);
   await noOverflow(page, `${tag} start screen`);
   const begin = await page.getByTestId('begin').boundingBox();
@@ -62,9 +61,9 @@ async function phone(viewport, tag) {
     const el = document.querySelector('.leaderboard');
     const r = el.getBoundingClientRect();
     const back = document.querySelector('[data-testid="leaderboard-toggle"]').getBoundingClientRect();
-    return { full: r.left === 0 && r.top === 0 && r.right === innerWidth && r.bottom === innerHeight, sideways: el.scrollWidth > el.clientWidth + 1, wide: [...el.querySelectorAll('.board-row, .board-card, .board-card h2, .rules-hero')].filter((x) => x.scrollWidth > x.clientWidth + 1).map((x) => x.className), cards: el.querySelectorAll('.board-card').length, rows: el.querySelectorAll('.board-row').length, back: back.left >= 0 && back.right <= innerWidth && back.top >= 0, rulesButtonHidden: getComputedStyle(document.querySelector('[data-testid="rules-toggle"]')).display === 'none' };
+    return { full: r.left === 0 && r.top === 0 && r.right === innerWidth && r.bottom === innerHeight, sideways: el.scrollWidth > el.clientWidth + 1, wide: [...el.querySelectorAll('.board-row, .board-card, .board-card h2, .rules-hero, .score-curve')].filter((x) => x.scrollWidth > x.clientWidth + 1).map((x) => x.className), cards: el.querySelectorAll('.board-card').length, rows: el.querySelectorAll('.board-row').length, back: back.left >= 0 && back.right <= innerWidth && back.top >= 0, rulesButtonHidden: getComputedStyle(document.querySelector('[data-testid="rules-toggle"]')).display === 'none' };
   });
-  check(results, `${tag}: the leaderboard fills the screen, nothing in it is too wide, and the way back is on screen`, hall.full && !hall.sideways && hall.wide.length === 0 && hall.cards === 7 && hall.rows === 6 && hall.back && hall.rulesButtonHidden, JSON.stringify(hall));
+  check(results, `${tag}: the leaderboard fills the screen, nothing in it is too wide, and the way back is on screen`, hall.full && !hall.sideways && hall.wide.length === 0 && hall.cards === 2 && hall.rows === 6 && hall.back && hall.rulesButtonHidden, JSON.stringify(hall));
   await page.screenshot({ path: SHOTS + `61-${tag}-leaderboard.png` });
   await page.getByTestId('leaderboard-toggle').tap();
   check(results, `${tag}: Back to the map returns from the leaderboard to the menu`, (await page.getByTestId('leaderboard').count()) === 0 && (await page.getByTestId('begin').isVisible()));
@@ -173,6 +172,48 @@ async function phone(viewport, tag) {
 await phone({ width: 390, height: 844 }, 'phone');
 await phone({ width: 844, height: 390 }, 'landscape');
 await phone({ width: 360, height: 640 }, 'small');
+
+// The Daily Game's own menu on a phone: what a new player sees first.
+async function dailyPhone(viewport, tag) {
+  const { browser, page, problems } = await launch({ viewport, touch: true, mobile: true, dpr: 2, daily: true });
+  await open(page);
+  await noOverflow(page, `${tag} daily menu`);
+  const begin = await page.getByTestId('begin').boundingBox();
+  check(results, `${tag} daily: the Begin button is always on screen`, begin.y >= 0 && begin.y + begin.height <= viewport.height, `bottom at ${Math.round(begin.y + begin.height)} of ${viewport.height}`);
+  // The corner is under the menu on a phone, so the padlock sits in the menu's header with Rules and Leaderboard.
+  const lock = await page.evaluate(() => {
+    const r = document.querySelector('[data-testid="classic-lock-menu"]').getBoundingClientRect();
+    const rules = document.querySelector('[data-testid="rules-open"]').getBoundingClientRect();
+    return { shown: r.width > 0, onScreen: r.left >= 0 && r.right <= innerWidth && r.top >= 0, sameLine: Math.abs((r.top + r.bottom) / 2 - (rules.top + rules.bottom) / 2) < 6, cornerHidden: getComputedStyle(document.querySelector('[data-testid="classic-lock"]')).display === 'none' };
+  });
+  check(results, `${tag} daily: the padlock is in the menu header, on screen`, lock.shown && lock.onScreen && lock.sameLine && lock.cornerHidden, JSON.stringify(lock));
+  await page.screenshot({ path: SHOTS + `62-${tag}-daily.png` });
+  await page.getByTestId('classic-lock-menu').tap();
+  await page.getByTestId('passcode-gate').waitFor();
+  const gate = await page.evaluate(() => { const r = document.querySelector('.gate').getBoundingClientRect(); return { fits: r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight, onTop: Boolean(document.elementFromPoint(innerWidth / 2, (r.top + r.bottom) / 2)?.closest('.gate')) }; });
+  check(results, `${tag} daily: the passcode prompt fits the screen, on top of the menu`, gate.fits && gate.onTop, JSON.stringify(gate));
+  await page.screenshot({ path: SHOTS + `62-${tag}-passcode.png` });
+  await page.getByTestId('passcode').fill(PASSCODE);
+  await page.getByTestId('passcode-submit').tap();
+  await page.locator('[data-testid="start-screen"][data-mode="classic"]').waitFor();
+  check(results, `${tag} daily: the passcode opens the classic menu, and its padlock leads back`, (await page.getByTestId('search').count()) === 1 && (await page.getByTestId('classic-lock-menu').isVisible()));
+  await page.getByTestId('classic-lock-menu').tap();
+  await page.locator('[data-testid="start-screen"][data-mode="daily"]').waitFor();
+  await page.getByTestId('begin').tap();
+  await page.locator('[data-testid="reel"].spinning').waitFor();
+  await page.getByTestId('reel').scrollIntoViewIfNeeded();
+  const reel = await page.evaluate(() => { const r = document.querySelector('.reel-window').getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height), onScreen: r.left >= 0 && r.right <= innerWidth }; });
+  check(results, `${tag} daily: the reel spins inside the menu`, reel.onScreen && reel.w >= 120 && reel.h >= 60, JSON.stringify(reel));
+  await page.getByTestId('question-card').waitFor({ timeout: 20000 });
+  const today = await page.evaluate(() => window.__atlas.daily);
+  const s = await state(page);
+  check(results, `${tag} daily: the reel lands and today's conquest begins`, s.daily === today.day && s.startId === today.countryId && s.multiplier === 1, `${s.startId} ${s.daily}`);
+  check(results, `${tag} daily: no console errors`, problems.length === 0, problems.slice(0, 3).join(' ; '));
+  await browser.close();
+}
+await dailyPhone({ width: 390, height: 844 }, 'phone');
+await dailyPhone({ width: 844, height: 390 }, 'landscape');
+await dailyPhone({ width: 360, height: 640 }, 'small');
 
 // Terrain fallback, forced.
 {

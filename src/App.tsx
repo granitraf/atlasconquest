@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AttackPanel } from './components/AttackPanel';
+import { ClassicLock, PasscodeGate } from './components/ClassicLock';
+import { DailyStart } from './components/DailyStart';
 import { EndScreen } from './components/EndScreen';
 import { AnswerFlash, BattleProgress, Toast, TopBar, TugOfWar, type ToastMessage } from './components/Hud';
 import { QuestionCard } from './components/QuestionCard';
@@ -7,7 +9,8 @@ import { Leaderboard } from './components/Leaderboard';
 import { Rules } from './components/Rules';
 import { StartScreen } from './components/StartScreen';
 import { BLAST_MS, WorldMap, type CountryStatus, type FocusRequest, type MapPadding, type TooltipInfo, type TooltipPart } from './components/WorldMap';
-import { loadEmpire, loadGameData, loadMemory, loadSave, runIdFor, saveEmpire, saveMemory, writeSave, type GameData } from './data';
+import { classicUnlocked, loadDaily, loadEmpire, loadGameData, loadMemory, loadMenu, loadSave, runIdFor, saveDaily, saveEmpire, saveMemory, saveMenu, unlockClassic, writeSave, type DailyRecord, type GameData } from './data';
+import { dailyCountryId, dailyDay, secondsUntilNextDay } from './daily/daily';
 import { defaultEmpireName, type Empire } from './game/flag';
 import { validateEmpireName } from './names/validateEmpireName';
 import { runRecord } from './leaderboard';
@@ -81,6 +84,25 @@ function Game({ data }: { data: GameData }) {
   const [game, setGame] = useState<GameState | null>(() => loadSave(data));
   const [mode, setMode] = useState<ModeId>('World');
   const [startId, setStartId] = useState<string | null>(null);
+  /**
+   * Which start menu is showing. The Daily Game is the game; the classic game (any campaign, any start) sits
+   * behind a padlock and a passcode.
+   */
+  const [menu, setMenu] = useState<'daily' | 'classic'>(loadMenu);
+  const [unlocked, setUnlocked] = useState(classicUnlocked);
+  const [gateOpen, setGateOpen] = useState(false);
+  useEffect(() => saveMenu(menu), [menu]);
+  /** The clock, ticking once a second: the daily game turns over at midnight US Eastern. */
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const today = dailyDay(now);
+  const todayCountry = dailyCountryId(today);
+  /** What this device has done with the latest Daily Game it began. */
+  const [dailyRecord, setDailyRecord] = useState<DailyRecord | null>(loadDaily);
+  const daily = menu === 'daily';
   const [empire, setEmpire] = useState<Empire>(loadEmpire);
   useEffect(() => saveEmpire(empire), [empire]);
   /** The rule book or the leaderboard, either of which takes the place of the map on the start screen. */
@@ -99,7 +121,8 @@ function Game({ data }: { data: GameData }) {
   /** Events up to this sequence number were seen before a reload; do not toast them again. */
   const seenSeq = useRef(game?.eventSeq ?? 0);
 
-  const world = data.worlds[game?.mode ?? mode];
+  // The Daily Game is always a World conquest.
+  const world = data.worlds[game?.mode ?? (daily ? 'World' : mode)];
   const { geometry, byId } = data;
 
   useEffect(() => writeSave(game), [game]);
@@ -117,8 +140,8 @@ function Game({ data }: { data: GameData }) {
   useEffect(() => {
     if (!import.meta.env.DEV) return;
     // `setState` lets a check put a particular question on screen.
-    (window as unknown as Record<string, unknown>).__atlas = { state: game, dispatch, data, sounds: soundLog, setState: setGame };
-  }, [game, dispatch, data]);
+    (window as unknown as Record<string, unknown>).__atlas = { state: game, dispatch, data, sounds: soundLog, setState: setGame, daily: { day: today, countryId: todayCountry } };
+  }, [game, dispatch, data, today, todayCountry]);
 
   const phase = game?.phase ?? null;
   const targets = useMemo(
@@ -232,6 +255,8 @@ function Game({ data }: { data: GameData }) {
       }
       if (!world.inPlay.has(id)) return { title, detail: 'Not part of this campaign' };
       if (!game) {
+        // The Daily Game has nothing to pick on the map: its country is the same for everyone.
+        if (daily) return { title };
         const d = startDifficulty(world, id);
         return { title, detail: `${d.label} start · score ×${d.multiplier}` };
       }
@@ -252,13 +277,13 @@ function Game({ data }: { data: GameData }) {
       if (lanes) return { title, detail: [{ text: 'No sea route yet' }, { text: `take a coast on the ${lanes.join(' or the ')} first`, tone: 'sea' }] };
       return { title, detail: 'Out of reach for now' };
     },
-    [byId, world, game, targets],
+    [byId, world, game, targets, daily],
   );
 
   const onCountryClick = useCallback(
     (id: string) => {
       if (!game) {
-        if (world.inPlay.has(id)) {
+        if (!daily && world.inPlay.has(id)) {
           // Picking where to begin: a snap, and a whoosh as the map zooms in on it.
           sound.zoom();
           setStartId(id);
@@ -271,7 +296,7 @@ function Game({ data }: { data: GameData }) {
       setTargetId(attackable ? id : null);
       setTargetFocus(null);
     },
-    [game, world, targets],
+    [game, world, targets, daily],
   );
 
   // A light pulse as the pointer passes over a country that can be picked: any country in the campaign
@@ -279,13 +304,14 @@ function Game({ data }: { data: GameData }) {
   const onCountryHover = useCallback(
     (id: string) => {
       if (!game) {
-        if (world.inPlay.has(id)) sound.pulse();
+        if (!daily && world.inPlay.has(id)) sound.pulse();
       } else if (game.phase === 'attack' && (targets.land.includes(id) || targets.sea.includes(id))) sound.pulse();
     },
-    [game, world, targets],
+    [game, world, targets, daily],
   );
 
-  const startGame = (id: string) => {
+  /** Begins a game from a country: a classic one in the chosen campaign, or (given its day) the Daily Game. */
+  const startGame = (id: string, day: string | null = null) => {
     const seed = (Math.random() * 4294967296) >>> 0;
     seenSeq.current = 0;
     // The siege begins.
@@ -297,7 +323,13 @@ function Game({ data }: { data: GameData }) {
     // the Begin button is disabled until it is changed.)
     const checked = validateEmpireName(empire.name);
     const name = checked.valid ? checked.name : defaultEmpireName(byId[id].name);
-    setGame(createGame(data.worlds[mode], id, seed, { name, flag: empire.flag }, loadMemory()));
+    setGame(createGame(data.worlds[day ? 'World' : mode], id, seed, { name, flag: empire.flag }, loadMemory(), day));
+    if (day) {
+      // One attempt a day: from here on, today's game is this run.
+      const record = { day };
+      saveDaily(record);
+      setDailyRecord(record);
+    }
   };
 
   /**
@@ -322,10 +354,18 @@ function Game({ data }: { data: GameData }) {
     );
   };
 
+  /**
+   * Leaves the game for the menu. A Daily Game that is still being played cannot simply be dropped (it could
+   * then be started over): giving it up ends it, and it counts as it stands.
+   */
   const quit = () => {
     decimateTimers.current.forEach((timer) => window.clearTimeout(timer));
     decimateTimers.current = [];
     setDecimating(null);
+    if (game?.daily && game.phase !== 'gameover' && game.phase !== 'victory') {
+      dispatch({ type: 'forfeit' });
+      return;
+    }
     setGame(null);
     setTargetId(null);
     setTargetFocus(null);
@@ -365,6 +405,13 @@ function Game({ data }: { data: GameData }) {
           title: `The attack on ${byId[event.countryId].name} failed`,
           detail: 'Your empire has fallen.',
         };
+      case 'surrendered':
+        return {
+          seq,
+          tone: 'bad',
+          title: 'The conquest ends here',
+          detail: "Today's run stands as it is.",
+        };
       case 'retreated':
         return {
           seq,
@@ -390,7 +437,7 @@ function Game({ data }: { data: GameData }) {
     if (game.eventSeq !== before.eventSeq && game.lastEvent) {
       const kind = game.lastEvent.kind;
       if (kind === 'conquered') game.phase === 'victory' ? sound.victory() : sound.conquer();
-      else if (kind === 'defeated') sound.gameOver();
+      else if (kind === 'defeated' || kind === 'surrendered') sound.gameOver();
       else if (kind === 'recruited') sound.recruited();
       else sound.retreat();
     }
@@ -418,10 +465,27 @@ function Game({ data }: { data: GameData }) {
   }, [lastStand]);
   useEffect(() => () => sound.heartbeat(false), []);
   // The finished run as the leaderboard records it. Its id is made once and kept beside the save.
+  // Only the Daily Game goes on the leaderboard.
   const run = useMemo(
-    () => (game && ended ? runRecord(game, gameStats(world, game), runIdFor(game.seed)) : null),
+    () => (game && ended && game.daily ? runRecord(game, gameStats(world, game), runIdFor(game.seed)) : null),
     [game, ended, world],
   );
+  // A finished Daily Game is remembered, so that day cannot be played again on this device.
+  useEffect(() => {
+    if (!run) return;
+    const record: DailyRecord = { day: run.day, finished: { score: run.score, conquered: run.conquered, outcome: run.outcome, runId: run.runId } };
+    saveDaily(record);
+    setDailyRecord(record);
+  }, [run?.runId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const mineToday = dailyRecord?.day === today && dailyRecord.finished ? { runId: dailyRecord.finished.runId, score: dailyRecord.finished.score } : null;
+  /** The padlock: asks for the passcode the first time, then switches between the two menus. */
+  const onLock = () => {
+    if (!unlocked) setGateOpen(true);
+    else {
+      setStartId(null);
+      setMenu((current) => (current === 'daily' ? 'classic' : 'daily'));
+    }
+  };
 
   return (
     <div
@@ -447,8 +511,21 @@ function Game({ data }: { data: GameData }) {
         onCountryHover={onCountryHover}
       />
 
-      {!game && panel === 'rules' && <Rules data={data} onClose={closePanel} />}
-      {!game && panel === 'leaderboard' && <Leaderboard data={data} onClose={closePanel} />}
+      {!game && panel === 'rules' && <Rules data={data} daily={daily} onClose={closePanel} />}
+      {!game && panel === 'leaderboard' && <Leaderboard data={data} day={today} secondsLeft={secondsUntilNextDay(now)} mine={mineToday} onClose={closePanel} />}
+      {!game && <ClassicLock unlocked={unlocked} classic={!daily} onClick={onLock} place="corner" />}
+      {!game && gateOpen && (
+        <PasscodeGate
+          onClose={() => setGateOpen(false)}
+          onUnlock={() => {
+            unlockClassic();
+            setUnlocked(true);
+            setGateOpen(false);
+            setStartId(null);
+            setMenu('classic');
+          }}
+        />
+      )}
       {!game && (
         // Rules stays centred above the map; Leaderboard sits to its right.
         <div className="map-buttons">
@@ -480,7 +557,7 @@ function Game({ data }: { data: GameData }) {
           </button>
         </div>
       )}
-      {!game && (
+      {!game && !daily && (
         <StartScreen
           data={data}
           mode={mode}
@@ -489,9 +566,26 @@ function Game({ data }: { data: GameData }) {
           onEmpire={setEmpire}
           onMode={changeMode}
           onSelect={setStartId}
-          onStart={startGame}
+          onStart={(id) => startGame(id)}
           onRules={() => setPanel('rules')}
           onLeaderboard={() => setPanel('leaderboard')}
+          doors={<ClassicLock unlocked={unlocked} classic onClick={onLock} place="menu" />}
+        />
+      )}
+      {!game && daily && (
+        <DailyStart
+          data={data}
+          day={today}
+          countryId={todayCountry}
+          secondsLeft={secondsUntilNextDay(now)}
+          record={dailyRecord}
+          empire={empire}
+          onEmpire={setEmpire}
+          onReveal={setStartId}
+          onBegin={(id) => startGame(id, today)}
+          onRules={() => setPanel('rules')}
+          onLeaderboard={() => setPanel('leaderboard')}
+          doors={<ClassicLock unlocked={unlocked} classic={false} onClick={onLock} place="menu" />}
         />
       )}
 
@@ -597,9 +691,7 @@ function Game({ data }: { data: GameData }) {
             </div>
           )}
 
-          {ended && run && (
-            <EndScreen state={game} stats={gameStats(world, game)} start={byId[game.startId]} run={run} byId={byId} onPlayAgain={quit} />
-          )}
+          {ended && <EndScreen state={game} stats={gameStats(world, game)} start={byId[game.startId]} run={run} byId={byId} onPlayAgain={quit} />}
         </>
       )}
     </div>

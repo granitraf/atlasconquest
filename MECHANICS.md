@@ -18,10 +18,53 @@ is used throughout: enemies in pink, troops gained in green, sea crossings in li
 
 ## 1. Setup
 
+There are two ways in. **The Daily Game is the game:** it is what opens, and the only one on
+the leaderboard. **The classic game** is the original, kept behind a padlock and a passcode.
+Every rule in this document applies to both unless it says otherwise; the differences are
+all in this section and in section 14.
+
+### The Daily Game
+
+- **One country a day.** Every player starts from the same country, and it changes at
+  12:00am US Eastern time (`DAILY_TIME_ZONE`, America/New_York, so the hour follows daylight
+  saving). The menu counts down to the next one.
+- **Which country** comes from a fixed, shuffled order of all 230 (`config/daily-order.json`):
+  day 0 is its `epoch`, each day takes the next country, and after the last the order starts
+  over, so no country repeats within 230 days. The order is fixed rather than drawn at random
+  on the day so that every browser and the database agree on it without asking each other.
+  `npm run daily` copies the order into `supabase/schema.sql`.
+- **The reveal.** The menu has no country list, no campaign list and no difficulty list:
+  only the empire's name and flag, and a reel. Begin conquest spins it: 44 country outlines
+  flash past like a slot machine, fast at first and slowing down, and it lands on the day's
+  country. The game begins a moment later. With reduced motion requested, it lands at once.
+- **It is always a World conquest:** all 230 countries are in play, and six continents.
+- **No start multiplier.** Everyone has the same start, so the rating of section 3 is not
+  applied: the multiplier is 1 and a country conquered is one point.
+- **One attempt a day,** per browser. The game is saved as it is played and resumes after a
+  reload. There is no New game button: the way out is **Give up**, which ends the run where it
+  stands (as a defeat, with what was conquered) and sends it to the leaderboard. Once the
+  day's run has ended, the menu shows its country and score and a button to the day's
+  leaderboard, until midnight. (This is a courtesy, not a lock: the attempt is remembered
+  in the browser's own storage.)
+- A game still being played at midnight carries on, and counts for the day it began.
+
+### The classic game
+
+- **The padlock** in the top right corner of the menu (in the menu's header on a phone)
+  asks for a passcode. The right one opens the classic menu and is remembered on that
+  device; from then on the padlock switches between the two menus.
+- **The passcode** is kept in the code only as a hash (`CLASSIC_PASSCODE_HASH` in
+  `src/daily/daily.ts`); case and surrounding spaces do not matter. Change it with
+  `npm run passcode -- NEWCODE`. It is a soft lock to keep the classic game out of the way,
+  not security: the whole game runs in the browser.
 - **Modes:** World (230 countries) or a single-continent campaign: Africa 56, Asia 49,
   Europe 51, North America 38, South America 13, Oceania 23. "Countries" includes territories
   with their own ISO code and complete data (e.g. Greenland, Puerto Rico).
 - **Start:** the player picks any country in the mode as their home.
+- Classic games are never sent to the leaderboard.
+
+### Both
+
 - **Empire name and flag:** cosmetic only. The flag is planted on every country held.
 - **Starting resources are fixed and identical for every start:** 10 troops (shown as 10,000)
   and 1 life.
@@ -45,7 +88,8 @@ Current counts: 35 famous, 88 mid-known, 107 obscure.
 ## 3. Start difficulty rating (affects score only)
 
 The rating crosses fame with the start's position. It does not change troops, defenders or
-questions; it only sets the score multiplier.
+questions; it only sets the score multiplier. **Classic game only:** the Daily Game shows no
+rating and scores every start at ×1.
 
 **Position**, counting only land neighbours that are in the mode, using their own defender
 counts (section 8, before escalation):
@@ -79,7 +123,8 @@ South America 2/2/8/0/1, Oceania 2/0/0/1/20.
 There are no turns. A game is: **one recruit phase** (5 questions, right after the starting
 country is chosen) → **the map**, where the player picks a target and fights a battle, again
 and again, until the game is won or lost. There is no End Turn button and nothing to wait
-for: the only things to do on the map are attack or start a new game.
+for: the only things to do on the map are attack or start a new game (in the Daily Game,
+give up).
 
 ## 5. Troops
 
@@ -230,8 +275,16 @@ and 9). The question card shows the tier.
 **What can be attacked:**
 
 - **Land:** any unowned in-mode country sharing a land border with player territory.
-- **Sea:** any unowned coastal country whose centre is within 2,500 km (`SEA_RANGE_KM`) of
-  the centre of an owned country **that has a coast on the same sea lane**.
+- **Sea:** any unowned coastal country whose coast is within 1,700 km (`SEA_RANGE_KM`) of
+  the coast of an owned country **that has a coast on the same sea lane**.
+- **Coast to coast.** The distance is the shortest one between the two countries' shores
+  (`coastKm`), worked out from the map's own shapes by `npm run derive` and stored with each
+  country (`near`, for every pair within 4,000 km). A country's shore is its mainland: its
+  largest landmass and anything within 900 km of it, so France is measured from Europe, not
+  from French Guiana. It used to be measured between centres, which made large countries
+  unreachable from their own neighbours: New Zealand to Australia is 1,494 km of sea but
+  4,043 km between centres, Australia to Papua New Guinea 93 km against 2,766, Russia to
+  Japan 7 km against 3,795.
 - **Sea lanes** (`config/geography.json`, `lanes`): Atlantic, Pacific, Indian Ocean, Arctic,
   Mediterranean, Black Sea, Baltic, Red Sea, Persian Gulf, Caspian. Open seas belong to
   their ocean (the North Sea, the Caribbean and the Gulf of Guinea are Atlantic; the South
@@ -245,9 +298,10 @@ and 9). The question card shows the tier.
   while that many remain. If land borders and the sea range together give fewer, the nearest
   coastal countries beyond the range are added, nearest first, until there are 3: shores on
   its own sea lanes first, and other seas only if that is still not enough. Pitcairn
-  has only French Polynesia within range (2,158 km), so the Cook Islands (3,057 km) and Niue
-  (4,138 km) open up too. Australia, whose centre is far from every shore but one, gets 3 as
-  well. Anyone who already has 3 or more targets is unaffected: the range does not change.
+  has only French Polynesia within range (1,044 km), so Kiribati (2,857 km) and the Cook
+  Islands (3,229 km) open up too. Eight starts need the top-up: the Falklands, Kiribati, the
+  Maldives, the Marshall Islands, Mauritius, Pitcairn, Saint Helena and Uruguay. Anyone who
+  already has 3 or more targets is unaffected: the range does not change.
 - **Last resort:** if neither rule yields a target while countries remain, the 3 nearest
   countries of any kind are offered as crossings. Every country is reachable from every start
   in every mode (covered by a test).
@@ -509,30 +563,43 @@ in `reports/new-questions-review.md`.
 ## 14. Ending and score
 
 - **Victory:** the player owns every country in the mode.
-- **Game over:** troops reach 0 in a battle.
+- **Game over:** troops reach 0 in a battle, or, in the Daily Game, the player gives up.
 - **Score = countries conquered × start multiplier + 10 × continents held in full.**
   The home country does not count as conquered. In World mode up to six continent bonuses are
   possible; in a continent campaign the bonus is earned exactly once, on victory.
+- **In the Daily Game the multiplier is 1:** a point for every country conquered, plus 10
+  for every continent held in full.
 - The end screen shows the empire, countries conquered, continents conquered, best streak,
-  battles fought and the score breakdown, and the global top five for the campaign (below).
+  battles fought and the score breakdown. After a Daily Game it also shows the day's top five
+  and the curve of everyone's scores (below), and its button leads back to the menu rather
+  than to another game.
 
-### The global leaderboard
+### The daily leaderboard
 
-The one part of the game that uses the network. It changes no rule and no number: with no
-leaderboard configured, or none reachable, it shows as unavailable and everything else plays
-the same.
+The one part of the game that uses the network, and it belongs to the Daily Game alone. It
+changes no rule and no number: with no leaderboard configured, or none reachable, it shows
+as unavailable and everything else plays the same.
 
-- **What is recorded:** one row per finished run (victory or game over; a game that is
-  abandoned is not finished): campaign, empire name, flag pattern and its three colours,
-  starting country, final score, countries conquered, continents held, battles fought, best
-  streak, outcome, and the time the database received it. Nothing identifies the player.
-- **Ranking,** per campaign: final score; ties go to fewer battles fought, then to the
+- **It starts afresh every day.** Every run carries the day it is the Daily Game for, and
+  every board shows one day only. At midnight US Eastern the board is empty again.
+- **What is recorded:** one row per finished Daily Game (victory, game over or giving up):
+  the day, empire name, flag pattern and its three colours, starting country, final score,
+  countries conquered, continents held, battles fought, best streak, outcome, and the time
+  the database received it. Nothing identifies the player. Classic games are never sent.
+- **Ranking,** within a day: final score; ties go to fewer battles fought, then to the
   earlier run.
-- **End screen:** the global top five for the campaign just played, with the player's run
-  picked out in gold. A run outside the top five is shown below it with its rank.
+- **End screen:** the day's top five, with the player's run picked out in gold. A run
+  outside the top five is shown below it with its rank.
+- **The curve.** Under the board, the day's scores are drawn as a bell curve: 20 bars, one
+  for each band of scores, with a bell curve of the same mean and spread laid over them (once
+  three players have finished and their scores differ) and a marker at the player's own
+  score. The caption gives the share of the *other* players the run beat, meaning those who
+  scored strictly less: "You beat 63% of the other 8 players today." The first to finish is
+  told so.
 - **Start screen:** a Leaderboard button to the right of Rules opens a page, in place of the
-  map, with the top five of each of the seven campaigns. Nothing is asked of the leaderboard
-  until that page is opened or a run ends.
+  map, with the day's top ten, the time left until it resets, and the same curve (with the
+  marker, once this browser has finished the day). Nothing is asked of the leaderboard until
+  that page is opened or a run ends.
 - **One row per run.** Each game gets a random id, kept beside the save. Looking at the end
   screen again after a refresh sends the same id, and the database keeps one row for it.
 - **Names** are checked by one pure function, `validateEmpireName` in
@@ -557,11 +624,16 @@ the same.
     into `supabase/schema.sql`), but not the obscenity library.
 - **The database** is a Supabase project set up by `supabase/schema.sql`. Anyone may read
   the table; nobody may insert, update or delete rows directly. A run gets in only through
-  the function `submit_run`, which refuses anything the game could not have produced: an
-  unknown campaign, a name that is too long or blocked, a flag outside the sixteen patterns
-  and twelve colours, more conquests than the campaign has countries, a victory that is not
-  every country, a score that is not conquests × one of the five multipliers + 10 per
-  continent, fewer battles than conquests. The project's address and public key come from
+  the function `submit_run`, which refuses anything the Daily Game could not have produced: a
+  day that is neither today nor yesterday on the Eastern clock (yesterday, for a game still
+  being played at midnight), a campaign other than World, a starting country that is not the
+  one of that day, a name that is too long or blocked, a flag outside the sixteen patterns
+  and twelve colours, more conquests than there are countries, a victory that is not
+  every country, a score that is not conquests + 10 per continent, fewer battles than
+  conquests. `top_runs` returns a day's best runs and `day_scores` how many players finished
+  on each score. Running the file again is safe, and it replaces the functions of the earlier,
+  per-campaign leaderboard; rows stored before the Daily Game have no day and appear on no
+  board. The project's address and public key come from
   `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (see `.env.example`).
 - **What it does not prevent** is listed in the readme: the checks stop impossible runs,
   not invented ones.

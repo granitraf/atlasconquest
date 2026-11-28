@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { flagUrl, type GameData } from '../data';
-import { LEADERBOARD_SIZE, RunRejected, campaignTitle, formatScore, submitRun, topRuns, type Leaderboard as Board, type LeaderboardRow, type RunRecord } from '../leaderboard';
+import { countdown, dailyCountryId, dayLabel } from '../daily/daily';
+import { LEADERBOARD_PAGE_SIZE, LEADERBOARD_SIZE, RunRejected, dayScores, formatScore, submitRun, topRuns, type LeaderboardRow, type RunRecord, type ScoreCount } from '../leaderboard';
 import { sound } from '../sound';
-import { MODES, type Country } from '../game/types';
+import type { Country } from '../game/types';
 import { FlagIcon } from './FlagIcon';
+import { ScoreCurve } from './ScoreCurve';
 
 const plural = (n: number, word: string, many = `${word}s`) => `${n} ${n === 1 ? word : many}`;
 
@@ -48,9 +50,12 @@ type RunBoard =
   | { status: 'loading' }
   | { status: 'unavailable' }
   /** `rank` is null when the leaderboard answered but would not take this run. */
-  | { status: 'ready'; rows: LeaderboardRow[]; rank: number | null };
+  | { status: 'ready'; rows: LeaderboardRow[]; scores: ScoreCount[]; rank: number | null };
 
-/** The end of a run: sends it to the leaderboard and shows the campaign's top five around it. */
+/**
+ * The end of a Daily Game: sends the run to the leaderboard, then shows the day's top five around it and
+ * where its score falls among everyone who has finished today.
+ */
 export function RunBoard({ run, byId }: { run: RunRecord; byId: Record<string, Country> }) {
   const [board, setBoard] = useState<RunBoard>({ status: 'loading' });
   useEffect(() => {
@@ -64,8 +69,8 @@ export function RunBoard({ run, byId }: { run: RunRecord; byId: Record<string, C
         // A refused run is not on the board, but the board can still be shown.
         if (!(err instanceof RunRejected)) throw err;
       }
-      const rows = (await topRuns(run.campaign))[run.campaign];
-      if (alive) setBoard({ status: 'ready', rows, rank });
+      const [rows, scores] = await Promise.all([topRuns(run.day), dayScores(run.day)]);
+      if (alive) setBoard({ status: 'ready', rows, scores, rank });
     })().catch(() => alive && setBoard({ status: 'unavailable' }));
     return () => {
       alive = false;
@@ -77,7 +82,7 @@ export function RunBoard({ run, byId }: { run: RunRecord; byId: Record<string, C
   return (
     <section className="end-board" data-testid="end-board" data-status={board.status} data-rank={board.status === 'ready' ? (board.rank ?? '') : ''}>
       <h2>
-        Global top {LEADERBOARD_SIZE} <span>{campaignTitle(run.campaign)}</span>
+        Today's top {LEADERBOARD_SIZE} <span>{dayLabel(run.day)}</span>
       </h2>
       {board.status === 'loading' && <p className="board-note">Consulting the scribes…</p>}
       {board.status === 'unavailable' && (
@@ -87,7 +92,7 @@ export function RunBoard({ run, byId }: { run: RunRecord; byId: Record<string, C
       )}
       {board.status === 'ready' && (
         <>
-          {board.rows.length > 0 ? <BoardRows rows={board.rows} byId={byId} mine={run.runId} /> : <p className="board-note">No empire has finished this campaign yet.</p>}
+          {board.rows.length > 0 ? <BoardRows rows={board.rows} byId={byId} mine={run.runId} /> : <p className="board-note">Nobody has finished today yet.</p>}
           {outside && (
             <>
               <p className="board-gap" aria-hidden="true">
@@ -100,35 +105,41 @@ export function RunBoard({ run, byId }: { run: RunRecord; byId: Record<string, C
             {board.rank === null
               ? 'This run could not be recorded.'
               : board.rank === 1
-                ? 'Your empire is the greatest this campaign has seen.'
-                : `Your empire ranks #${board.rank.toLocaleString('en-US')} in this campaign.`}
+                ? 'Your empire leads the day.'
+                : `Your empire ranks #${board.rank.toLocaleString('en-US')} today.`}
           </p>
+          {board.rank !== null && <ScoreCurve scores={board.scores} mine={run.score} />}
         </>
       )}
     </section>
   );
 }
 
-type AllBoards = { status: 'loading' } | { status: 'unavailable' } | { status: 'ready'; board: Board };
+type DayBoard = { status: 'loading' } | { status: 'unavailable' } | { status: 'ready'; rows: LeaderboardRow[]; scores: ScoreCount[] };
 
 interface Props {
   data: GameData;
+  /** Today in the daily game's time zone, and the seconds left in it. */
+  day: string;
+  secondsLeft: number;
+  /** This device's own finished run today, if any: picked out on the board and marked on the curve. */
+  mine: { runId: string; score: number } | null;
   onClose: () => void;
 }
 
-/** The hall of empires: the top five of every campaign. It takes the place of the map, like the rule book. */
-export function Leaderboard({ data, onClose }: Props) {
-  const [state, setState] = useState<AllBoards>({ status: 'loading' });
+/** Today's leaderboard: the best runs of the day and the spread of everyone's scores. It starts afresh every day. */
+export function Leaderboard({ data, day, secondsLeft, mine, onClose }: Props) {
+  const [state, setState] = useState<DayBoard>({ status: 'loading' });
   const load = useCallback(() => {
     let alive = true;
     setState({ status: 'loading' });
-    topRuns()
-      .then((board) => alive && setState({ status: 'ready', board }))
+    Promise.all([topRuns(day, LEADERBOARD_PAGE_SIZE), dayScores(day)])
+      .then(([rows, scores]) => alive && setState({ status: 'ready', rows, scores }))
       .catch(() => alive && setState({ status: 'unavailable' }));
     return () => {
       alive = false;
     };
-  }, []);
+  }, [day]);
   useEffect(load, [load]);
 
   useEffect(() => {
@@ -139,16 +150,17 @@ export function Leaderboard({ data, onClose }: Props) {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  const start = data.byId[dailyCountryId(day)];
   return (
-    <section className="rules leaderboard" aria-label="Leaderboard" data-testid="leaderboard" data-status={state.status}>
+    <section className="rules leaderboard" aria-label="Leaderboard" data-testid="leaderboard" data-status={state.status} data-day={day}>
       <div className="rules-bar" aria-hidden="true" />
       <div className="rules-page">
         <header className="rules-hero">
-          <p className="rules-kicker">Hall of empires</p>
+          <p className="rules-kicker">{dayLabel(day)}</p>
           <h1>
             Leader<span>board</span>
           </h1>
-          <p className="rules-lead">The five greatest empires of every campaign, from players everywhere.</p>
+          <p className="rules-lead">Today's greatest empires. Everyone starts from the same country, and the board starts afresh every day.</p>
         </header>
 
         {state.status === 'loading' && (
@@ -173,20 +185,29 @@ export function Leaderboard({ data, onClose }: Props) {
             </button>
           </article>
         )}
-        {state.status === 'ready' &&
-          MODES.map((mode) => (
-            <article key={mode} className={`rule board-card ${mode === 'World' ? 'wide' : ''}`} data-campaign={mode} data-testid={`board-${mode}`}>
+        {state.status === 'ready' && (
+          <>
+            <article className="rule board-card" data-testid="board-today">
               <h2>
-                {campaignTitle(mode)}
-                <small>{data.worlds[mode].ids.length} countries</small>
+                Today's top {LEADERBOARD_PAGE_SIZE}
+                <small>resets in {countdown(secondsLeft)}</small>
               </h2>
-              {state.board[mode].length > 0 ? (
-                <BoardRows rows={state.board[mode]} byId={data.byId} detailed />
+              {state.rows.length > 0 ? (
+                <BoardRows rows={state.rows} byId={data.byId} mine={mine?.runId} detailed />
               ) : (
-                <p className="board-note">No empire has finished this campaign yet. Be the first.</p>
+                <p className="board-note">Nobody has finished today's conquest yet. Be the first.</p>
               )}
             </article>
-          ))}
+            <article className="rule board-card" data-testid="board-curve">
+              <h2>How everyone did</h2>
+              {state.scores.length > 0 ? <ScoreCurve scores={state.scores} mine={mine?.score ?? null} /> : <p className="board-note">The curve fills in as players finish.</p>}
+              <p className="rule-note">
+                {mine ? 'The marker is your score.' : start ? "Finish today's conquest to see where you stand." : ''} Each bar is a band of scores; the line is the bell
+                curve they follow.
+              </p>
+            </article>
+          </>
+        )}
 
         <footer className="rules-foot">
           {state.status === 'ready' && <p className="rule-note">Ranked by final score. Ties go to the empire that fought fewer battles, then to the earlier one.</p>}

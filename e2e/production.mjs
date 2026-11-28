@@ -1,13 +1,13 @@
 // Production build smoke test: the dev hook is not shipped, so this plays by the DOM alone.
 // The game may talk to one other place, the leaderboard's Supabase project, and nowhere else: every
 // other request to another origin is blocked and counted, to prove the game needs no live API.
-import { launch, check, BASE, SHOTS, SUPABASE_URL } from './lib.mjs';
+import { launch, check, BASE, PASSCODE, PASSCODE_HASH, SHOTS, SUPABASE_URL } from './lib.mjs';
 const results = [];
 const { browser, page, problems, board } = await launch();
 const external = [];
 const toLeaderboard = [];
-board.add('World', 'Alpha', 40);
-board.add('World', 'Bravo', 36);
+board.add('Alpha', 40);
+board.add('Bravo', 36);
 await page.route('**/*', (route) => {
   const url = route.request().url();
   if (url.startsWith(BASE) || url.startsWith('data:')) return route.continue();
@@ -41,8 +41,8 @@ check(results, 'loading the game sends nothing to the leaderboard', toLeaderboar
 // The leaderboard works in the production build, against the project the build was configured with.
 await page.getByTestId('leaderboard-toggle').click();
 await page.locator('[data-testid="leaderboard"][data-status="ready"]').waitFor();
-const leaders = await page.getByTestId('board-World').locator('.board-name').allInnerTexts();
-check(results, 'the Leaderboard opens and lists the top runs', leaders.join() === 'Alpha,Bravo' && (await page.getByTestId('leaderboard').locator('.board-card').count()) === 7, leaders.join());
+const leaders = await page.getByTestId('board-today').locator('.board-name').allInnerTexts();
+check(results, "the Leaderboard opens and lists today's top runs and the curve of everyone's scores", leaders.join() === 'Alpha,Bravo' && (await page.getByTestId('leaderboard').locator('.board-card').count()) === 2 && (await page.getByTestId('score-curve').getAttribute('data-players')) === '2', leaders.join());
 check(results, 'only the public key is sent: no service key is in the build', board.requests.every((r) => r.headers.apikey === 'test-public-key' && r.headers.authorization === 'Bearer test-public-key') && !/service_role/.test(await page.evaluate(async () => (await Promise.all([...document.scripts].filter((s) => s.src).map(async (s) => (await fetch(s.src)).text()))).join(''))));
 await page.getByTestId('leaderboard-close').click();
 await page.getByTestId('search').fill('germany');
@@ -80,6 +80,35 @@ check(results, 'the only requests to leave this origin went to the leaderboard p
 check(results, 'no console errors or failed requests', problems.length === 0, problems.slice(0, 4).join(' ; '));
 await page.screenshot({ path: SHOTS + '80-production.png' });
 await browser.close();
+
+// The front door of the production build: the Daily Game, with the classic game behind its passcode.
+{
+  const fresh = await launch({ daily: true });
+  const p = fresh.page;
+  await p.goto(BASE);
+  await p.getByTestId('start-screen').waitFor({ timeout: 20000 });
+  check(results, 'a new player arrives at the Daily Game, with no lists to choose from', (await p.getByTestId('start-screen').getAttribute('data-mode')) === 'daily' && (await p.locator('.country-row').count()) === 0 && (await p.locator('[data-testid^="mode-"]').count()) === 0);
+  const bundle = await p.evaluate(async () => (await Promise.all([...document.scripts].filter((s) => s.src).map(async (s) => (await fetch(s.src)).text()))).join(''));
+  check(results, 'the passcode is not written in the build, only its hash', !bundle.toLowerCase().includes(PASSCODE) && bundle.includes(String(PASSCODE_HASH)));
+  await p.getByTestId('classic-lock').click();
+  await p.getByTestId('passcode').fill('letmein');
+  await p.getByTestId('passcode-submit').click();
+  await p.getByTestId('passcode-error').waitFor();
+  check(results, 'a wrong passcode leaves the classic game locked', (await p.getByTestId('start-screen').getAttribute('data-mode')) === 'daily');
+  await p.getByTestId('passcode').fill(PASSCODE);
+  await p.getByTestId('passcode-submit').click();
+  await p.locator('[data-testid="start-screen"][data-mode="classic"]').waitFor();
+  check(results, 'the passcode opens the classic game', (await p.locator('.country-row').count()) === 230);
+  await p.getByTestId('classic-lock').click();
+  await p.locator('[data-testid="start-screen"][data-mode="daily"]').waitFor();
+  await p.getByTestId('begin').click();
+  await p.locator('[data-testid="reel"].landed').waitFor({ timeout: 20000 });
+  const landed = (await p.getByTestId('reel-name').innerText()).trim();
+  await p.getByTestId('question-card').waitFor({ timeout: 8000 });
+  check(results, "the reel lands on today's country and the daily game begins", landed.length > 0 && (await p.getByTestId('quit').innerText()).trim() === 'Give up', landed);
+  check(results, 'daily game: no console errors or failed requests', fresh.problems.length === 0, fresh.problems.slice(0, 4).join(' ; '));
+  await fresh.browser.close();
+}
 const failed = results.filter((r) => !r.pass);
 console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
 process.exit(failed.length ? 1 : 0);

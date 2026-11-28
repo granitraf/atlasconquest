@@ -24,6 +24,12 @@ export interface Country {
   capital: string;
   /** The year the country gained independence, with other significant years to steer clear of. Null if it has no clear date. */
   independence: { year: number; also: number[] } | null;
+  /**
+   * The gap to every nearby country, coast to coast, in km (0 where they touch): measured on the map
+   * shapes, from each country's mainland and the islands near it. Countries further apart than the data
+   * goes are missing; the game falls back to the distance between their centres.
+   */
+  near: Record<string, number>;
   /** The religion with the most followers, or null where that is contested or unknown. */
   religion: string | null;
   /** Other religions with a large following there: the most tempting wrong options. */
@@ -227,6 +233,8 @@ export type GameEvent =
   /** `continent` is set when this conquest completed a whole continent. `troopsGained` is what the conquest was worth. */
   | { kind: 'conquered'; countryId: string; continent: Continent | null; troopsGained: number; decimated?: boolean }
   | { kind: 'defeated'; countryId: string }
+  /** The player ended a Daily Game themselves: it stands as it was. */
+  | { kind: 'surrendered' }
   /** `defendersLeft` of `defendersFull` were still standing; the country stays wounded. */
   | { kind: 'retreated'; countryId: string; troopsLost: number; defendersLeft: number; defendersFull: number };
 
@@ -258,6 +266,11 @@ export interface GameState {
   recentSigs: string[];
   /** The wrong options shown with each recent question, by signature, so a returning question rotates them. */
   recentDecoys: Record<string, string[]>;
+  /**
+   * The day (YYYY-MM-DD, US Eastern) this run is the Daily Game for, or null for a classic game. A daily
+   * run starts from that day's country, has no start multiplier, and goes on the leaderboard.
+   */
+  daily: string | null;
   /**
    * A DECIMATE is ready: the last country fell with a streak of DECIMATE_STREAK or more. It must be used on
    * the next attack, and it cannot be held: attacking any other way gives it up.
